@@ -1,6 +1,6 @@
-# LameOpenFAST
-Author: Adam Cardoza
-Contact: adam@cardoza.one
+# OpenFASTsr
+Author: Adam Cardoza  
+Contact: adam@cardoza.one  
 Summary:
   Call OpenFAST using the command line.
 
