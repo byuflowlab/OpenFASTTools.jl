@@ -1,0 +1,7 @@
+name = "OpenFASTsr"
+uuid = "45c743d6-1a1e-4fb4-aa78-18ed941dcf18"
+authors = ["cardoza2 <adam@cardoza.one>"]
+version = "0.1.0"
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
