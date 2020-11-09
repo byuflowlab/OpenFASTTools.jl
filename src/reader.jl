@@ -158,52 +158,56 @@ TwrShadow = fetchword15(lines[9])
 TwrAero = fetchword15(lines[10])
 FrozenWake = fetchword15(lines[11])
 CavitCheck = fetchword15(lines[12])
-#Line 13 is a general title
-AirDens = parse(Float64, lines[14][1:14])
-KinVisc = parse(Float64, lines[15][1:14])
-SpdSound = parse(Float64, lines[16][1:14])
-Patm = parse(Float64, lines[17][1:14])
-Pvap = parse(Float64, lines[18][1:14])
-FluidDepth = parse(Float64, lines[19][1:14])
-#Line 20 is a general title
-SkewMod = parse(Int, lines[21][1:14])
-SkewModFactor = fetchword(lines[22], lengthofword=14)
-TipLoss = fetchword15(lines[23])
-HubLoss = fetchword15(lines[24])
-TanInd = fetchword15(lines[25])
-AIDrag = fetchword15(lines[26])
-TIDrag = fetchword15(lines[27])
-IndToler = fetchword(lines[28], lengthofword=14)
-MaxIter = parse(Int, lines[29][1:14])
-#Line 30 is a general title
-DBEMT_Mod = parse(Int, lines[31][1:14])
-tau1_const = parse(Int, lines[32][1:14])
-#Line 33 is a general title
-UAMod = parse(Int, lines[34][1:14])
-FLookup = fetchword15(lines[35])
-#Line 36 is a general title
-AFTabMod = parse(Int, lines[37][1:14])
-InCol_Alfa = parse(Int, lines[38][1:14])
-InCol_Cl = parse(Int, lines[39][1:14])
-InCol_Cd = parse(Int, lines[40][1:14])
-InCol_Cm = parse(Int, lines[41][1:14])
-InCol_Cpmin = parse(Int, lines[42][1:14])
-NumAFfiles = parse(Int, lines[43][1:14])
+CompAA = fetchword15(lines[13])
+AA_InputFile = fetchword(lines[14];lengthofword=length(lines[14]))
+#Line 15 is a general title
+AirDens = parse(Float64, lines[16][1:14])
+KinVisc = parse(Float64, lines[17][1:14])
+SpdSound = parse(Float64, lines[18][1:14])
+Patm = parse(Float64, lines[19][1:14])
+Pvap = parse(Float64, lines[20][1:14])
+FluidDepth = parse(Float64, lines[21][1:14])
+#Line 22 is a general title
+SkewMod = parse(Int, lines[23][1:14])
+SkewModFactor = fetchword(lines[24], lengthofword=14)
+TipLoss = fetchword15(lines[25])
+HubLoss = fetchword15(lines[26])
+TanInd = fetchword15(lines[27])
+AIDrag = fetchword15(lines[28])
+TIDrag = fetchword15(lines[29])
+IndToler = fetchword(lines[30], lengthofword=14)
+MaxIter = parse(Int, lines[31][1:14])
+#Line 32 is a general title
+DBEMT_Mod = parse(Int, lines[33][1:14])
+tau1_const = parse(Int, lines[34][1:14])
+#Line 35 is a general title
+OLAFInputFileName = fetchword(lines[36];lengthofword=length(lines[14]))
+#Line 37 is a general title
+UAMod = parse(Int, lines[38][1:14])
+FLookup = fetchword15(lines[39])
+#Line 40 is a general title
+AFTabMod = parse(Int, lines[41][1:14])
+InCol_Alfa = parse(Int, lines[42][1:14])
+InCol_Cl = parse(Int, lines[43][1:14])
+InCol_Cd = parse(Int, lines[44][1:14])
+InCol_Cm = parse(Int, lines[45][1:14])
+InCol_Cpmin = parse(Int, lines[46][1:14])
+NumAFfiles = parse(Int, lines[47][1:14])
 
 Foils = String[]
 i = 1
 for i = 1:NumAFfiles
     temp = "Foil $i"
     push!(directory, temp)
-    foilname = fetchword(lines[43 + i];lengthofword=length(lines[43 + i]))
+    foilname = fetchword(lines[47 + i];lengthofword=length(lines[47 + i]))
     push!(Foils, foilname)
 end
-#Line 44+NumAFfiles is a general title
-UseBlCm = fetchword15(lines[45+NumAFfiles])
+#Line 48+NumAFfiles is a general title
+UseBlCm = fetchword15(lines[49+NumAFfiles])
 push!(directory, "UseBlCm")
 
 Blades = String[]
-idx = 45+NumAFfiles
+idx = 50+NumAFfiles
 i = 1
 for i = 1:3
    temp = "Blade $i"
@@ -212,33 +216,40 @@ for i = 1:3
    push!(Blades, bladename)
 end
 
-#Line 49+NumAFfiles is a general title
+#Line 53+NumAFfiles is a general title
 #TODO: I need to put everything after this point into the directory.
-NumTwrNds = parse(Int, lines[50 + NumAFfiles][1:14])
-#Line 51+NumAFfiles is a matrix title
-#Line 52+NumAFfiles is a matrix title
+NumTwrNds = parse(Int, lines[54 + NumAFfiles][1:14])
+#Line 55+NumAFfiles is a matrix title
+#Line 56+NumAFfiles is a matrix title
 
 ##Read Twr Nodes matrix
-TwrNds = fetchmatrix(lines[53+NumAFfiles:52+NumAFfiles+NumTwrNds], 43, 3)
+TwrNds = fetchmatrix(lines[57+NumAFfiles:56+NumAFfiles+NumTwrNds], 43, 3)
 idx = NumAFfiles+NumTwrNds
 
-#Line 53 + idx is a general title
-SumPrint = fetchword15(lines[54+idx])
-NBlOuts = parse(Int, lines[55+idx][1:14])
-BlOutNd = readvector(lines[56+idx],NBlOuts)
-NTwOuts = parse(Int, lines[57+idx][1:14])
-TwOutNd = readvector(lines[58+idx],NTwOuts)
-#Line 59+idx is a general title
-Outlist = readoutlist(lines[59+idx:end])
+#Line 57 + idx is a general title
+SumPrint = fetchword15(lines[58+idx])
+NBlOuts = parse(Int, lines[59+idx][1:14])
+BlOutNd = readvector(lines[60+idx],NBlOuts)
+NTwOuts = parse(Int, lines[61+idx][1:14])
+TwOutNd = readvector(lines[62+idx],NTwOuts)
+#Line 63+idx is a general title
+Outlist = readoutlist(lines[64+idx:end])
+# Node Outputs (Can't tell where the end, no way to hint how many outputs we're looking at) 
+nodeoutputstitleidx = 0 
+for i = 1:length(lines)
+    if lowercase(lines[i][1:3]) == "end"
+        nodeoutputstitleidx = i+1 #This is the title index
+        break
+    end
+end
+BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
+BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2], BldNd_BladesOut) 
+# nodeoutputstitleidx+3 is a general title
+NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
 
 
 file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent,
-        TwrShadow, TwrAero, FrozenWake, CavitCheck, AirDens, KinVisc, SpdSound,
-        Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd,
-        AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, UAMod, FLookup,
-        AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles,
-        Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd,
-        NTwOuts, TwOutNd, Outlist)
+        TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
 return file
 end
 
