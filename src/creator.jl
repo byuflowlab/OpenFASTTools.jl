@@ -56,61 +56,58 @@ end
 function CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
     DTAero="\"default\"", WakeMod=1,
     AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
-    CavitCheck="False", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
+    CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
     Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="\"default\"", TipLoss="True",
     HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="\"default\"",
-    MaxIter=100, DBEMT_Mod=2, tau1_const=4, UAMod=3, FLookup="True", AFTabMod=1,
+    MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
     InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
     TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
-    Outlist=String[])
+    Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
 
-directory = [
-"title"; "notes"; "GeneralOptions"; "Echo"; "DTAero"; "WakeMod"; "AFAeroMod";
-"TwrPotent"; "TwrShadow"; "TwrAero"; "FrozenWake"; "CavitCheck"; "EnvironmetalConditions";
-"AirDens"; "KinVisc"; "SpdSound"; "Patm"; "Pvap"; "FluidDepth"; "BEMoptions";
-"SkewMod"; "SkewModFactor"; "TipLoss"; "HubLoss"; "TanInd"; "AIDrag"; "TIDrag";
-"IndToler"; "MaxIter"; "DynamicBEMoptions"; "DBEMT_Mod"; "tau1_const"; "BLUAAoptions";
-"UAMod"; "FLookup"; "AirfoilInfo"; "AFTabMod"; "InCol_Alfa"; "InCol_Cl";
-"InCol_Cd"; "InCol_Cm"; "InCol_Cpmin"; "NumAFfiles"]
+    directory = [
+    "title"; "notes"; "GeneralOptions"; "Echo"; "DTAero"; "WakeMod"; "AFAeroMod";
+    "TwrPotent"; "TwrShadow"; "TwrAero"; "FrozenWake"; "CavitCheck"; "EnvironmetalConditions";
+    "AirDens"; "KinVisc"; "SpdSound"; "Patm"; "Pvap"; "FluidDepth"; "BEMoptions";
+    "SkewMod"; "SkewModFactor"; "TipLoss"; "HubLoss"; "TanInd"; "AIDrag"; "TIDrag";
+    "IndToler"; "MaxIter"; "DynamicBEMoptions"; "DBEMT_Mod"; "tau1_const"; "BLUAAoptions";
+    "UAMod"; "FLookup"; "AirfoilInfo"; "AFTabMod"; "InCol_Alfa"; "InCol_Cl";
+    "InCol_Cd"; "InCol_Cm"; "InCol_Cpmin"; "NumAFfiles"]
 
 
 
-NumAFfiles=length(Foils)
-if NumAFfiles==0
- error("Too few airfoils included in AD15 file. - CreateAD15")
-end
+    NumAFfiles=length(Foils)
+    if NumAFfiles==0
+     error("Too few airfoils included in AD15 file. - CreateAD15")
+    end
 
-for i=1:NumAFfiles
- temp = "Foil $i"
- push!(directory, temp)
-end
-#TODO: Add other things to the directory
+    for i=1:NumAFfiles
+     temp = "Foil $i"
+     push!(directory, temp)
+    end
+    #TODO: Add other things to the directory
 
-if length(Blades)>3
- error("Too many blade files included in AD15 file. - CreateAD15")
-elseif length(Blades)==0
- error("A blade file is required to create an AD15 file.")
-end
+    if length(Blades)>3
+     error("Too many blade files included in AD15 file. - CreateAD15")
+    elseif length(Blades)==0
+     error("A blade file is required to create an AD15 file.")
+    end
 
-m,n = size(TwrNds)
-NumTwrNds = m
-if n!=3
- error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
-end
+    m,n = size(TwrNds)
+    NumTwrNds = m
+    if n!=3
+     error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
+    end
 
-if NBlOuts>9
- error("Max number of NBlOuts is 9. CreateAD15")
-end
-if NTwOuts>9
- error("Max number of NBlOuts is 9. CreateAD15")
-end
+    if NBlOuts>9
+     error("Max number of NBlOuts is 9. CreateAD15")
+    end
+    if NTwOuts>9
+     error("Max number of NBlOuts is 9. CreateAD15")
+    end
 
-file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero,
-FrozenWake, CavitCheck, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor,
-TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, UAMod, FLookup,
-AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades,
-NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist)
-return file
+    file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent,
+        TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
+    return file
 end
 
 """
@@ -130,6 +127,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
 - hubrad - hub radius from center of rotation (meters)
 - cylinderrad - the radial distance (from the center of rotation) of the end of the cynlinder section. If no cylinder section is included, set this value to the hub radius. 
 - airfoilrad - the radial distance (from the center of rotation) of the first airfoil 
+- pitch - The value that the tip of the blade is pitched (assuming pitch is constant throughout the analysis) (degrees)
 - importantrads - radial distances that the user would like to insure a node is placed. (meters)
 - notes - notes that the user would like placed at the top of the blade file.
 - verbose - boolean that marks whether to make statements about creating the blade.
@@ -148,7 +146,7 @@ Below is a short list of the naming convention used in this function.
 - blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
 - blade fraction (blfrac) - percentage of blade radius
 """
-function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad; importantrads=[], notes="This is a turbine.", verbose=true)
+function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=100, importantrads=[], notes="This is a turbine.", verbose=true)
     # Definitions
     # radius (rads) - distance from the center of rotation
     # fractions (fracs) - percentage of total blade radius
@@ -161,7 +159,7 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     conefit = Akima(rads, radscones)
     coneangfit = Akima(rads, radsconeangs)
     sweepfit = Akima(rads, radssweeps)
-    radsafid = nametonumber(geoprops[:,8]).-1
+    radsafid = nametonumber(radsafid).-1
 
     # Need to add important locations to fracs
     minus = 2
@@ -200,16 +198,16 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     twist = twistfit.(locs)
     twist = twist.+(-twist[end]+pitch) #Correct twist to OpenFAST input style,  including blade pitch
     chords = chordfit.(locs)
-    afid = of.intergerfit(rads, radsafid, locs)
+    afid = intergerfit(rads, radsafid, locs)
     adprops = hcat(blrads, precone, sweep, preconeangle, twist, chords, afid)
     directory = ["BlSpn" "BlCrvAC" "BlSwpAC" "BlCrvAng" "BlTwist" "BlChord" "BlAFID"]
 
-    adblade = of.ADBlade(directory, notes, n, adprops, blrads, precone, sweep,  preconeangle, twist, chords, afid) #Maybe remove adprops from this struct
+    adblade = ADBlade(directory, notes, n, adprops, blrads, precone, sweep,  preconeangle, twist, chords, afid) #Maybe remove adprops from this struct
 
     # Find the nodes of the important idxs
     nodeidxs = []
     for i = 1:length(locs)
-        if in(locs[i], PTrads)
+        if in(locs[i], importantrads)
             push!(nodeidxs, i)
         end
     end
@@ -227,6 +225,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
     - hubrad - hub radius from center of rotation (meters)
     - cylinderrad - the radial distance (from the center of rotation) of the end of the cynlinder section. If no cylinder section is included, set this value to the hub radius. 
     - airfoilrad - the radial distance (from the center of rotation) of the first airfoil 
+    - pitch - The value that the tip of the blade is pitched (assuming pitch is constant throughout the analysis) (degrees)
     - importantrads - radial distances that the user would like to insure a node is placed. (meters)
     - notes - notes that the user would like placed at the top of the blade file.
     - verbose - boolean that marks whether to make statements about creating the blade.
@@ -245,7 +244,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
     - blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
     - blade fraction (blfrac) - percentage of blade radius
 """
-function CreateAD15Blade(props, tiprad, hubrad, cylinderrad, airfoilrad; importantrads = [], notes = "This is a turbine.", verbose=true)
+function CreateAD15Blade(props, tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=true)
 
-    return CreateAD15Blade(props[:,1], props[:,2], props[:,3], props[:,4], props[:,5], props[:,6], props[:,7], tiprad, hubrad, cylinderrad, airfoilrad; importantrads = [], notes = "This is a turbine.", verbose=true)
+    return CreateAD15Blade(props[:,1], props[:,2], props[:,3], props[:,4], props[:,5], props[:,6], props[:,7], tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=true)
 end
