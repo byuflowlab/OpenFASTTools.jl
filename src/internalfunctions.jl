@@ -402,6 +402,7 @@ function formatword(word;location="front",quotes=true, desiredlength=11)
 
     if length(word)>desiredlength
         println("Word in formatted word is longer than desired length.")
+        println("word: ", word)
     elseif length(word)<desiredlength && location == "front"
         addlength = desiredlength-length(word)
         word = word*" "^addlength

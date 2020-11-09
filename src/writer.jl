@@ -133,6 +133,10 @@ function WriteAD15File(adfile, outputfile)
     push!(lines, line)
     line = string(formatword(adfile.CavitCheck;quotes=false), "   CavitCheck         - Perform cavitation check? (flag) [AFAeroMod must be 1 when CavitCheck=true]")
     push!(lines, line)
+    line = string(formatword(adfile.CompAA;quotes=false), "   CompAA             - Flag to compute AeroAcoustics calculation [only used when WakeMod=1 or 2]")
+    push!(lines, line)
+    line = string(formatword(adfile.AA_InputFile), "   - Aeroacoustics input file")
+    push!(lines, line)
     line = string("="^6, "  Environmental Conditions  ", "="^67)
     push!(lines, line)
     line = string(formatword(string(adfile.AirDens);location="back", quotes=false), "   AirDens            - Air density (kg/m^3)")
@@ -173,6 +177,10 @@ function WriteAD15File(adfile, outputfile)
     push!(lines, line)
     line = string(formatword(string(adfile.tau1_const);location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
     push!(lines, line)
+    line = string("="^6, "   OLAF -- cOnvecting LAgrangian Filaments (Free Vortex Wake) Theory Options", "="^46)
+    push!(lines, line)
+    line = string(formatword(adfile.OLAFInputFileName), "   - Aeroacoustics input file")
+    push!(lines, line)
     line = string("="^6, "  Beddoes-Leishman Unsteady Airfoil Aerodynamics Options  ", "="^37)
     push!(lines, line)
     line = string(formatword(string(adfile.UAMod);location="back", quotes=false), "   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
@@ -196,7 +204,7 @@ function WriteAD15File(adfile, outputfile)
     line = string(formatword(string(adfile.NumAFfiles);location="back", quotes=false), "   NumAFfiles         - Number of airfoil files used (-)")
     push!(lines, line)
 
-    line = string(formatword(adfile.Foils[1];desiredlength=40), "AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)")
+    line = string(formatword(adfile.Foils[1];desiredlength=length(adfile.Foils[2])+5), "AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)")
     push!(lines, line)
 
     for i=2:length(adfile.Foils)
@@ -209,12 +217,12 @@ function WriteAD15File(adfile, outputfile)
     line = string(formatword(adfile.UseBlCm;quotes=false), "   UseBlCm            - Include aerodynamic pitching moment in calculations?  (flag)")
     push!(lines,line)
 
-    while length(adfile.Blades)<3
+    while length(adfile.Blades)<3 #If only one blade file is given, this repeats it 3 times so that the file is the correct length. I suppose I could always add "unused" instead, but the same name works just fine. 
        push!(adfile.Blades,adfile.Blades[1])
     end
 
     for i=1:length(adfile.Blades)
-       line = string(formatword(adfile.Blades[i];desiredlength=28),"ADBlFile($i)        - Name of file containing distributed aerodynamic properties for Blade #$i (-)")
+       line = string(formatword(adfile.Blades[i];desiredlength=length(adfile.Blades[i])+2),"   ADBlFile($i)        - Name of file containing distributed aerodynamic properties for Blade #$i (-)")
        push!(lines, line)
     end
 
@@ -258,6 +266,28 @@ function WriteAD15File(adfile, outputfile)
     end
     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
     push!(lines,line)
+    line = "---------------------- NODE OUTPUTS --------------------------------------------"
+    push!(lines, line)
+    line = string(formatword(string(adfile.BldNd_BladesOut);location="back",quotes=false), "   BldNd_BladesOut  - Blades to output")
+    push!(lines, line)
+
+    if adfile.BldNd_BladesOut>0
+        line = formatvector(adfile.BldNd_BlOutNd)
+    else
+        line = " "^11
+    end
+     line = string(line, "   - Blade nodes on each blade (currently unused)")
+     push!(lines, line)
+
+     line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
+
+     push!(lines, line)
+     for i=1:length(adfile.NodeOutlist)
+        line = adfile.NodeOutlist[i]
+        push!(lines,line)
+     end
+     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
+     push!(lines,line)
 
     #Write lines to file
     fi = open(outputfile,"w+")
