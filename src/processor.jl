@@ -163,14 +163,13 @@ end
 """
 interpolate2dcurve(coords1, coords2, d1, d2, d3) 
     This function creates a new curve at d, betwen the two curves.  
-        Inputs:
-        coords1 - a (n,2) Float array of the XY coordinates of curve 1
-        coords2 = a (n,2) Float array of the XY coordinates of curve 2
-        d - float (range 0 to 1) indicating the percentage of the distance between
-        the two original curves that the interpolated curve is located.
+Inputs:
+- coords1 - a (n,2) Float array of the XY coordinates of curve 1
+- coords2 = a (n,2) Float array of the XY coordinates of curve 2
+- d - float (range 0 to 1) indicating the percentage of the distance between the two original curves that the interpolated curve is located.
         
-        Outputs:
-        coords3
+Outputs:
+- coords3
 
         Notes:
         Assume the function is defined (Only 1 Y value for a given X value)
@@ -192,4 +191,103 @@ function interpolate2dcurve(coords1, coords2, d)
         coords3[i,:] = c3
     end
     return coords3
+end
+
+"""
+#### intergerfit(x, y, xnew)
+Fit Integer values of Y.
+### Inputs
+- x = x values 
+- y = y values (Integers)
+- xnew = x values to be interpolated, single element or an array
+
+### Outputs
+- ynew = the fit integer values that correspond to xnew
+
+### Notes
+The function requires x and xnew to be increasing order. Xnew need not be within
+    the range of of x, however, values outside of the range will interpolated to
+    the first value if below the range and the last value if after the range. 
+"""
+function intergerfit(x, y, xnew)
+    ynew = zeros(Int, length(xnew))
+    for i=1:length(xnew)
+        for j=1:length(x)
+            if xnew[i]<= x[j]
+                ynew[i] = y[j]
+                break
+            end
+        end
+    end
+    return ynew
+end
+
+"""
+#### nametonumber(list)
+Converts a list of names into a list of integers. The first name will appear as 1, the second name will appear as 2, etc. 
+
+### Inputs
+list - a 1D array of strings containing the names you wish to convert to numbers
+
+### Outputs
+numbers - a 1D array of integers that represent the names you converted
+
+### Notes
+Note that this function is not case sensitive. Thus Afoil and afoil will receive the same number assignment. 
+"""
+function nametonumber(list)
+    n = length(list)
+    numbers = zeros(Int, n)
+    uniquelist = unique(lowercase.(list))
+    m = length(uniquelist)
+    for i = 1:n
+        for j = 1:m
+            if lowercase(list[i]) == uniquelist[j]
+                numbers[i] = j
+            end
+        end
+    end
+    return numbers
+end
+
+"""
+#### localtoroot(N*, T*, ϕ)
+Converts from local blade reference (lbr) to blade root reference (brr)
+
+### Inputs 
+- Nstar = local force normal to chord (Flatwise loading)
+- Tstar = local force tangent to chord (Edgewise loading)
+- ϕ = Total twist (pitch + twist distro) in degrees
+
+### Outputs 
+- N = brr normal force
+- T = brr tangent force
+
+Notes: OpenFAST definition of normal and tangent
+"""
+function localtoroot(Nstar, Tstar, ϕ)
+    T = Tstar*cosd(ϕ) + Nstar*sind(ϕ)
+    N = Nstar*cosd(ϕ) - Tstar*sind(ϕ)
+    return N, T
+end
+
+"""
+#### roottolocal(N, T, ϕ)
+Converts from blade root reference (BRR) to local blade reference (LBR).
+
+### Inputs
+- N = local force normal to blade root chord (Flapwise loading)
+- T = local force tangent to blade root chord (Leadlag Loading)
+- ϕ = Total twist (pitch + twist distribution) in degrees
+
+### Outputs
+- Nstar - lbr normal force
+- Tstar - lbr tangent force
+
+### Notes
+OpenFAST definition of normal and tangent (increasing twist angle decreases local angle of attack.)
+"""
+function roottolocal(N, T, ϕ)
+    Nstar = (T*tand(ϕ) + N)/(cosd(ϕ) + sind(ϕ)*tand(ϕ))
+    Tstar = (T/cosd(ϕ)) - (tand(ϕ)*Nstar)
 end

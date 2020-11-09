@@ -347,7 +347,7 @@ function ReadAirfoilInput(filename, filepath)
     for i = 41:length(lines)
         lines[i] = rmspaces(lines[i])
     end
-    Polar = readmatrix(lines[41:end],4)
+    Polar = readmatrix(lines[41:end],4) #This is having troubles reading the lines that have a different number of characters per entry. say 180.0 and 80.0/ 
 
     airfoilinput = AirfoilInput(InterpOrd, NonDimArea, NumCoords, NumTabs, Re, UserProp,
             InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1,

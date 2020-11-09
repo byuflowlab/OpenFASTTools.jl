@@ -1,109 +1,9 @@
 
 """
-Part of the OpenFASTsr
+Part of the OpenFASTsr wrapper of OpenFAST
 
 """
 # using Printf
-
-function MakeTurbine()
-end
-
-function CreateAD14(Foils, Nodes; StallMod="STEADY", UseCm="NO_CM", InfModel="EQUIL",
-    IndModel="SWIRL", AToler=0.005, TLModel="PRANDtl", HLModel="PRANDtl",
-    TwrShad=0.3, ShadHWid=0.2, T_Shad_Refpt=1.341, AirDens=0.9526, KinVisc=1.4639E-05,
-    DTAero=0.005, notes="This is an Aerodyn input file.")
-
-    NumFoil = length(Foils)
-    if NumFoil == 0
-        error("Too few airfoil files")
-    end
-    BldNodes,temp = size(Nodes)
-    if BldNodes == 0
-        error("Too few Blade Nodes")
-    end
-    directory = [
-    "title"; "notes"; "StallMod"; "UseCm"; "InfModel"; "IndModel"; "AToler";
-    "TLModel"; "HLModel"; "TwrShad"; "ShadHWid"; "T_Shad_Refpt"; "AirDens";
-    "KinVisc"; "DTAero"; "NumFoil"]
-    i = 1
-    for i = 1:NumFoil
-        temp = "Foil $i"
-        push!(directory,temp)
-    end
-    append!(directory,["BldNodes"; "nodetitle"])
-    i=1
-    for i = 1:BldNodes
-        temp = "BldNode $i"
-        push!(directory,temp)
-    end
-
-    file = AD14file(directory, notes, StallMod, UseCm, InfModel, IndModel, AToler, TLModel,
-        HLModel, TwrShad, ShadHWid, T_Shad_Refpt, AirDens, KinVisc, DTAero, NumFoil, Foils,
-        BldNodes, Nodes)
-
-    return file
-end
-
-function CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
-         DTAero="\"default\"", WakeMod=1,
-         AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
-         CavitCheck="False", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
-         Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="\"default\"", TipLoss="True",
-         HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="\"default\"",
-         MaxIter=100, DBEMT_Mod=2, tau1_const=4, UAMod=3, FLookup="True", AFTabMod=1,
-         InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
-         TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
-         Outlist=String[])
-
-   directory = [
-   "title"; "notes"; "GeneralOptions"; "Echo"; "DTAero"; "WakeMod"; "AFAeroMod";
-   "TwrPotent"; "TwrShadow"; "TwrAero"; "FrozenWake"; "CavitCheck"; "EnvironmetalConditions";
-   "AirDens"; "KinVisc"; "SpdSound"; "Patm"; "Pvap"; "FluidDepth"; "BEMoptions";
-   "SkewMod"; "SkewModFactor"; "TipLoss"; "HubLoss"; "TanInd"; "AIDrag"; "TIDrag";
-   "IndToler"; "MaxIter"; "DynamicBEMoptions"; "DBEMT_Mod"; "tau1_const"; "BLUAAoptions";
-   "UAMod"; "FLookup"; "AirfoilInfo"; "AFTabMod"; "InCol_Alfa"; "InCol_Cl";
-   "InCol_Cd"; "InCol_Cm"; "InCol_Cpmin"; "NumAFfiles"]
-
-
-
-   NumAFfiles=length(Foils)
-   if NumAFfiles==0
-      error("Too few airfoils included in AD15 file. - CreateAD15")
-   end
-
-   for i=1:NumAFfiles
-      temp = "Foil $i"
-      push!(directory, temp)
-   end
-   #TODO: Add other things to the directory
-
-   if length(Blades)>3
-      error("Too many blade files included in AD15 file. - CreateAD15")
-   elseif length(Blades)==0
-      error("A blade file is required to create an AD15 file.")
-   end
-
-   m,n = size(TwrNds)
-   NumTwrNds = m
-   if n!=3
-      error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
-   end
-
-   if NBlOuts>9
-      error("Max number of NBlOuts is 9. CreateAD15")
-   end
-   if NTwOuts>9
-      error("Max number of NBlOuts is 9. CreateAD15")
-   end
-
-   file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero,
-   FrozenWake, CavitCheck, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor,
-   TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, UAMod, FLookup,
-   AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades,
-   NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist)
-   return file
-end
-
 
 function WritefstFile(filename;description = "A fast input file.")
 
@@ -666,7 +566,7 @@ function WriteADBlade(adblade, outputfile)
     line = "   (m)           (m)            (m)            (deg)         (deg)           (m)              (-)"
     push!(lines, line)
     line = formatmatrix(adblade.BldProps[:,1:end-1])
-    newcolumn = formatwidecolumn(adblade.BldProps[:,end])
+    newcolumn = formatwidecolumn(Int.(adblade.BldProps[:,end]))
     line = formatmatrix_appendcolumn(line, newcolumn)
     append!(lines, line)
 
