@@ -436,7 +436,7 @@ function ReadEDFile(filename, filepath)
     #line 3 is a general title
     Echo = fetchword15(lines[4])
     Method = parse(Int, lines[5][1:14])
-    DT = fetchword15(lines[6])
+    DT = fetchword15(lines[6]) ### TODO: This can be an float as well. 
     #line 7 is a general title
     Gravity = parse(Float64, lines[8][1:14])
     #line 9 is a general title
@@ -554,6 +554,17 @@ function ReadEDFile(filename, filepath)
     BldGagNd = readvector(lines[121], NBlGages)
     #Line 122 is the outlist parameter
     Outlist = readoutlist(lines[123:end])
+    nodeoutputstitleidx = 0 
+    for i = 1:length(lines)
+        if lowercase(lines[i][1:3]) == "end"
+            nodeoutputstitleidx = i+1 #This is the title index
+            break
+        end
+    end
+    BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
+    BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2], BldNd_BladesOut) 
+    # nodeoutputstitleidx+3 is a general title
+    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
 
     file = EDFile(directory, Notes, Echo, Method, DT, Gravity, FlapDOF1, FlapDOF2,
             EdgeDOF, TeetDOF, DrTrDOF, GenDOF, YawDOF, TwFADOF1, TwFADOF2, TwSSDOF1,
@@ -568,7 +579,7 @@ function ReadEDFile(filename, filepath)
             BldNodes, BldFile1, BldFile2, BldFile3, TeetMod, TeetDmpP, TeetDmp, TeetCDmp,
             TeetSStP, TeetHStP, TeetSSSp, TeetHSSp, GBoxEff, GBRatio, DTTorSpr, DTTorDmp,
             Furling, FurlFile, TwrNodes, TwrFile, SumPrint, OutFile, TabDelim, OutFmt,
-            TStart, DecFact, NTwGages, TwrGagNd, NBlGages, BldGagNd, Outlist)
+            TStart, DecFact, NTwGages, TwrGagNd, NBlGages, BldGagNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
     return file
 end
 

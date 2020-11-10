@@ -283,7 +283,7 @@ function WriteAD15File(adfile, outputfile)
 
      push!(lines, line)
      for i=1:length(adfile.NodeOutlist)
-        line = adfile.NodeOutlist[i]
+        line = string("\"", adfile.NodeOutlist[i], "\"")
         push!(lines,line)
      end
      line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
@@ -570,6 +570,27 @@ function WriteEDFile(edfile, outputfile)
     end
     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
     push!(lines, line)
+    line = "---------------------- NODE OUTPUTS --------------------------------------------"
+    push!(lines, line)
+    line = string(formatword(string(edfile.BldNd_BladesOut);location="back",quotes=false), "   BldNd_BladesOut  - Blades to output")
+    push!(lines, line)
+
+    if edfile.BldNd_BladesOut>0
+        line = formatvector(edfile.BldNd_BlOutNd)
+    else
+        line = " "^11
+    end
+     line = string(line, "   - Blade nodes on each blade (currently unused)")
+     push!(lines, line)
+
+     line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
+
+     push!(lines, line)
+     for i=1:length(edfile.NodeOutlist)
+        line = string("\"", edfile.NodeOutlist[i], "\"")
+        push!(lines,line)
+     end
+     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
 
     #Write lines to file
     fi = open(outputfile,"w+")
