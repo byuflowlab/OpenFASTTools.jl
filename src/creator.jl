@@ -246,5 +246,114 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
 """
 function CreateAD15Blade(props, tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=true)
 
-    return CreateAD15Blade(props[:,1], props[:,2], props[:,3], props[:,4], props[:,5], props[:,6], props[:,7], tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=true)
+    return CreateAD15Blade(props[:,1], props[:,2], props[:,3], props[:,4], props[:,5], props[:,6], props[:,7], tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=false)
+end
+
+"""
+#### function CreateEDBlade(rads, radspitchaxis, radstwists, radsdensity, radsflapstiff, radsedgestiff, tiprad, hubrad, cylinderrad, airfoilrad, pitch, numnodes, bladedamping, adjustfactor, tuner, blmdadj, modeshapes;importantrads=[], notes = "This is a turbine.", verbose=false)
+
+Creates an instance of EDBlade based off of input data. 
+
+
+### Inputs
+- rads - node distance from the center of rotation. (meters)
+- radspitchaxis -  Fraction of chord from leading edge to pitch axis 
+- radstwist - node twist angle (degrees)
+- radsdensity - node blade density (kg/m) 
+- radsflapstiff - node flapwise stiffness (Nm^2)
+- radsedgestiff - node edgewise stiffness (Nm^2)
+- tiprad - tip radius from center of rotation (meters)
+- hubrad - hub radius from center of rotation (meters)
+- cylinderrad - the radial distance (from the center of rotation) of the end of the cynlinder section. If no cylinder section is included, set this value to the hub radius. 
+- airfoilrad - the radial distance (from the center of rotation) of the first airfoil 
+- pitch - The value that the tip of the blade is pitched (assuming pitch is constant throughout the analysis) (degrees)
+- importantrads - radial distances that the user would like to insure a node is placed. (meters)
+- notes - notes that the user would like placed at the top of the blade file.
+- verbose - boolean that marks whether to make statements about creating the blade.
+
+### Outputs
+- adblade - an adblade struct
+- importantnodes - the node numbers of the important radi that the user declared. 
+
+### Notes
+- Note that this function does not place nodes in the transition region between the cylinder and the airfoils. Properties are interpolated by Akima spline. 
+
+### Definitions 
+Below is a short list of the naming convention used in this function.
+- radius (rads) - distance from the center of rotation
+- fractions (fracs) - percentage of total blade radius
+- blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
+- blade fraction (blfrac) - percentage of blade radius
+"""
+function CreateEDBlade(rads, radspitchaxis, radstwists, radsdensity, radsflapstiff, radsedgestiff, tiprad, hubrad, cylinderrad, airfoilrad, pitch, numnodes, bladedamping, adjustfactor, tuner, blmdadj, modeshapes;importantrads=[], notes = "This is a turbine.", verbose=false)
+
+        # Definitions
+    # radius (rads) - distance from the center of rotation
+    # fractions (fracs) - percentage of total blade radius
+    # blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
+    # blade fraction (blfrac) - percentage of blade radius
+
+    pitchaxisfit = Akima(rads, radspitchaxis)
+    twistfit = Akima(rads, radstwists) 
+    densityfit = Akima(rads, radsdensity)
+    flapstifffit = Akima(rads, radsflapstiff)
+    edgestifffit = Akima(rads, radsedgestiff)
+
+
+    # Need to add important locations to fracs
+    minus = 2
+    bladelength = tiprad-hubrad
+    tipblfrac = 1.0
+    hubblfrac = 0.0
+    if airfoilrad<hubrad || airfoilrad<cylinderrad
+        error("Beginning of airfoil radius smaller than cylinder radius or hub  radius. ")
+    end
+    airfoilblfrac = (airfoilrad-hubrad)/bladelength
+    cylinderblfrac = (cylinderrad-hubrad)/bladelength
+    if cylinderrad<=hubrad
+        if verbose
+            println("No Cylinder portion on this blade.")
+        end
+        cylinderblfrac = 0
+        minus -= 1
+    end
+    importantblfracs = (importantrads.-hubrad)./bladelength  
+    blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantrads)-minus))
+    append!(blfracs, importantblfracs)
+    push!(blfracs, hubblfrac,  airfoilblfrac, tipblfrac)
+    if cylinderblfrac>0
+        push!(blfracs, cylinderblfrac)
+    end
+    unique!(blfracs)
+    sort!(blfracs)
+
+    # Convert from blfracs to radius positions and their radial locations
+    blrads = blfracs.*(bladelength) #Note do not use this to get any property   values    with the fits.
+    locs = blrads.+0.508 #The rads location of the blrads nodes
+    n = length(blrads)
+    pitchaxis = pitchaxisfit.(locs)
+    twist = twistfit.(locs)
+    twist = twist.+(-twist[end]+pitch) #Correct twist to OpenFAST input style,      including blade pitch
+    bmassdens = densityfit.(locs)
+    flpstiff = flapstifffit.(locs)
+    edgstiff = edgestifffit.(locs)
+
+    bldprops = hcat(blfracs, pitchaxis, twist, bmassdens, flpstiff, edgstiff)
+
+    directory = ["Directory" "Notes" "NBlInpSt" "BldFlDmp1" "BldFlDmp2"     "BldEdDmp1"     "FlStTunr1" "FlStTunr2" "AdjBlMs" "AdjFlSt" "AdjEdSt" "BldProps"    "BldFl1Sh2"    "BldFl1Sh3" "BldFl1Sh4" "BldFl1Sh5" "BldFl1Sh6" "BldFl2Sh2"     "BldFl2Sh3"    "BldFl2Sh4" "BldFl2Sh5" "BldFl2Sh6" "BldEdgSh2" "BldEdgSh3"  "BldEdgSh4"    "BldEdgSh5" "BldEdgSh6"]
+
+    # Find the nodes of the important idxs
+    nodeidxs = []
+    for i = 1:length(locs)
+        if in(locs[i], importantrads)
+            push!(nodeidxs, i)
+        end
+    end
+
+
+    edblade = EDBlade(directory, notes, n, bladedamping, bladedamping, bladedamping, tuner, tuner, blmdadj, adjustfactor, adjustfactor, bldprops,modeshapes[1], modeshapes[2], modeshapes[3], modeshapes[4], modeshapes[5], modeshapes[6], modeshapes[7], modeshapes[8], modeshapes[9], modeshapes[10], modeshapes[11], modeshapes[12], modeshapes[13], modeshapes[14], modeshapes[15])
+end
+
+function CreateEDBlade(props, tiprad, hubrad, cylinderrad, airfoilrad, pitch, numnodes, bladedamping, adjustfactor, tuner, blmdadj, modeshapes;importantrads=[], notes = "This is a turbine.", verbose=false)
+    return CreateEDBlade(props[1], props[2], props[3], props[4], props[5], props[6], tiprad, hubrad, cylinderrad, airfoilrad, pitch, numnodes, bladedamping, adjustfactor, tuner, blmdadj, modeshapes;importantrads=[], notes = "This is a turbine.", verbose=false)
 end
