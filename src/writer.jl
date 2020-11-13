@@ -99,12 +99,12 @@ function WriteAD14File(adfile, outputfile)
     #Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
         write(fi,lines[i])
         write(fi,"\n")
         # println(lines[i])
     end
-
+    write(fi,lines[end])
     close(fi)
 end
 
@@ -292,10 +292,11 @@ function WriteAD15File(adfile, outputfile)
     #Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 
@@ -595,10 +596,11 @@ function WriteEDFile(edfile, outputfile)
     #Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 
@@ -624,10 +626,11 @@ function WriteADBlade(adblade, outputfile)
     #Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 
@@ -659,10 +662,11 @@ function WriteAirfoilCoordinates(airfoilcoords, outputfile)
     ### Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 
@@ -775,10 +779,11 @@ function WriteAirfoilInput(airfoilinput, outputfile)
     ### Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 
@@ -822,13 +827,156 @@ function WriteAerodata(aerodata, outputfile)
     ### Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 
+"""
+    WriteBDFile(bdfile, outputfile; outputpath=pwd())
+
+Writes a BeamDyn struct to file. 
+
+**Arguments**
+- bdfile::BDFile : BeamDyn file
+- outputfile::String : Name to give the written file. 
+- outputpath::String : Path to the desired write location, otherwise, will write at current location. 
+
+"""
+function WriteBDFile(bdfile, outputfile; outputpath=pwd())
+    lines = String[]
+    line = string("-"^9, " BEAMDYN with OpenFAST INPUT FILE ", "-"^43)
+    push!(lines,line)
+    push!(lines, bdfile.Notes)
+    line = string("-"^22, " SIMULATION CONTROL ", "-"^43)
+    push!(lines,line)
+    line = string(formatword(bdfile.Echo;quotes=false),"   Echo             - Echo  input data to \"<RootName>.ech\"? (flag)")
+    push!(lines,line)
+    line = string(formatword(string(bdfile.QuasiStaticInit);quotes=false),"     QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
+    push!(lines,line)
+    line = string(formatword(string(bdfile.rhoinf);location="back",quotes=false),"   rhoinf           - Numerical damping parameter for generalized-alpha integrator")
+    push!(lines,line)
+    line = string(formatword(string(bdfile.quadrature);location="back", quotes=false),  "   quadrature       - Quadrature method: 1=Gaussian; 2=Trapezoidal (switch)")
+    push!(lines,line)
+    line = string(formatword(bdfile.refine;quotes=false),"   refine           - Refinement factor for trapezoidal quadrature (-) [DEFAULT = 1; used only when   quadrature=2]")
+    push!(lines,line)
+    line = string(formatword(bdfile.n_fact;quotes=false),"   n_fact           -   Factorization frequency for the Jacobian in N-R iteration(-) [DEFAULT = 5]")
+    push!(lines,line)
+    line = string(formatword(bdfile.DTBeam;quotes=false),"   DTBeam           - Time step size (s)")
+    push!(lines,line)
+    line = string(formatword(bdfile.load_retries;quotes=false),"   load_retries  -   Number of factored load retries before quitting the aimulation [DEFAULT = 20]")
+    push!(lines,line)
+    line = string(formatword(bdfile.NRMax;quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
+    push!(lines,line)
+    line = string(formatword(bdfile.stop_tol;quotes=false),"   stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]")
+    push!(lines,line)
+    line = string(formatword(bdfile.tngt_stf_fd;quotes=false),"   tngt_stf_fd      -    Use finite differenced tangent stiffness matrix? (flag)")
+    push!(lines,line)
+    line = string(formatword(bdfile.tngt_stf_comp;quotes=false),"   tngt_stf_comp       - Compare analytical finite differenced tangent stiffness matrix? (flag)")
+    push!(lines,line)
+    line = string(formatword(bdfile.tngt_stf_pert;quotes=false),"   tngt_stf_pert       - Perturbation size for finite differencing (-) [DEFAULT = 1E-6]")
+    push!(lines,line)
+    line = string(formatword(bdfile.tngt_stf_difftol;quotes=false),"    tngt_stf_difftol - Maximum allowable relative difference between analytical and  fd tangent stiffness (-); [DEFAULT = 0.1]")
+    push!(lines,line)
+    line = string(formatword(bdfile.RotStates;quotes=false),"   RotStates        -  Orient states in the rotating frame during linearization? (flag) [used only when     linearizing]")
+    push!(lines,line)
+    line = string("-"^22, " GEOMETRY PARAMETER ", "-"^42)
+    push!(lines, line)
+    line = string(formatword(string(bdfile.member_total);location="back",   quotes=false),"   member_total    - Total number of members (-)")
+    push!(lines,line)
+    line = string(formatword(string(bdfile.kp_total);location="back", quotes=false),    "   kp_total        - Total number of key points (-) [must be at least 3]")
+    push!(lines,line)
+    if bdfile.member_total==1
+        local line = string(formatpair(bdfile.membernumber[1]), "       - Member    number; Number of key points in this member ")
+        push!(lines, line)
+    else
+        line = string(formatpair(bdfile.membernumber[1]), "       - Member number;  Number of key points in this member ")
+        push!(lines, line)
+        for i = 2:bdfile.member_total
+            line = formatpair(bdfile.membernumber[i])
+            push!(lines,line)
+        end
+    end
+
+    line = "   kp_xr         kp_yr         kp_zr        initial_twist"
+    push!(lines,line)
+    line = "   (m)            (m)          (m)            (deg)"
+    push!(lines,line)
+    mat = formatmatrix(bdfile.geomparams)
+    append!(lines, mat)
+
+    line = string("-"^22, " MESH PARAMETER ", "-"^42)
+    push!(lines, line)
+    line = string(formatword(string(bdfile.order_elem);location="back", quotes=false),  "   order_elem     - Order of interpolation (basis) function (-)")
+    push!(lines, line)
+    line = string("-"^22, " MATERIAL PARAMETER ", "-"^39)
+    push!(lines, line)
+    line = string(formatword(bdfile.BldFile;quotes=false, desiredlength=length(bdfile.  BldFile)+1),"   BldFile - Name of file containing properties for blade (quoted    string)")
+    push!(lines, line)
+    line = string("-"^22, "PITCH ACTUATOR PARAMETERS", "-"^33)
+    push!(lines, line)
+    line = string(formatword(bdfile.UsePitchAct;quotes=false),"   UsePitchAct -     Whether a pitch actuator should be used (flag)")
+    push!(lines, line)
+    line = string(formatword(string(bdfile.PitchJ);location="back", quotes=false),"     PitchJ      - Pitch actuator inertia (kg-m^2) [used only when UsePitchAct is true]    ")
+    push!(lines, line)
+    line = string(formatword(string(bdfile.PitchK);location="back", quotes=false),"     PitchK      - Pitch actuator stiffness (kg-m^2/s^2) [used only when UsePitchAct   is true]")
+    push!(lines, line)
+    line = string(formatword(string(bdfile.PitchC);location="back", quotes=false),"     PitchC      - Pitch actuator damping (kg-m^2/s) [used only when UsePitchAct is    true]")
+    push!(lines, line)
+    line = string("-"^22, " OUTPUTS ", "-"^50)
+    push!(lines, line)
+    line = string(formatword(bdfile.SumPrint;quotes=false),"   SumPrint       - Print   summary data to \"<RootName>.sum\" (flag)")
+    push!(lines, line)
+    line = string(formatword(bdfile.OutFmt;quotes=false),"   OutFmt          - Format   used for text tabular output, excluding the time channel.")
+    push!(lines, line)
+    line = string(formatword(string(bdfile.NNodeOuts);quotes=false),"       NNodeOuts      - Number of nodes to output to file [0 - 9] (-)")
+    push!(lines, line)
+    line = string(formatvector(bdfile.OutNd), "   OutNd          - Nodes whose values   will be output  (-)")
+    push!(lines, line)
+    line = "          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
+    push!(lines, line)
+    for i=1:length(bdfile.Outlist)
+       local line = bdfile.Outlist[i]
+       push!(lines,line)
+    end
+    line = "END of input file (the word \"END\" must appear in the first 3columns of    this last OutList line)"
+    push!(lines,line)
+    line = "---------------------- NODE OUTPUTS     --------------------------------------------"
+    # push!(lines, line)
+    # line = string(formatword(string(bdfile.BldNd_BladesOut);  location="back"quotes=false), "   BldNd_BladesOut  - Blades to output")
+    # push!(lines, line)
+
+    # if bdfile.BldNd_BladesOut>0
+    #     line = formatvector(bdfile.BldNd_BlOutNd)
+    # else
+    #     line = " "^11
+    # end
+    # line = string(line, "   - Blade nodes on each blade (currently unused)")
+    line = "         99   BldNd_BlOutNd   - Blade nodes on each blade (currently    unused)" # Not sure if this section will get used because the other sections are   all the same, but for some odd reason, this nodal output section is different. 
+    push!(lines, line)
+    line = "                   OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)"
+    push!(lines, line)
+    for i=1:length(bdfile.NodeOutlist)
+       local line = string("\"", bdfile.NodeOutlist[i], "\"")
+       push!(lines,line)
+    end
+    line = "END of input file (the word \"END\" must appear in the first  columns of    this last OutList line)"
+    push!(lines,line)
+
+    cd(outputpath)
+    ## Write lines to file
+    fi = open(outputfile,"w+")
+    i = 1
+    for i = 1:length(lines)-1
+         write(fi,lines[i])
+         write(fi,"\n")
+    end
+    write(fi,lines[end])
+    close(fi)
+end
 
 
 """
@@ -909,10 +1057,11 @@ function WriteEDBlade(edblade, outputfile)
     ### Write lines to file
     fi = open(outputfile,"w+")
     i = 1
-    for i = 1:length(lines)
+    for i = 1:length(lines)-1
          write(fi,lines[i])
          write(fi,"\n")
     end
+    write(fi,lines[end])
     close(fi)
 end
 

@@ -6,6 +6,7 @@ greet() = print("Hello World!")
 
 using Printf
 using FLOWMath
+using DelimitedFiles
 
 include("structures.jl")
 include("internalfunctions.jl")

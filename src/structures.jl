@@ -79,7 +79,43 @@ mutable struct AD15file
     NodeOutlist::Array{String}
  end
 
-struct EDFile
+ mutable struct BDFile
+    Directory::Array{String}
+    Notes::String
+    Echo::String
+    QuasiStaticInit::String
+    rhoinf::Float64
+    quadrature::Int
+    refine
+    n_fact
+    DTBeam
+    load_retries
+    NRMax
+    stop_tol
+    tngt_stf_fd
+    tngt_stf_comp
+    tngt_stf_pert
+    tngt_stf_difftol
+    RotStates::String
+    member_total::Int
+    kp_total::Int
+    membernumber::Array{}
+    geomparams::Array{Float64,2}
+    order_elem::Int
+    BldFile::String
+    UsePitchAct::String
+    PitchJ::Float64
+    PitchK::Float64
+    PitchC::Float64
+    SumPrint::String
+    OutFmt::String
+    NNodeOuts::Int
+    OutNd::Array{Int}
+    Outlist::Array{String}
+    NodeOutlist::Array{String}
+ end
+
+mutable struct EDFile
      Directory::Array{String}
      Notes::String
      Echo::String
@@ -195,7 +231,7 @@ struct EDFile
      NodeOutlist::Array{String}
  end
 
-struct EDBlade
+mutable struct EDBlade
      Directory
      Notes
      NBlInpSt
@@ -225,7 +261,7 @@ struct EDBlade
      BldEdgSh6
  end
 
-struct ADBlade
+mutable struct ADBlade
      Directory
      Notes
      NumBlNds

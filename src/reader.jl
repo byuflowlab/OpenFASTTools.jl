@@ -253,6 +253,75 @@ file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent,
 return file
 end
 
+function ReadBDFile(filename, filepath)
+    cd(filepath)
+    fi = open(filename, "r")
+    lines = readlines(fi)
+    close(fi)
+
+    Directory = ["title"]
+
+    # Line 1 is the title
+    Notes = lines[2]
+    # Line 3 is the simulation control title
+    Echo = fetchword15(lines[4])
+    QuasiStaticInit = fetchword15(lines[5])
+    rhoinf = parse(Float64, lines[6][1:14])
+    quadrature = parse(Int, lines[7][1:14])
+    refine = fetchword15(lines[8])
+    n_fact = fetchword15(lines[9])
+    DTBeam = fetchword15(lines[10])
+    load_retries = fetchword15(lines[11])
+    NRMax = fetchword15(lines[12])
+    stop_tol = fetchword15(lines[13])
+    tngt_stf_fd = fetchword15(lines[14])
+    tngt_stf_comp = fetchword15(lines[15])
+    tngt_stf_pert = fetchword15(lines[16])
+    tngt_stf_difftol = fetchword15(lines[17])
+    RotStates = fetchword15(lines[18])
+    # Line 19 is the Geometry Parameter title
+    member_total = parse(Int, lines[20][1:14])
+    kp_total = parse(Int, lines[21][1:14])
+
+    membernumber = []
+    for i=1:member_total
+        temp = readpair(lines[21+i])
+        push!(membernumber, temp)
+    end
+
+    idx = kp_total+member_total+24
+    geomparams = cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
+
+    # Line idx is the Mesh Parameter title
+    order_elem = parse(Int, lines[idx+1][1:14])
+    # Line idx+2 is the Material Paramer title
+    BldFile = fetchword(lines[idx+3];lengthofword=length(lines[idx+3]))
+    # Line idx+4 is the Pitch actuator parameters title
+    UsePitchAct = fetchword15(lines[idx+5])
+    PitchJ = parse(Float64, lines[idx+6][1:14])
+    PitchK = parse(Float64, lines[idx+7][1:14])
+    PitchC = parse(Float64, lines[idx+8][1:14])
+    # Line idx+9 is the Outputs title
+    SumPrint = fetchword15(lines[idx+10])
+    OutFmt = fetchword15(lines[idx+11])
+    NNodeOuts = parse(Int, lines[idx+12][1:14])
+    OutNd = readvector(lines[idx+13],NNodeOuts)
+    OutList = readoutlist(lines[idx+14:end])
+    nodeoutputstitleidx = 0 
+    for i = 1:length(lines)
+        if lowercase(lines[i][1:3]) == "end"
+            nodeoutputstitleidx = i+1 #This is the title index
+            break
+        end
+    end
+    # BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
+    # BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2], BldNd_BladesOut) #   This is how they did it previously, so I wonder if they did the same thing with   BeamDyn
+    # nodeoutputstitleidx+3 is a general title
+    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
+
+    bdfile = BDFile(Directory, Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fact, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, geomparams, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, OutList, NodeOutlist)
+end
+
 """
 ReadAerodata(filename, filepath)
     This function reads in the information from an aerodata file, including the polars
@@ -663,7 +732,7 @@ function ReadADBlade(filename, filepath)
     #Line 3 is a general title
     NumBlNds = parse(Int, lines[4][1:14])
     #Lines 5-6 are general titles
-    BldProps = readmatrix(lines[7:6+NumBlNds], 7)
+    BldProps = readmatrix(lines[7:6+NumBlNds], 7) #This is not an error, I overloaded the function readmatrix. 
     BlSpn = BldProps[:,1]
     BlCrvAC = BldProps[:,2]
     BlSwpAC = BldProps[:,3]

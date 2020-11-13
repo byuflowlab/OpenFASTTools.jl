@@ -139,6 +139,7 @@ end
 parse a matrix that is seperated by a single space, not distances
 """
 function readmatrix(lines;n=1)
+    #TODO: Better than this function: cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
     stops = []
     for i=1:length(lines[1])
         if lines[1][i]==' '
@@ -151,7 +152,7 @@ function readmatrix(lines;n=1)
         end
     end
 
-    matrix = zeros(length(lines), length(stops)-n)
+    matrix = zeros(length(lines), length(stops)-n) #What the heck did I do here?
 
     for i=1:length(lines)
         idx = 1
@@ -250,6 +251,32 @@ function readoutlist(lines)
       end
    end
     return outlist
+end
+
+"""
+#### readpair(line)
+Reads a line to find the first two integers separated by spaces, and returns them as a tuple. Note that the second integer must be followed by a space
+
+### Inputs
+- line - a string containing two integers separated by spaces, text may follow the integers, but may not be between or before the integers
+
+### Outputs
+- pair - a tuple of the pair of integers
+"""
+function readpair(line)
+    #TODO: Fix me if there isn't a space after the final number. 
+    vec = []
+    idx = 1
+    for i = 1:length(line)-1
+        if line[i]!=' ' && line[i+1]==' '
+            temp = parse(Int, line[idx:i])
+            push!(vec, temp)
+            idx = i+1
+        elseif length(vec) == 2
+            break
+        end
+    end
+    return (vec[1], vec[2])
 end
 
 """
@@ -451,13 +478,46 @@ function formatmatrix_appendcolumn(smat, appendcolumn)
     return smat
 end
 
-function formatvector(vector;desiredlength=11, loc="back")
-   line = ""
-   for i=1:length(vector)-1
-      line = string(line,formatword(string(vector[i]);location=loc,quotes=false),",")
-   end
-   line = string(line,formatword(string(vector[end]);location=loc,quotes=false))
-   return line
+"""
+    formatpair(pair; desiredlength=11, delim=" ")
+
+Formats a tuple for printing. 
+
+**Arguments**
+- pair::tuple - tuple pair to be written
+
+**Returns**
+- line::String - a formatted string for printing
+"""
+function formatpair(pair)
+    return string(" "^5, pair[1], " "^5, pair[2], " "^10)
+end
+
+"""
+    formatvector(vector;desiredlength=11, loc="back", delim=",")
+
+Formats a vector for printing. 
+
+**Arguments**
+- vector::Array{Any,1} - vector to be formatted
+- desiredlength::Int - length of desired string that each element is within, not yet integrated
+- loc::String - position in the formatted string, not yet implemented
+- delim:String - the deliminating character
+
+**Returns**
+- line::String - The formatted string of the vector. 
+"""
+function formatvector(vector;desiredlength=11, loc="back", delim=",")
+    line = ""
+    if length(vector)>0
+        for i=1:length(vector)-1
+           line = string(line,formatword(string(vector[i]);location=loc,quotes=false),delim)
+        end
+        line = string(line,formatword(string(vector[end]);location=loc,quotes=false))
+    else
+        line = "     "
+    end
+    return line
 end
 
 """
