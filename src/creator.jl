@@ -250,7 +250,7 @@ function CreateAD15Blade(props, tiprad, hubrad, cylinderrad, airfoilrad, pitch; 
 end
 
 """
-#### function CreateEDBlade(rads, radspitchaxis, radstwists, radsdensity, radsflapstiff, radsedgestiff, tiprad, hubrad, cylinderrad, airfoilrad, pitch, numnodes, bladedamping, adjustfactor, tuner, blmdadj, modeshapes;importantrads=[], notes = "This is a turbine.", verbose=false)
+    function CreateEDBlade(rads, radspitchaxis, radstwists, radsdensity, radsflapstiff, radsedgestiff, tiprad, hubrad, cylinderrad, airfoilrad, pitch, numnodes, bladedamping, adjustfactor, tuner, blmdadj, modeshapes;importantrads=[], notes = "This is a turbine.", verbose=false)
 
 Creates an instance of EDBlade based off of input data. 
 

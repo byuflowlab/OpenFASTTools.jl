@@ -77,9 +77,9 @@ mutable struct AD15file
     BldNd_BladesOut::Int
     BldNd_BlOutNd::Array{}
     NodeOutlist::Array{String}
- end
+end
 
- mutable struct BDFile
+mutable struct BDFile
     Directory::Array{String}
     Notes::String
     Echo::String
@@ -113,7 +113,7 @@ mutable struct AD15file
     OutNd::Array{Int}
     Outlist::Array{String}
     NodeOutlist::Array{String}
- end
+end
 
 mutable struct EDFile
      Directory::Array{String}

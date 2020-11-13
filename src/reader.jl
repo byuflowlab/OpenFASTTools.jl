@@ -475,7 +475,6 @@ end
 ReadEDFile(filename, filepath)
 This function reads in a ElastoDyn input file and stores the values in an ED structure.
 """
-
 function ReadEDFile(filename, filepath)
     cd(filepath)
     fi = open(filename, "r")
