@@ -22,10 +22,10 @@ end
     swidth = spacing width
 """
 function formatmatrix(matrix;spacing=2)
+        #I've wanted to modify the function to have a size aspect to it, but I haven't found a way.
     line = string()
     smatrix = String[]
     m, n = size(matrix)
-
     for i = 1:m
         for j = 1:n
             text = @sprintf "%.7E" matrix[i,j]

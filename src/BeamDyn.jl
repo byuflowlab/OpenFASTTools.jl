@@ -37,6 +37,78 @@ mutable struct BDFile
     Outlist::Array{String}
     NodeOutlist::Array{String}
 end
+mutable struct BDBladeNode
+    frac::Float64
+    stiffmatrix::Array{Float64, 2}
+    massmatrix::Array{Float64, 2}
+
+    #Stiffness Matrix values
+    shredg::Float64
+    shrflp::Float64
+    EA::Float64
+    EIedg::Float64
+    EIflp::Float64
+    GJ::Float64
+    E::Float64
+    Iedg::Float64
+    Iflp::Float64
+    G::Float64
+    J::Float64
+
+    #Mass Matrix values
+    mass::Float64
+    Ycm::Float64
+    Xcm::Float64
+    iedg::Float64
+    icp::Float64
+    iflp::Float64
+    iplr::Float64
+
+end
+
+"""
+    makenode(frac, stiffmat, massmat)
+
+Take the makings of a BeamDyn blade node and make it into a node. 
+
+### Inputs
+- frac::Float64 - The percentage of the blade (not including hub distance) that the node is defined at. 
+- stiffmat::Array{Float64, 2} - The 6x6 array defining the flap, edge, and polar shear and extension stiffnesses. See the OpenFAST docs for a description of this matrix (and the next one). 
+- massmat::Array{Float64, 2} - The 6x6 array defining the mass, center of mass, and area moment of inertia. 
+
+### Outputs
+- BDBladeNode - An object containing the extractable data from the matrices. 
+"""
+function makenode(frac, stiffmat, massmat)
+    shrflp = stiffmat[1,1]
+    shredg = stiffmat[2,2]
+    EA = stiffmat[3,3]
+    EIedg = stiffmat[4,4]
+    EIflp = stiffmat[5,5]
+    GJ = stiffmat[6,6]
+    E = 1
+    Iedg = 1
+    Iflp = 1
+    G = 1
+    J = 1
+    mass = massmat[1,1]
+    Ycm = massmat[3,4]/mass
+    Xcm = massmat[2,6]/mass
+    iedg = massmat[4,4]
+    iflp = massmat[5,5]
+    icp = -massmat[4,5]
+    iplr = massmat[6,6]
+
+    return BDBladeNode(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, Iedg, Iflp, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
+end
+
+mutable struct BDBlade
+    Notes::String
+    station_total::Int
+    damp_type::Int
+    dampcoef::Array{Float64,1}
+    nodes::Array{BDBladeNode,1}
+end
 
 ##############################################################
 ################## READING FUNCTIONS #########################
@@ -121,6 +193,52 @@ function ReadBDFile(filename, filepath)
     NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
 
     bdfile = BDFile(Directory, Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fact, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, geomparams, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, OutList, NodeOutlist)
+end
+
+"""
+    ReadBDBlade(filename, filepath)
+
+Reads a BeamDyn blade file and creates an object containing the data. 
+
+### Inputs
+- filename::String - a string containing the name of the file
+- filepath::String - a string containing the path to the file to be read
+
+### Outputs
+- BDBlade - a BeamDyn Blade object. 
+"""
+function ReadBDBlade(filename, filepath)
+    cd(filepath)
+    fi = open(filename, "r")
+    lines = readlines(fi)
+    close(fi)
+
+    Directory = ["title"]
+
+    # Line 1 is the title
+    Notes = lines[2]
+    # Line 3 is the Blade Parameters title
+    station_total = parse(Int, lines[4][1:5])
+    damp_type = parse(Int, lines[5][1:5])
+    # Line 6 is the damping coefficient title
+    # line 7 is the damping coefficents header
+    # line 8 is the damping coefficients units
+    dampcoef = cat(readdlm.(IOBuffer.(lines[9]))...,dims=1)
+    # line 10 is the distributed properties title
+    nodes = BDBladeNode[]
+    let 
+        idx = 11
+        for i = 1:station_total
+            frac = parse(Float64, lines[idx])
+            stiffmat = cat(readdlm.(IOBuffer.(lines[idx+1:idx+6]))...,dims=1)
+            # println(stiffmat)
+            massmat = cat(readdlm.(IOBuffer.(lines[idx+8:idx+13]))...,dims=1)
+            node = makenode(frac, stiffmat, massmat)
+            push!(nodes, node)
+            idx += 15
+        end
+    end
+    return BDBlade(Notes, station_total, damp_type, dampcoef, nodes)
 end
 
 
@@ -272,6 +390,56 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     close(fi)
 end
 
+function WriteBDBlade(bdblade, outputfile; outputpath=pwd())
+    lines = String[]
+    line = string("-"^9, " BEAMDYN V1.00.* INDIVIDUAL BLADE INPUT FILE ", "-"^43)
+    push!(lines,line)
+    push!(lines, bdblade.Notes)
+    line = string("-"^22, " BLADE PARAMETERS ", "-"^43)
+    push!(lines,line)
+    line = string(formatword(string(bdblade.station_total);location="back", quotes=false, desiredlength=5),  "   station_total    - Number of blade input stations (-)")
+    push!(lines,line)
+    line = string(formatword(string(bdblade.damp_type);location="back", quotes=false, desiredlength=5),  "   damp_type        - Damping type: 0: no damping; 1: damped")
+    push!(lines,line)
+    line = string("-"^22, " DAMPING COEFFICIENT ", "-"^30)
+    push!(lines,line)
+    line = "   mu1        mu2        mu3        mu4        mu5        mu6"
+    push!(lines,line)   
+    line = "   (-)        (-)        (-)        (-)        (-)        (-)"
+    push!(lines,line)
+    let
+        line = ""
+        for i = 1:length(bdblade.dampcoef)
+            s = @sprintf "%.1E" bdblade.dampcoef[i]
+            line = string(line, s, "    ")
+        end
+        push!(lines,line)
+    end
+    line = string("-"^22, " DISTRIBUTED PROPERTIES ", "-"^30)
+
+    for i = 1:bdblade.station_total
+        local line = string("  ", bdblade.nodes[i].frac)
+        push!(lines, line)
+        line = formatmatrix(bdblade.nodes[i].stiffmatrix;spacing=4)
+        append!(lines, line)
+        push!(lines, "")
+        line = formatmatrix(bdblade.nodes[i].massmatrix;spacing=4)
+        #There is some wonky spacing happening here because of the negative signs. 
+        append!(lines, line)
+        push!(lines, "")
+    end
+
+    cd(outputpath)
+    ## Write lines to file
+    fi = open(outputfile,"w+")
+    i = 1
+    for i = 1:length(lines)-1
+         write(fi,lines[i])
+         write(fi,"\n")
+    end
+    write(fi,lines[end])
+    close(fi)
+end
 
 
 ##############################################################

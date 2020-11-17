@@ -11,6 +11,7 @@ using DelimitedFiles
 include("AeroDyn.jl")
 include("BeamDyn.jl")
 include("ElastoDyn.jl")
+include("InflowWind.jl")
 include("reading.jl")
 include("writing.jl")
 include("processor.jl")
