@@ -79,7 +79,7 @@ mutable struct AD15file
     TwOutNd::Array
     Outlist::Array{String}
     BldNd_BladesOut::Int
-    BldNd_BlOutNd::Array{}
+    BldNd_BlOutNd::Array{Int}
     NodeOutlist::Array{String}
 end
 
@@ -325,7 +325,7 @@ UseBlCm = fetchword15(lines[49+NumAFfiles])
 push!(directory, "UseBlCm")
 
 Blades = String[]
-idx = 50+NumAFfiles
+idx = 49+NumAFfiles
 i = 1
 for i = 1:3
    temp = "Blade $i"
