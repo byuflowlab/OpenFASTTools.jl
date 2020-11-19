@@ -344,6 +344,34 @@ function readvector(line,veclength)
    # println("Vector: ", vector, " Type: ", typeof(vector))
    return vector
 end
+"""
+    readvector(line)
+
+An improved version of readvector that doesn't require the number of elements. It chops off the trailing characters and returns a vector of numbers. 
+
+### Inputs 
+- line::String - A string containing a vector of numbers separated by spaces or commas. characters can follow the vector
+
+### Outputs
+- vector::Array{inferred} - an array of the numbers you sent to be read. 
+"""
+function readvector(line)
+    stop = 1
+    strings = " 1234567890.,"
+    line = rmspaces(line)
+    for i=1:length(line)
+        if !occursin(line[i],strings)
+            stop = i-1
+            break
+        end
+    end
+    line = replace(line[1:stop], "," => "") #Remove the commas so readdlm will parse it as numbers instead of strings. 
+    if line[end]==' ' #Remove the rando entry at the end. 
+        line = line[1:end-1]
+    end 
+
+    return cat(readdlm.(IOBuffer.(line))...,dims=1)
+end
 
 """
 removes tab characters and doublespaces
@@ -358,6 +386,7 @@ function rmspaces(line)
 
     return line
 end
+
 
 """
 Seperate the rows of a matrix that is one big string line.

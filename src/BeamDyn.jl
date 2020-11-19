@@ -10,7 +10,7 @@ mutable struct BDFile
     rhoinf::Float64
     quadrature::Int
     refine
-    n_fact
+    n_fract
     DTBeam
     load_retries
     NRMax
@@ -23,7 +23,7 @@ mutable struct BDFile
     member_total::Int
     kp_total::Int
     membernumber::Array{}
-    geomparams::Array{Float64,2}
+    geoparams::Array{Float64,2}
     order_elem::Int
     BldFile::String
     UsePitchAct::String
@@ -163,7 +163,7 @@ function ReadBDFile(filename, filepath)
     end
 
     idx = kp_total+member_total+24
-    geomparams = cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
+    geoparams = cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
 
     # Line idx is the Mesh Parameter title
     order_elem = parse(Int, lines[idx+1][1:14])
@@ -178,7 +178,7 @@ function ReadBDFile(filename, filepath)
     SumPrint = fetchword15(lines[idx+10])
     OutFmt = fetchword15(lines[idx+11])
     NNodeOuts = parse(Int, lines[idx+12][1:14])
-    OutNd = readvector(lines[idx+13],NNodeOuts)
+    OutNd = readvector(lines[idx+13])
     OutList = readoutlist(lines[idx+14:end])
     nodeoutputstitleidx = 0 
     for i = 1:length(lines)
@@ -190,9 +190,16 @@ function ReadBDFile(filename, filepath)
     # BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
     # BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2], BldNd_BladesOut) #   This is how they did it previously, so I wonder if they did the same thing with   BeamDyn
     # nodeoutputstitleidx+3 is a general title
-    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
+    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+3:end])
+    # println("")
+    # println("rhoinf: ", rhoinf, "   type: ", typeof(rhoinf))
+    # println("PitchJ: ", PitchJ, "   type: ", typeof(PitchJ))
+    # println("PitchK: ", PitchK, "   type: ", typeof(PitchK))
+    # println("PitchC: ", PitchC, "   type: ", typeof(PitchC))
+    # println("geoparams: ", geoparams, "   type: ", typeof(geoparams))
 
-    bdfile = BDFile(Directory, Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fact, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, geomparams, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, OutList, NodeOutlist)
+
+    return BDFile(Directory, Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fact, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, geoparams, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, OutList, NodeOutlist)
 end
 
 """
@@ -226,10 +233,14 @@ function ReadBDBlade(filename, filepath)
     dampcoef = cat(readdlm.(IOBuffer.(lines[9]))...,dims=1)
     # line 10 is the distributed properties title
     nodes = BDBladeNode[]
+    # for i=11:length(lines)
+    #     lines[i] = string(" ", rmspaces(lines[i]), " ")
+    # end
     let 
         idx = 11
         for i = 1:station_total
             frac = parse(Float64, lines[idx])
+            # println("\"", lines[idx+1])
             stiffmat = cat(readdlm.(IOBuffer.(lines[idx+1:idx+6]))...,dims=1)
             # println(stiffmat)
             massmat = cat(readdlm.(IOBuffer.(lines[idx+8:idx+13]))...,dims=1)
@@ -267,7 +278,7 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     push!(lines,line)
     line = string(formatword(bdfile.Echo;quotes=false),"   Echo             - Echo  input data to \"<RootName>.ech\"? (flag)")
     push!(lines,line)
-    line = string(formatword(string(bdfile.QuasiStaticInit);quotes=false),"     QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
+    line = string(formatword(string(bdfile.QuasiStaticInit);quotes=false),"   QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
     push!(lines,line)
     line = string(formatword(string(bdfile.rhoinf);location="back",quotes=false),"   rhoinf           - Numerical damping parameter for generalized-alpha integrator")
     push!(lines,line)
@@ -275,7 +286,7 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     push!(lines,line)
     line = string(formatword(bdfile.refine;quotes=false),"   refine           - Refinement factor for trapezoidal quadrature (-) [DEFAULT = 1; used only when   quadrature=2]")
     push!(lines,line)
-    line = string(formatword(bdfile.n_fact;quotes=false),"   n_fact           -   Factorization frequency for the Jacobian in N-R iteration(-) [DEFAULT = 5]")
+    line = string(formatword(bdfile.n_fract;quotes=false),"   n_fact           -   Factorization frequency for the Jacobian in N-R iteration(-) [DEFAULT = 5]")
     push!(lines,line)
     line = string(formatword(bdfile.DTBeam;quotes=false),"   DTBeam           - Time step size (s)")
     push!(lines,line)
@@ -291,7 +302,7 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     push!(lines,line)
     line = string(formatword(bdfile.tngt_stf_pert;quotes=false),"   tngt_stf_pert       - Perturbation size for finite differencing (-) [DEFAULT = 1E-6]")
     push!(lines,line)
-    line = string(formatword(bdfile.tngt_stf_difftol;quotes=false),"    tngt_stf_difftol - Maximum allowable relative difference between analytical and  fd tangent stiffness (-); [DEFAULT = 0.1]")
+    line = string(formatword(bdfile.tngt_stf_difftol;quotes=false),"   tngt_stf_difftol - Maximum allowable relative difference between analytical and  fd tangent stiffness (-); [DEFAULT = 0.1]")
     push!(lines,line)
     line = string(formatword(bdfile.RotStates;quotes=false),"   RotStates        -  Orient states in the rotating frame during linearization? (flag) [used only when     linearizing]")
     push!(lines,line)
@@ -317,7 +328,7 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     push!(lines,line)
     line = "   (m)            (m)          (m)            (deg)"
     push!(lines,line)
-    mat = formatmatrix(bdfile.geomparams)
+    mat = formatmatrix(bdfile.geoparams)
     append!(lines, mat)
 
     line = string("-"^22, " MESH PARAMETER ", "-"^42)
@@ -326,7 +337,7 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     push!(lines, line)
     line = string("-"^22, " MATERIAL PARAMETER ", "-"^39)
     push!(lines, line)
-    line = string(formatword(bdfile.BldFile;quotes=false, desiredlength=length(bdfile.  BldFile)+1),"   BldFile - Name of file containing properties for blade (quoted    string)")
+    line = string(formatword(bdfile.BldFile;quotes=true, desiredlength=length(bdfile.BldFile)+2),"   BldFile - Name of file containing properties for blade (quoted    string)")
     push!(lines, line)
     line = string("-"^22, "PITCH ACTUATOR PARAMETERS", "-"^33)
     push!(lines, line)
@@ -351,12 +362,13 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     line = "          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
     push!(lines, line)
     for i=1:length(bdfile.Outlist)
-       local line = bdfile.Outlist[i]
+       local line = string("\"", bdfile.Outlist[i], "\"")
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first 3columns of    this last OutList line)"
     push!(lines,line)
-    line = "---------------------- NODE OUTPUTS     --------------------------------------------"
+    line = "---------------------- NODE OUTPUTS --------------------------------------------"
+    push!(lines,line)
     # push!(lines, line)
     # line = string(formatword(string(bdfile.BldNd_BladesOut);  location="back"quotes=false), "   BldNd_BladesOut  - Blades to output")
     # push!(lines, line)
@@ -411,12 +423,17 @@ function WriteBDBlade(bdblade, outputfile; outputpath=pwd())
         line = ""
         for i = 1:length(bdblade.dampcoef)
             s = @sprintf "%.1E" bdblade.dampcoef[i]
-            line = string(line, s, "    ")
+            if i<length(bdblade.dampcoef)
+                space = "    "
+            else
+                space = ""
+            end
+            line = string(line, s, space)
         end
         push!(lines,line)
     end
     line = string("-"^22, " DISTRIBUTED PROPERTIES ", "-"^30)
-
+    push!(lines,line)
     for i = 1:bdblade.station_total
         local line = string("  ", bdblade.nodes[i].frac)
         push!(lines, line)

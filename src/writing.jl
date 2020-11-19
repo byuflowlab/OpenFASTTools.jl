@@ -34,6 +34,8 @@ function formatmatrix(matrix;spacing=2)
                 if matrix[i,j+1]<0
                     space = " "^(spacing-1) #Have the spacing vary based on negative signs... I don't know if this is a good fix.
                 end
+            elseif j==n
+                space=""
             end
             line = line*text*space
         end
@@ -139,11 +141,15 @@ function formatcoordinates(matrix; spacing=2)
                 if matrix[i,j+1]<0
                     space = " "^(spacing-1) #Have the spacing vary based on negative signs... I don't know if this is a good fix.
                 end
+            elseif j==n
+                space = ""
             end
             line = line*text*space
         end
+        # println(line)
         push!(smatrix,line)
         line = string()
     end
+    # println(smatrix)
     return smatrix
 end

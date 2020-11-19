@@ -118,52 +118,52 @@ end
 
 struct AirfoilInput
     InterpOrd
-    NonDimArea
+    NonDimArea::AbstractFloat
     NumCoords
-    NumTabs
-    Re
-    UserProp
-    InclUAdata
-    alpha0
-    alpha1
-    alpha2
-    eta_e
-    C_nalpha
-    T_f0
-    T_V0
-    T_p
-    T_VL
-    b1
-    b2
-    b5
-    A1
-    A2
-    A5
-    S1
-    S2
-    S3
-    S4
-    Cn1
-    Cn2
-    St_sh
-    Cd0
-    Cm0
-    k0
-    k1
-    k2
-    k3
-    k1_hat
-    x_cp_bar
+    NumTabs::Int
+    Re::AbstractFloat
+    UserProp::Int
+    InclUAdata::String
+    alpha0::AbstractFloat
+    alpha1::AbstractFloat
+    alpha2::AbstractFloat
+    eta_e::AbstractFloat
+    C_nalpha::AbstractFloat
+    T_f0::AbstractFloat
+    T_V0::AbstractFloat
+    T_p::AbstractFloat
+    T_VL::AbstractFloat
+    b1::AbstractFloat
+    b2::AbstractFloat
+    b5::AbstractFloat
+    A1::AbstractFloat
+    A2::AbstractFloat
+    A5::AbstractFloat
+    S1::AbstractFloat
+    S2::AbstractFloat
+    S3::AbstractFloat
+    S4::AbstractFloat
+    Cn1::AbstractFloat
+    Cn2::AbstractFloat
+    St_sh::AbstractFloat
+    Cd0::AbstractFloat
+    Cm0::AbstractFloat
+    k0::AbstractFloat
+    k1::AbstractFloat
+    k2::AbstractFloat
+    k3::AbstractFloat
+    k1_hat::AbstractFloat
+    x_cp_bar::AbstractFloat
     UACutout
     filtCutOff
-    NumAlf
-    Polar
+    NumAlf::Int
+    Polar::Array{AbstractFloat}
 end
 
 struct AirfoilCoords
-    NumCoords
-    AirfoilReference
-    Coordinates
+    NumCoords::Int
+    AirfoilReference::Array{Float64,2}
+    Coordinates::Array{Float64, 2}
 end
  
 
@@ -349,7 +349,7 @@ SumPrint = fetchword15(lines[58+idx])
 NBlOuts = parse(Int, lines[59+idx][1:14])
 BlOutNd = readvector(lines[60+idx],NBlOuts)
 NTwOuts = parse(Int, lines[61+idx][1:14])
-TwOutNd = readvector(lines[62+idx],NTwOuts)
+TwOutNd = readvector(lines[62+idx])
 #Line 63+idx is a general title
 Outlist = readoutlist(lines[64+idx:end])
 # Node Outputs (Can't tell where the end, no way to hint how many outputs we're looking at) 
@@ -437,15 +437,27 @@ function ReadAerodata(filename, filepath)
     Cn_stall_positive = parse(Float64,lines[11][1:firstletter(lines[11])-1])
     Cn_stall_negative = parse(Float64,lines[12][1:firstletter(lines[12])-1])
     Aoa_minCd = parse(Float64,lines[13][1:firstletter(lines[13])-1])
+    # println(Aoa_minCd)
     Cd_min = parse(Float64,lines[14][1:firstletter(lines[14])-1])
 
+    stop = 15
     for i = 15:length(lines)
         lines[i] = rmspaces(lines[i])
+        
+        if lines[i]=="" #Chop the blank lines following. 
+            stop = i-1
+            break
+        else
+            stop = i
+        end
+        # println("\"", lines[i])
+
     end
-    Polars = readmatrix(lines[15:end], 4)
+    Polars = cat(readdlm.(IOBuffer.(lines[15:stop]))...,dims=1) #readmatrix(lines[15:end], 4)
+    # println("polars: ", Polars, "   type: ", typeof(Polars))
 
     aerodata = Aerodata(Notes1, Notes2, NumAirfoils, TableID, Aoa_stall, z1, z2, z3,
-            Aoa_0Cn, dCn_0L, Cn_stall_positive, Cn_stall_negative, Aoa_0Cn, Cd_min, Polars)
+            Aoa_0Cn, dCn_0L, Cn_stall_positive, Cn_stall_negative, Aoa_minCd, Cd_min, Polars)
     return aerodata
 end
 
@@ -474,8 +486,8 @@ function ReadAirfoilInput(filename, filepath)
     end
 
     InterpOrd = fetchword(lines[1])
-    NonDimArea = parse(Int,lines[2][1:14])
-    NumCoords = fetchword15(lines[3], lengthofword=26)
+    NonDimArea = parse(Float64,lines[2][1:14])
+    NumCoords = fetchword15(lines[3], lengthofword=26) #TODO: update this so it isn't just a hardcoded distance. 
     NumTabs = parse(Int,lines[4][1:14])
     Re = parse(Float64,lines[5][1:14])
     UserProp = parse(Int,lines[6][1:14])
@@ -784,17 +796,13 @@ function WriteAD15File(adfile, outputfile)
     push!(lines, line)
     line = string(formatword(string(adfile.NTwOuts);location="back",quotes=false), "   NTwOuts             - Number of tower node outputs [0 - 9]  (-)")
     push!(lines, line)
-    if adfile.NTwOuts>0
-       line = formatvector(adfile.TwOutNd)
-    else
-       line = " "^11
-    end
+    line = formatvector(adfile.TwOutNd)
     line = string(line, "   TwOutNd             - Tower nodes whose values will be output  (-)")
     push!(lines, line)
     line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
     push!(lines, line)
     for i=1:length(adfile.Outlist)
-       line = adfile.Outlist[i]
+       line = string("\"", adfile.Outlist[i], "\"")
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
@@ -834,7 +842,7 @@ function WriteAD15File(adfile, outputfile)
 end
 
 
-function WriteADBlade(adblade, outputfile)
+function WriteADBlade(adblade, outputfile; outputpath=pwd())
     lines = String[]
     line = string("-"^7, " AERODYN v15.00.* BLADE DEFINITION INPUT FILE ", "-"^37)
     push!(lines, line)
@@ -869,7 +877,7 @@ WriteAirfoilCoordinates(airfoilcoords, outputfile)
 
     Writes a file for the OpenFAST airfoil coordinates file.
 """
-function WriteAirfoilCoordinates(airfoilcoords, outputfile)
+function WriteAirfoilCoordinates(airfoilcoords, outputfile; outputpath=pwd())
     lines = String[]
     line = string(formatword(string(airfoilcoords.NumCoords);location="back", quotes=false),"   NumCoords         ! The number of coordinates in the airfoil shape file (including an extra coordinate for airfoil reference).  Set to zero if coordinates not included." )
     push!(lines, line)
@@ -890,6 +898,7 @@ function WriteAirfoilCoordinates(airfoilcoords, outputfile)
 
 
     ### Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
@@ -903,7 +912,7 @@ end
 """
 WriteAirfoilInput(airfoilinput, outputfile)
 """
-function WriteAirfoilInput(airfoilinput, outputfile)
+function WriteAirfoilInput(airfoilinput, outputfile; outputpath=pwd())
     lines = String[]
     line = "! ------------ AirfoilInfo v1.01.x Input File ----------------------------------"
     push!(lines, line)
@@ -925,7 +934,7 @@ function WriteAirfoilInput(airfoilinput, outputfile)
     push!(lines, line)
     line = string(formatword(string(airfoilinput.UserProp);location="back", quotes=false),"   UserProp          ! User property (control) setting")
     push!(lines, line)
-    line = string(formatword(string(airfoilinput.InclUAdata);location="back", quotes=false),"   InclUAdata        ! Is unsteady aerodynamics data included in this table? If TRUE, then include 30 UA coefficients below this line")
+    line = string(formatword(string(airfoilinput.InclUAdata);location="front", quotes=false),"   InclUAdata        ! Is unsteady aerodynamics data included in this table? If TRUE, then include 30 UA coefficients below this line")
     push!(lines, line)
     line = "!........................................"
     push!(lines, line)
@@ -1007,6 +1016,7 @@ function WriteAirfoilInput(airfoilinput, outputfile)
     append!(lines, line)
 
     ### Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
@@ -1021,7 +1031,7 @@ end
 WriteAerodata(aerodata, outputfile)
 This function takes an aerodata structure and writes an output file for it.
 """
-function WriteAerodata(aerodata, outputfile)
+function WriteAerodata(aerodata, outputfile; outputpath=pwd())
     lines = String[]
     line = aerodata.Notes1
     push!(lines, line)
@@ -1052,9 +1062,12 @@ function WriteAerodata(aerodata, outputfile)
     line = string(formatword(string(aerodata.Cd_min);location="back", quotes=false),"   Minimum CD value")
     push!(lines, line)
     line = formatcoordinates(aerodata.Polar)
+    # println(line)
+    # println(aerodata.Polar)
     append!(lines, line)
 
     ### Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
