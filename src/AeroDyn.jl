@@ -120,6 +120,7 @@ struct AirfoilInput
     InterpOrd
     NonDimArea::AbstractFloat
     NumCoords
+    BL_file::String
     NumTabs::Int
     Re::AbstractFloat
     UserProp::Int
@@ -487,54 +488,53 @@ function ReadAirfoilInput(filename, filepath)
 
     InterpOrd = fetchword(lines[1])
     NonDimArea = parse(Float64,lines[2][1:14])
-    NumCoords = fetchword15(lines[3], lengthofword=26) #TODO: update this so it isn't just a hardcoded distance. 
-    NumTabs = parse(Int,lines[4][1:14])
-    Re = parse(Float64,lines[5][1:14])
-    UserProp = parse(Int,lines[6][1:14])
-    InclUAdata = fetchword15(lines[7])
-    alpha0 = parse(Float64,lines[8][1:14])
-    alpha1 = parse(Float64,lines[9][1:14])
-    alpha2 = parse(Float64,lines[10][1:14])
-    eta_e = parse(Float64,lines[11][1:14])
-    C_nalpha = parse(Float64,lines[12][1:14])
-    T_f0 = parse(Float64,lines[13][1:14])
-    T_V0 = parse(Float64,lines[14][1:14])
-    T_p = parse(Float64,lines[15][1:14])
-    T_VL = parse(Float64,lines[16][1:14])
-    b1 = parse(Float64,lines[17][1:14])
-    b2 = parse(Float64,lines[18][1:14])
-    b5 = parse(Float64,lines[19][1:14])
-    A1 = parse(Float64,lines[20][1:14])
-    A2 = parse(Float64,lines[21][1:14])
-    A5 = parse(Float64,lines[22][1:14])
-    S1 = parse(Float64,lines[23][1:14])
-    S2 = parse(Float64,lines[24][1:14])
-    S3 = parse(Float64,lines[25][1:14])
-    S4 = parse(Float64,lines[26][1:14])
-    Cn1 = parse(Float64,lines[27][1:14])
-    Cn2 = parse(Float64,lines[28][1:14])
-    St_sh = parse(Float64,lines[29][1:14])
-    Cd0 = parse(Float64,lines[30][1:14])
-    Cm0 = parse(Float64,lines[31][1:14])
-    k0 = parse(Float64,lines[32][1:14])
-    k1 = parse(Float64,lines[33][1:14])
-    k2 = parse(Float64,lines[34][1:14])
-    k3 = parse(Float64,lines[35][1:14])
-    k1_hat = parse(Float64,lines[36][1:14])
-    x_cp_bar = parse(Float64,lines[37][1:14])
-    UACutout = fetchword15(lines[38])
-    filtCutOff = fetchword15(lines[39])
-    NumAlf = parse(Int,lines[40][1:14])
+    NumCoords = fetchword15(lines[3], lengthofword=length(lines[3])-115)
+    BL_file = fetchword15(lines[4], lengthofword=length(lines[4])-145)
+    NumTabs = parse(Int,lines[5][1:14])
+    Re = parse(Float64,lines[6][1:14])
+    UserProp = parse(Int,lines[7][1:14])
+    InclUAdata = fetchword15(lines[8])
+    alpha0 = parse(Float64,lines[9][1:14])
+    alpha1 = parse(Float64,lines[10][1:14])
+    alpha2 = parse(Float64,lines[11][1:14])
+    eta_e = parse(Float64,lines[12][1:14])
+    C_nalpha = parse(Float64,lines[13][1:14])
+    T_f0 = parse(Float64,lines[14][1:14])
+    T_V0 = parse(Float64,lines[15][1:14])
+    T_p = parse(Float64,lines[16][1:14])
+    T_VL = parse(Float64,lines[17][1:14])
+    b1 = parse(Float64,lines[18][1:14])
+    b2 = parse(Float64,lines[19][1:14])
+    b5 = parse(Float64,lines[20][1:14])
+    A1 = parse(Float64,lines[21][1:14])
+    A2 = parse(Float64,lines[22][1:14])
+    A5 = parse(Float64,lines[23][1:14])
+    S1 = parse(Float64,lines[24][1:14])
+    S2 = parse(Float64,lines[25][1:14])
+    S3 = parse(Float64,lines[26][1:14])
+    S4 = parse(Float64,lines[27][1:14])
+    Cn1 = parse(Float64,lines[28][1:14])
+    Cn2 = parse(Float64,lines[29][1:14])
+    St_sh = parse(Float64,lines[30][1:14])
+    Cd0 = parse(Float64,lines[31][1:14])
+    Cm0 = parse(Float64,lines[32][1:14])
+    k0 = parse(Float64,lines[33][1:14])
+    k1 = parse(Float64,lines[34][1:14])
+    k2 = parse(Float64,lines[35][1:14])
+    k3 = parse(Float64,lines[36][1:14])
+    k1_hat = parse(Float64,lines[37][1:14])
+    x_cp_bar = parse(Float64,lines[38][1:14])
+    UACutout = fetchword15(lines[39])
+    filtCutOff = fetchword15(lines[40])
+    # println(lines[41])
+    NumAlf = parse(Int,lines[41][1:14])
 
-    for i = 41:length(lines)
+    for i = 42:length(lines)
         lines[i] = rmspaces(lines[i])
     end
-    Polar = readmatrix(lines[41:end],4) #This is having troubles reading the lines that have a different number of characters per entry. say 180.0 and 80.0/ 
+    Polar = readmatrix(lines[42:end],4) #TODO: This is having troubles reading the lines that have a different number of characters per entry. say 180.0 and 80.0/ There is the idea of using readdlm and iobuffer. 
 
-    airfoilinput = AirfoilInput(InterpOrd, NonDimArea, NumCoords, NumTabs, Re, UserProp,
-            InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1,
-            b2, b5, A1, A2, A5, S1, S2, S3, S4, Cn1, Cn2, St_sh, Cd0, Cm0, k0, k1, k2, k3,
-            k1_hat, x_cp_bar, UACutout, filtCutOff, NumAlf, Polar)
+    airfoilinput = AirfoilInput(InterpOrd, NonDimArea, NumCoords, BL_file, NumTabs, Re, UserProp, InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1, b2, b5, A1, A2, A5, S1, S2, S3, S4, Cn1, Cn2, St_sh, Cd0, Cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, UACutout, filtCutOff, NumAlf, Polar)
     return airfoilinput
 end
 
@@ -922,6 +922,8 @@ function WriteAirfoilInput(airfoilinput, outputfile; outputpath=pwd())
     push!(lines, line)
     line = string(formatword(string(airfoilinput.NumCoords);location="front", quotes=false, desiredlength=27),"   NumCoords         ! The number of coordinates in the airfoil shape file.  Set to zero if coordinates not included.")
     push!(lines, line)
+    line = string(formatword(string(airfoilinput.BL_file);location="front", quotes=false, desiredlength=length(airfoilinput.BL_file)+0), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
+    push!(lines, line)
     line = string(formatword(string(airfoilinput.NumTabs);location="back", quotes=false),"   NumTabs           ! Number of airfoil tables in this file.")
     push!(lines, line)
     line = "! ------------------------------------------------------------------------------"
@@ -1188,8 +1190,7 @@ function CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is."
      error("Max number of NBlOuts is 9. CreateAD15")
     end
 
-    file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent,
-        TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
+    file = AD15file(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
     return file
 end
 

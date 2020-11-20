@@ -51,6 +51,7 @@
     @test iwfile.WindProfile==2
     @test isapprox(iwfile.PLexpHAWC, 0.2, atol=1e-5)
     @test isapprox(iwfile.Z0, 0.03, atol=1e-5)
+    @test isapprox(iwfile.InitPositionx, 0.0, atol=1e-5)
 
     @test lowercase(iwfile.SumPrint)=="false"
     outlist = [ "Wind1VelX", "Wind1VelY", "Wind1VelZ"]
@@ -112,6 +113,7 @@
     @test iwfile.WindProfile==2
     @test isapprox(iwfile.PLexpHAWC, 0.2, atol=1e-5)
     @test isapprox(iwfile.Z0, 0.03, atol=1e-5)
+    @test isapprox(iwfile.InitPositionx, 0.0, atol=1e-5)
 
     @test lowercase(iwfile.SumPrint)=="false"
     outlist = [ "Wind1VelX", "Wind1VelY", "Wind1VelZ"]

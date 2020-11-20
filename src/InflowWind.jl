@@ -41,6 +41,7 @@ mutable struct IWFile
     WindProfile::Int
     PLexpHAWC::AbstractFloat
     Z0::AbstractFloat
+    InitPositionx::AbstractFloat
     SumPrint::String
     Outlist::Array{String, 1}
 end
@@ -115,10 +116,11 @@ function ReadIWFile(filename, filepath)
     WindProfile = parse(Int, lines[45][1:14])
     PLexpHAWC = parse(Float64, lines[46][1:14])
     Z0 = parse(Float64, lines[47][1:14])
-    # Line 48 is the output title
-    SumPrint = fetchword15(lines[49])
-    Outlist = readoutlist(lines[51:end])
-    return IWFile(Directory, Notes, Echo, WindType, PropagationDir, NWindVel, WindVxiList, WindVyiList, WindVziList, HWindSpeedSteady, RefHtSteady, PLexpSteady, FilenameUniform, RefHtUniform, RefLengthUniform, FilenameTurbSim, FilenameBinary, TowerFile, FileName_u, FileName_v, FileName_w, nx, ny, nz, dx, dy, dz, RefHtHAWC, ScaleMethod, SFx, SFy, SFz, SigmaFx, SigmaFy, SigmaFz, URef, WindProfile, PLexpHAWC, Z0, SumPrint, Outlist)
+    InitPositionx = parse(Float64, lines[48][1:14])
+    # Line 49 is the output title
+    SumPrint = fetchword15(lines[50])
+    Outlist = readoutlist(lines[52:end])
+    return IWFile(Directory, Notes, Echo, WindType, PropagationDir, NWindVel, WindVxiList, WindVyiList, WindVziList, HWindSpeedSteady, RefHtSteady, PLexpSteady, FilenameUniform, RefHtUniform, RefLengthUniform, FilenameTurbSim, FilenameBinary, TowerFile, FileName_u, FileName_v, FileName_w, nx, ny, nz, dx, dy, dz, RefHtHAWC, ScaleMethod, SFx, SFy, SFz, SigmaFx, SigmaFy, SigmaFz, URef, WindProfile, PLexpHAWC, Z0, InitPositionx, SumPrint, Outlist)
 end
 
 
@@ -232,6 +234,8 @@ function WriteIWFile(iwfile, outputfile; outputpath=pwd())
     line = string(formatword(string(iwfile.PLexpHAWC);location="back", quotes=false),"   PLExp          - Power law exponent (-) (used for PL wind profile type only)")
     push!(lines, line)
     line = string(formatword(string(iwfile.Z0);location="back", quotes=false),"   Z0             - Surface roughness length (m) (used for LG wind profile type only)")
+    push!(lines, line)
+    line = string(formatword(string(iwfile.InitPositionx);location="back", quotes=false), "   InitPosition(x) - Initial offset in +x direction (shift of wind box) [Only used with WindType = 5] (m)")
     push!(lines, line)
     line = string("="^20, " OUTPUT ", "="^20)
     push!(lines, line)

@@ -679,7 +679,7 @@ function WriteEDFile(edfile, outputfile; outputpath=pwd())
         push!(lines,line)
      end
      line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
-
+     push!(lines,line)
     #Write lines to file
     cd(outputpath)
     fi = open(outputfile,"w+")
