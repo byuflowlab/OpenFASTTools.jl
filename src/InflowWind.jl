@@ -8,33 +8,33 @@ mutable struct IWFile
     WindType::Int
     PropagationDir::AbstractFloat
     NWindVel::Int
-    WindVxiList::Array{AbstractFloat}
-    WindVyiList::Array{AbstractFloat}
-    WindVziList::Array{AbstractFloat}
+    WindVxiList::Array{Float64, 1} #TODO: This could be an array of arrays
+    WindVyiList::Array{Float64, 1}
+    WindVziList::Array{Float64, 1}
     HWindSpeedSteady::AbstractFloat
     RefHtSteady::AbstractFloat
     PLexpSteady::AbstractFloat
     FilenameUniform::String
     RefHtUniform::AbstractFloat
-    RefLengthUniform::AbstractFloat
+    RefLengthUniform::AbstractFloat #TODO: Couldn't I just combine all of the Reference Heights, lengths, and power law exponents into one variable? 
     FilenameTurbSim::String
     FilenameBinary::String
     TowerFile::String
-    FileName_u::String
+    FileName_u::String #TODO: This could be an array
     FileName_v::String
     FileName_w::String
-    nx::Int
+    nx::Int #TODO: This could be an array
     ny::Int
     nz::Int
-    dx::AbstractFloat
+    dx::AbstractFloat #TODO: This could be an array
     dy::AbstractFloat
     dz::AbstractFloat
     RefHtHAWC::AbstractFloat
     ScaleMethod::Int
-    SFx::AbstractFloat
+    SFx::AbstractFloat #TODO: This could be an array
     SFy::AbstractFloat
     SFz::AbstractFloat
-    SigmaFx::AbstractFloat
+    SigmaFx::AbstractFloat #TODO: This could be an array
     SigmaFy::AbstractFloat
     SigmaFz::AbstractFloat
     URef::AbstractFloat
@@ -61,7 +61,7 @@ Reads an InflowWind file and produces an IWFile object.
 ### Outputs
 - iwfile::IWFile - an InflowWind file object
 """
-function ReadInflowWindFile(filename, filepath)
+function ReadIWFile(filename, filepath)
     cd(filepath)
     fi = open(filename, "r")
     lines = readlines(fi)
@@ -75,9 +75,9 @@ function ReadInflowWindFile(filename, filepath)
     WindType = parse(Int, lines[5][1:14])
     PropagationDir = parse(Float64, lines[6][1:14])
     NWindVel = parse(Int, lines[7][1:14])
-    WindVxiList = readvector(lines[8], NWindVel)
-    WindVyiList = readvector(lines[9], NWindVel)
-    WindVziList = readvector(lines[10], NWindVel)
+    WindVxiList = readvector(lines[8])
+    WindVyiList = readvector(lines[9])
+    WindVziList = readvector(lines[10])
     # Line 11 steady wind title
     HWindSpeedSteady = parse(Float64, lines[12][1:14])
     RefHtSteady = parse(Float64, lines[13][1:14])
@@ -240,7 +240,7 @@ function WriteIWFile(iwfile, outputfile; outputpath=pwd())
     push!(lines, "              OutList      - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)")
 
     for i=1:length(iwfile.Outlist)
-       local line = iwfile.Outlist[i]
+       local line = string("\"", iwfile.Outlist[i], "\"")
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"

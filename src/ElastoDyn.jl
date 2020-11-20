@@ -28,7 +28,7 @@ mutable struct EDFile
     PtfmYDOF::String
     OoPDefl::Float64
     IPDefl::Float64
-    BlPitch1::Float64
+    BlPitch1::Float64 #TODO: Should make this an array. 
     BlPitch2::Float64
     BlPitch3::Float64
     TeetDefl::Float64
@@ -56,20 +56,20 @@ mutable struct EDFile
     OverHang::Float64
     ShftGagL::Float64
     ShftTilt::Float64
-    NacCMxn::Float64
+    NacCMxn::Float64 #TODO: Should make this an array
     NacCMyn::Float64
     NacCMzn::Float64
-    NcIMUxn::Float64
+    NcIMUxn::Float64 #TODO: Should make this an array
     NcIMUyn::Float64
     NcIMUzn::Float64
     Twr2Shft::Float64
     TowerHt::Float64
     TowerBsHt::Float64
-    PtfmCMxt::Float64
+    PtfmCMxt::Float64 #TODO: Should make this an array
     PtfmCMyt::Float64
     PtfmCMzt::Float64
     PtfmRefzt::Float64
-    TipMass1::Float64
+    TipMass1::Float64 #TODO: Should make this an array
     TipMass2::Float64
     TipMass3::Float64
     HubMass::Float64
@@ -83,7 +83,7 @@ mutable struct EDFile
     PtfmPIner::Float64
     PtfmYIner::Float64
     BldNodes::Int
-    BldFile1::String
+    BldFile1::String #Should make this an array
     BldFile2::String
     BldFile3::String
     TeetMod::Int
@@ -104,48 +104,48 @@ mutable struct EDFile
     TwrFile::String
     SumPrint::String
     OutFile::Int
-    TabDelim::String
-    OutFmt::String
-    TStart::Float64
-    DecFact::Int
+    TabDelim::String #Currently Unused
+    OutFmt::String #Currently Unused
+    TStart::Float64 #Currently Unused
+    DecFact::Int #Currently Unused
     NTwGages::Int
     TwrGagNd::Array{Int}
     NBlGages::Int
     BldGagNd::Array{Int}
     Outlist::Array{String}
     BldNd_BladesOut::Int
-    BldNd_BlOutNd::Array{Int}
+    BldNd_BlOutNd::Array{Int} #Currently Unused
     NodeOutlist::Array{String}
 end
 
 mutable struct EDBlade
     Directory
     Notes
-    NBlInpSt
-    BldFlDmp1
-    BldFlDmp2
-    BldEdDmp1
-    FlStTunr1
-    FlStTunr2
-    AdjBlMs
-    AdjFlSt
-    AdjEdSt
-    BldProps
-    BldFl1Sh2
-    BldFl1Sh3
-    BldFl1Sh4
-    BldFl1Sh5
-    BldFl1Sh6
-    BldFl2Sh2
-    BldFl2Sh3
-    BldFl2Sh4
-    BldFl2Sh5
-    BldFl2Sh6
-    BldEdgSh2
-    BldEdgSh3
-    BldEdgSh4
-    BldEdgSh5
-    BldEdgSh6
+    NBlInpSt::Int
+    BldFlDmp1::AbstractFloat #TODO: This could be an array
+    BldFlDmp2::AbstractFloat
+    BldEdDmp1::AbstractFloat
+    FlStTunr1::AbstractFloat #TODO: This could be an array
+    FlStTunr2::AbstractFloat
+    AdjBlMs::AbstractFloat
+    AdjFlSt::AbstractFloat
+    AdjEdSt::AbstractFloat
+    BldProps::Array{Float64,2}
+    BldFl1Sh2::AbstractFloat #TODO: This could be an array
+    BldFl1Sh3::AbstractFloat
+    BldFl1Sh4::AbstractFloat
+    BldFl1Sh5::AbstractFloat
+    BldFl1Sh6::AbstractFloat
+    BldFl2Sh2::AbstractFloat #TODO: This could be an array
+    BldFl2Sh3::AbstractFloat
+    BldFl2Sh4::AbstractFloat
+    BldFl2Sh5::AbstractFloat
+    BldFl2Sh6::AbstractFloat
+    BldEdgSh2::AbstractFloat #TODO: This could be an array
+    BldEdgSh3::AbstractFloat
+    BldEdgSh4::AbstractFloat
+    BldEdgSh5::AbstractFloat
+    BldEdgSh6::AbstractFloat
 end
 
 ##############################################################
@@ -396,7 +396,7 @@ WriteEDFile(edfile, outputfile)
 
     This function takes an ElastoDyn structure and writes it to file.
 """
-function WriteEDFile(edfile, outputfile)
+function WriteEDFile(edfile, outputfile; outputpath=pwd())
     lines = String[]
     line = string("-"^7, " ELASTODYN v1.03.* INPUT FILE ", "-"^43)
     push!(lines, line)
@@ -608,7 +608,7 @@ function WriteEDFile(edfile, outputfile)
     push!(lines, line)
     line = string("-"^22, " FURLING ", "-"^49)
     push!(lines, line)
-    line = string(formatword(string(edfile.Furling);location="back",quotes=false),"   Furling     - Read in additional model properties for furling turbine (flag) [must currently be FALSE)")
+    line = string(formatword(string(edfile.Furling);location="front",quotes=false),"   Furling     - Read in additional model properties for furling turbine (flag) [must currently be FALSE)")
     push!(lines, line)
     line = string(formatword(edfile.FurlFile;quotes=false,desiredlength=35),"   FurlFile    - Name of file containing furling properties (quoted string) [unused when Furling=False]")
     push!(lines, line)
@@ -681,6 +681,7 @@ function WriteEDFile(edfile, outputfile)
      line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
 
     #Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
@@ -697,7 +698,7 @@ WriteEDBlade(edblade, outputfile)
 Takes an edblade structure and prints it to file.
 
 """
-function WriteEDBlade(edblade, outputfile)
+function WriteEDBlade(edblade, outputfile; outputpath=pwd())
     lines = String[]
     line = string("-"^7, "  ELASTODYN V1.00.* INDIVIDUAL BLADE INPUT FILE  ", "-"^26)
     push!(lines, line)
@@ -767,6 +768,7 @@ function WriteEDBlade(edblade, outputfile)
     push!(lines, line)
 
     ### Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
