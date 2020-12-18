@@ -49,6 +49,15 @@ function fetchmatrix(lines, widthofmatrix, numcolumns)
 end
 
 """
+    fetchname(line)
+
+Fetches a name from a fast file. Similar to fetchword, but instead of using a set distance, it bases off of line length to guess how long the name you're trying to snag is. 
+"""
+function fetchname(line)
+    return line[1:endofword(line[1:(length(line)-57)])]
+end
+
+"""
 Fetch one of the beginning words from a FAST File.
 """
 function fetchword(line;lengthofword=11)
@@ -132,12 +141,14 @@ end
 function parsenames(line)
     idx = 1
     namesvec = String[]
-    for i=2:length(line)
-        if line[i] != ' ' && line[i-1] == ' '
+    for i=2:length(line) #Run along the string containing names until you run into something that is not a space, with a space before it. From idx til that point will contain a word. Remove the tabs and spaces. 
+        if (line[i] != ' ' && line[i]!='\t') && (line[i-1] == ' ' || line[i-1] == '\t')
             name = line[idx:i-1]
             name = replace(name, "\t" => "")
             name = replace(name, " " => "")
-            push!(namesvec,name)
+            if name != ""
+                push!(namesvec,name)
+            end
             idx = i
         end
     end

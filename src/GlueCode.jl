@@ -21,13 +21,21 @@ ReadOutput reads the .out file from OpenFASt and parses it into a dictionary.
 A dictionary was chosen because the out file can have a lot of different outputs, and it was easier to program a reactive function rather than a predictive one.
 
 """
-
 function ReadOutput(filename, filepath)
-    #Read in the file
-    cd(filepath)
-    fi = open(filename, "r")
-    lines = readlines(fi)
-    close(fi)
+        #Read in the file
+        cd(filepath)
+        fi = open(filename, "r")
+        lines = readlines(fi)
+        close(fi)
+        if length(lines)>2
+            outputs = ReadOutput2(lines)
+        else
+            outputs = ReadOutput1(lines)
+        end
+        return outputs
+end
+
+function ReadOutput1(lines)
 
     #Find the first row
     line = lines[1]
@@ -59,6 +67,17 @@ function ReadOutput(filename, filepath)
     outputs = Dict()
     for i = 1:length(namesvec)
         outputs[namesvec[i]]=matrix[:,i]
+    end
+    return outputs
+end
+
+function ReadOutput2(lines)
+    namesvec = parsenames(lines[7]) #Had an error where it would return an empty string if there were any spaces before the first word. 
+    # println(namesvec)
+    matrix = cat(readdlm.(IOBuffer.(lines[9:end]))...,dims=1)
+    outputs = Dict()
+    for i = 1:length(namesvec)
+        outputs[namesvec[i]]=matrix[:, i]
     end
     return outputs
 end

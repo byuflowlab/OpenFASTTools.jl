@@ -194,7 +194,7 @@ function interpolate2dcurve(coords1, coords2, d)
 end
 
 """
-#### intergerfit(x, y, xnew)
+#### integerfit(x, y, xnew)
 Fit Integer values of Y.
 ### Inputs
 - x = x values 
@@ -209,7 +209,7 @@ The function requires x and xnew to be increasing order. Xnew need not be within
     the range of of x, however, values outside of the range will interpolated to
     the first value if below the range and the last value if after the range. 
 """
-function intergerfit(x, y, xnew)
+function integerfit(x, y, xnew)
     ynew = zeros(Int, length(xnew))
     for i=1:length(xnew)
         for j=1:length(x)
@@ -248,6 +248,30 @@ function nametonumber(list)
         end
     end
     return numbers
+end
+
+function namefit(x, list, xnew)
+    n = length(list)
+    numbers = zeros(Int, n)
+    uniquelist = unique(lowercase.(list))
+    m = length(uniquelist)
+    for i = 1:n
+        for j = 1:m
+            if lowercase(list[i]) == uniquelist[j]
+                numbers[i] = j
+            end
+        end
+    end
+    newnums = integerfit(x, numbers, xnew)
+    newnames = String[]
+    for i=1:length(newnums)
+        for j=1:length(uniquelist)
+            if newnums[i]==j
+                push!(newnames, uniquelist[j])
+            end
+        end
+    end
+    return newnames
 end
 
 """

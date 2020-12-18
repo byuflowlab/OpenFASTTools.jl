@@ -1,10 +1,5 @@
 """
 Module : OpenFASTsr
-Summary: functions to call openfast using the command line, including
-    - WriteInputFile()
-    - CallFAST()
-    - ReadOutputFile()
-    - OpenFAST()
 
 Author: Adam Cardoza
 Start Date: 5/22/2020
@@ -23,6 +18,8 @@ function CallFAST(inputfile,inputpath, outputpath)
     file = inputpath*'/'*inputfile
 
     run(`openfast $file`)
+
+    #run(`openfast 20kWturbine.fst`) worked. So maybe I just need to change to the outputpath, then run the file? I dunno? The caller might not like the $outputpath dealio. 
 
 end
 

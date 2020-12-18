@@ -167,7 +167,23 @@ struct AirfoilCoords
     Coordinates::Array{Float64, 2}
 end
  
-
+mutable struct ADDriver
+    Notes::String
+    Echo::String
+    AD_InputFile::String
+    NumBlades::Int
+    HubRad::Float64
+    HubHt::Float64
+    Overhang::Float64
+    ShftTilt::Float64
+    Precone ::Float64
+    OutFileRoot::String
+    TabDel::String
+    OutFmt::String
+    Beep::String
+    NumCases::Int
+    WindData::Array{Float64, 2}
+    end
 
 
 ##############################################################
@@ -182,9 +198,7 @@ Read an AeroDyn v14 inputfile and creates a mutable struct of all the input data
 function ReadAD14File(filename, filepath)
     cd(filepath)
     fi = open(filename, "r")
-
     lines = readlines(fi)
-
     close(fi)
 
     # Lines 1-16 are constant
@@ -572,6 +586,58 @@ function ReadAirfoilCoordinates(filename, filepath)
     airfoilcoords = AirfoilCoords(NumCoords, AirfoilReference, Coordinates)
     return airfoilcoords
 end
+
+"""
+    ReadADDriver(filename, filepath)
+
+Returns an ADDriver object by reading a ADDriver input file. Note that the driver file is different from the primary input file. 
+
+### Inputs 
+- filename::String - The name of the file in the directory to be read. 
+- filepath::String - The path to the file to be read, not including the filename in the path
+
+### Outputs
+- addriver - the read AD driver file object
+
+### Notes
+- Note that the reading function moves you to the directory of the file to be read. 
+"""
+function ReadADDriver(filename, filepath)
+    cd(filepath)
+    fi = open(filename, "r")
+    lines = readlines(fi)
+    close(fi)
+
+    #Line 1 is the main title
+    Notes = lines[2]
+    #Line 3 is the input configuration title
+    Echo = fetchword15(lines[4])
+    AD_InputFile = fetchname(lines[5])
+    #Line 6 is the Turbine Data title
+    NumBlades = parse(Int, lines[7][1:14])
+    HubRad = parse(Float64, lines[8][1:14])
+    HubHt = parse(Float64, lines[9][1:14])
+    Overhang = parse(Float64, lines[10][1:14])
+    ShftTilt = parse(Float64, lines[11][1:14])
+    Precone = parse(Float64, lines[12][1:14])
+    #Line 13 is the I/O Settings title
+    OutFileRoot = fetchname(lines[14])
+    TabDel = fetchword15(lines[15])
+    OutFmt = fetchname(lines[16])
+    Beep = fetchword15(lines[17])
+    #Line 18 is the combined-case Analysis title
+    NumCases = parse(Int, lines[19][1:14])
+    #Line 20 is the wind data header
+    #Line 21 is the wind data units
+    WindData = readmatrix(lines[22:21+NumCases], 7)
+    #TODO: Maybe put something in here (or the writer) that makes NumCases match the    winddata matrix. I don't know if you can have unsteady data or not in this. 
+
+    return ADDriver(Notes, Echo, AD_InputFile, NumBlades, HubRad, HubHt, Overhang, ShftTilt, Precone , OutFileRoot, TabDel, OutFmt, Beep, NumCases, WindData)
+end
+
+
+
+
 ##############################################################
 ############# WRITING FUNCTIONS ##############################
 ##############################################################
@@ -653,7 +719,7 @@ function WriteAD14File(adfile, outputfile)
     close(fi)
 end
 
-function WriteAD15File(adfile, outputfile)
+function WriteAD15File(adfile, outputfile; outputpath=pwd())
     lines = String[]
     line = string("-"^7, " AERODYN v15 for OpenFAST INPUT FILE ", "-"^47)
     push!(lines,line)
@@ -831,6 +897,7 @@ function WriteAD15File(adfile, outputfile)
      push!(lines,line)
 
     #Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
@@ -862,6 +929,7 @@ function WriteADBlade(adblade, outputfile; outputpath=pwd())
     append!(lines, line)
 
     #Write lines to file
+    cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
@@ -938,72 +1006,74 @@ function WriteAirfoilInput(airfoilinput, outputfile; outputpath=pwd())
     push!(lines, line)
     line = string(formatword(string(airfoilinput.InclUAdata);location="front", quotes=false),"   InclUAdata        ! Is unsteady aerodynamics data included in this table? If TRUE, then include 30 UA coefficients below this line")
     push!(lines, line)
-    line = "!........................................"
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.alpha0);location="back", quotes=false),"   alpha0            ! 0-lift angle of attack, depends on airfoil.")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.alpha1);location="back", quotes=false),"   alpha1            ! Angle of attack at f=0.7, (approximately the stall angle) for AOA>alpha0. (deg)")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.alpha2);location="back", quotes=false),"   alpha2            ! Angle of attack at f=0.7, (approximately the stall angle) for AOA<alpha0. (deg)")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.eta_e);location="back", quotes=false),"   eta_e             ! Recovery factor in the range [0.85 - 0.95] used only for UAMOD=1, it is set to 1 in the code when flookup=True. (-)")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.C_nalpha);location="back", quotes=false),"   C_nalpha          ! Slope of the 2D normal force coefficient curve. (1/rad)")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.T_f0);location="back", quotes=false),"   T_f0              ! Initial value of the time constant associated with Df in the expression of Df and f''. [default = 3]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.T_V0);location="back", quotes=false),"   T_V0              ! Initial value of the time constant associated with the vortex lift decay process; it is used in the expression of Cvn. It depends on Re,M, and airfoil class. [default = 6]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.T_p);location="back", quotes=false),"   T_p               ! Boundary-layer,leading edge pressure gradient time constant in the expression of Dp. It should be tuned based on airfoil experimental data. [default = 1.7]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.T_VL);location="back", quotes=false),"   T_VL              ! Initial value of the time constant associated with the vortex advection process; it represents the non-dimensional time in semi-chords, needed for a vortex to travel from LE to trailing edge (TE); it is used in the expression of Cvn. It depends on Re, M (weakly), and airfoil. [valid range = 6 - 13, default = 11]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.b1);location="back", quotes=false),"   b1                ! Constant in the expression of phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin airfoils, but may be different for turbine airfoils. [from experimental results, defaults to 0.14]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.b2);location="back", quotes=false),"   b2                ! Constant in the expression of phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin airfoils, but may be different for turbine airfoils. [from experimental results, defaults to 0.53]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.b5);location="back", quotes=false),"   b5                ! Constant in the expression of K'''_q,Cm_q^nc, and k_m,q.  [from  experimental results, defaults to 5]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.A1);location="back", quotes=false),"   A1                ! Constant in the expression of phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin airfoils, but may be different for turbine airfoils. [from experimental results, defaults to 0.3]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.A2);location="back", quotes=false),"   A2                ! Constant in the expression of phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin airfoils, but may be different for turbine airfoils. [from experimental results, defaults to 0.7]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.A5);location="back", quotes=false),"   A5                ! Constant in the expression of K'''_q,Cm_q^nc, and k_m,q. [from experimental results, defaults to 1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.S1);location="back", quotes=false),"   S1                ! Constant in the f curve best-fit for alpha0<=AOA<=alpha1; by definition it depends on the airfoil. [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.S2);location="back", quotes=false),"   S2                ! Constant in the f curve best-fit for         AOA> alpha1; by definition it depends on the airfoil. [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.S3);location="back", quotes=false),"   S3                ! Constant in the f curve best-fit for alpha2<=AOA< alpha0; by definition it depends on the airfoil. [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.S4);location="back", quotes=false),"   S4                ! Constant in the f curve best-fit for         AOA< alpha2; by definition it depends on the airfoil. [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.Cn1);location="back", quotes=false),"   Cn1               ! Critical value of C0n at leading edge separation. It should be extracted from airfoil data at a given Mach and Reynolds number. It can be calculated from the static value of Cn at either the break in the pitching moment or the loss of chord force at the onset of stall. It is close to the condition of maximum lift of the airfoil at low Mach numbers.")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.Cn2);location="back", quotes=false),"   Cn2               ! As Cn1 for negative AOAs.")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.St_sh);location="back", quotes=false),"   St_sh             ! Strouhal's shedding frequency constant.  [default = 0.19]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.Cd0);location="back", quotes=false),"   Cd0               ! 2D drag coefficient value at 0-lift.")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.Cm0);location="back", quotes=false),"   Cm0               ! 2D pitching moment coefficient about 1/4-chord location, at 0-lift, positive if nose up. [If the aerodynamics coefficients table does not include a column for Cm, this needs to be set to 0.0]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.k0);location="back", quotes=false),"   k0                ! Constant in the hat(x)_cp curve best-fit; = (hat(x)_AC-0.25).  [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.k1);location="back", quotes=false),"   k1                ! Constant in the hat(x)_cp curve best-fit.  [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.k2);location="back", quotes=false),"   k2                ! Constant in the hat(x)_cp curve best-fit.  [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.k3);location="back", quotes=false),"   k3                ! Constant in the hat(x)_cp curve best-fit.  [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.k1_hat);location="back", quotes=false),"   k1_hat            ! Constant in the expression of Cc due to leading edge vortex effects.  [ignored if UAMod<>1]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.x_cp_bar);location="back", quotes=false),"   x_cp_bar          ! Constant in the expression of hat(x)_cp^v. [ignored if UAMod<>1, default = 0.2]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.UACutout);location="front", quotes=false),"   UACutout          ! Angle of attack above which unsteady aerodynamics are disabled (deg). [Specifying the string \"Default\" sets UACutout to 45 degrees]")
-    push!(lines, line)
-    line = string(formatword(string(airfoilinput.filtCutOff);location="front", quotes=false),"   filtCutOff        ! Cut-off frequency (-3 dB corner frequency) for low-pass filtering the AoA input to UA, as well as the 1st and 2nd derivatives (Hz) [default = 20]")
-    push!(lines, line)
+    if parse(Bool, airfoilinput.InclUAdata)
+        line = "!........................................"
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.alpha0);location="back",   quotes=false),"   alpha0            ! 0-lift angle of attack, depends on  airfoil.")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.alpha1);location="back",   quotes=false),"   alpha1            ! Angle of attack at f=0.7,   (approximately the stall angle) for AOA>alpha0. (deg)")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.alpha2);location="back",   quotes=false),"   alpha2            ! Angle of attack at f=0.7,   (approximately the stall angle) for AOA<alpha0. (deg)")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.eta_e);location="back",    quotes=false),"   eta_e             ! Recovery factor in the range [0.85 - 0.  95] used only for UAMOD=1, it is set to 1 in the code when flookup=True. (-)  ")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.C_nalpha);location="back",     quotes=false),"   C_nalpha          ! Slope of the 2D normal force  coefficient curve. (1/rad)")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.T_f0);location="back",     quotes=false),"   T_f0              ! Initial value of the time constant    associated with Df in the expression of Df and f''. [default = 3]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.T_V0);location="back",     quotes=false),"   T_V0              ! Initial value of the time constant    associated with the vortex lift decay process; it is used in the expression    of Cvn. It depends on Re,M, and airfoil class. [default = 6]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.T_p);location="back",  quotes=false),"   T_p               ! Boundary-layer,leading edge pressure   gradient time constant in the expression of Dp. It should be tuned based on   airfoil experimental data. [default = 1.7]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.T_VL);location="back",     quotes=false),"   T_VL              ! Initial value of the time constant    associated with the vortex advection process; it represents the    non-dimensional time in semi-chords, needed for a vortex to travel from LE     to trailing edge (TE); it is used in the expression of Cvn. It depends on   Re, M (weakly), and airfoil. [valid range = 6 - 13, default = 11]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.b1);location="back",   quotes=false),"   b1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.14]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.b2);location="back",   quotes=false),"   b2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.53]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.b5);location="back",   quotes=false),"   b5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q.  [from  experimental results, defaults to 5]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.A1);location="back",   quotes=false),"   A1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.3]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.A2);location="back",   quotes=false),"   A2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.7]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.A5);location="back",   quotes=false),"   A5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q. [from experimental results, defaults to 1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.S1);location="back",   quotes=false),"   S1                ! Constant in the f curve best-fit for    alpha0<=AOA<=alpha1; by definition it depends on the airfoil. [ignored if  UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.S2);location="back",   quotes=false),"   S2                ! Constant in the f curve best-fit    for         AOA> alpha1; by definition it depends on the airfoil. [ignored     if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.S3);location="back",   quotes=false),"   S3                ! Constant in the f curve best-fit for    alpha2<=AOA< alpha0; by definition it depends on the airfoil. [ignored if  UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.S4);location="back",   quotes=false),"   S4                ! Constant in the f curve best-fit    for         AOA< alpha2; by definition it depends on the airfoil. [ignored     if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.Cn1);location="back",  quotes=false),"   Cn1               ! Critical value of C0n at leading edge  separation. It should be extracted from airfoil data at a given Mach and     Reynolds number. It can be calculated from the static value of Cn at either     the break in the pitching moment or the loss of chord force at the onset of     stall. It is close to the condition of maximum lift of the airfoil at low   Mach numbers.")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.Cn2);location="back",  quotes=false),"   Cn2               ! As Cn1 for negative AOAs.")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.St_sh);location="back",    quotes=false),"   St_sh             ! Strouhal's shedding frequency    constant.  [default = 0.19]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.Cd0);location="back",  quotes=false),"   Cd0               ! 2D drag coefficient value at 0-lift.")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.Cm0);location="back",  quotes=false),"   Cm0               ! 2D pitching moment coefficient about 1/    4-chord location, at 0-lift, positive if nose up. [If the aerodynamics  coefficients table does not include a column for Cm, this needs to be set to     0.0]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.k0);location="back",   quotes=false),"   k0                ! Constant in the hat(x)_cp curve     best-fit; = (hat(x)_AC-0.25).  [ignored if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.k1);location="back",   quotes=false),"   k1                ! Constant in the hat(x)_cp curve     best-fit.  [ignored if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.k2);location="back",   quotes=false),"   k2                ! Constant in the hat(x)_cp curve     best-fit.  [ignored if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.k3);location="back",   quotes=false),"   k3                ! Constant in the hat(x)_cp curve     best-fit.  [ignored if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.k1_hat);location="back",   quotes=false),"   k1_hat            ! Constant in the expression of Cc due    to leading edge vortex effects.  [ignored if UAMod<>1]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.x_cp_bar);location="back",     quotes=false),"   x_cp_bar          ! Constant in the expression of hat(x)  _cp^v. [ignored if UAMod<>1, default = 0.2]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.UACutout);location="front",    quotes=false),"   UACutout          ! Angle of attack above which unsteady     aerodynamics are disabled (deg). [Specifying the string \"Default\" sets    UACutout to 45 degrees]")
+        push!(lines, line)
+        line = string(formatword(string(airfoilinput.filtCutOff);location="front", quotes=false),"   filtCutOff        ! Cut-off frequency (-3 dB corner frequency) for low-pass filtering the AoA input to UA, as well as the 1st and 2nd derivatives (Hz) [default = 20]")
+        push!(lines, line)
+    end
     line = "!........................................"
     push!(lines, line)
     line = "! Table of aerodynamics coefficients"
@@ -1069,6 +1139,79 @@ function WriteAerodata(aerodata, outputfile; outputpath=pwd())
     append!(lines, line)
 
     ### Write lines to file
+    cd(outputpath)
+    fi = open(outputfile,"w+")
+    i = 1
+    for i = 1:length(lines)-1
+         write(fi,lines[i])
+         write(fi,"\n")
+    end
+    write(fi,lines[end])
+    close(fi)
+end
+
+"""
+    WriteADDriver(addriver, outputfile;outputpath=pwd())
+
+Writes the desired AD driver file at the stated location. 
+
+### Inputs 
+- addriver - the AD driver file
+- outputfile::String - The name of the file, containing the file ending.
+- outputpath::String - the location to write the file
+
+### No Outputs, but a file will be written
+"""
+function WriteADDriver(addriver, outputfile; outputpath=pwd())
+    lines = []
+    line = string("-"^7, " AeroDyn Driver v1.00.x Input File ", "-"^37)
+    push!(lines, line)
+    line = addriver.Notes
+    push!(lines, line)
+    line = string("="^7, "  General Options  ", "="^30)
+    push!(lines, line)
+    line = string(formatword(addriver.Echo;quotes=false),"   Echo               -   Echo the input to \"<rootname>.ech\"?  (flag)")
+    push!(lines, line)
+    line = string(formatword(addriver.AD_InputFile;quotes=false,desiredlength=length(addriver.AD_InputFile)+1),"   AD_InputFile    -  Name of the primary AeroDyn input file")
+    push!(lines, line)
+    line = string("-"^7, " Turbine Data ", "-"^30)
+    push!(lines, line)
+    line = string(formatword(string(addriver.NumBlades);location="back", quotes=false)  , "   NumBlades       - Number of blades (-)")
+    push!(lines, line)
+    line = string(formatword(string(addriver.HubRad);location="back", quotes=false),    "   HubRad          - Hub radius (m)")
+    push!(lines, line)
+    line = string(formatword(string(addriver.HubHt);location="back", quotes=false),     "   HubHt           - Hub height (m)")
+    push!(lines, line)
+    line = string(formatword(string(addriver.Overhang);location="back", quotes=false)   , "   Overhang        - Overhang (m)")
+    push!(lines, line)
+    line = string(formatword(string(addriver.ShftTilt);location="back", quotes=false)   , "   ShftTilt        - Shaft tilt (deg)")
+    push!(lines, line)
+    line = string(formatword(string(addriver.Precone);location="back", quotes=false),   "   Precone         - Blade precone (deg)")
+    push!(lines, line)
+    line = string("-"^7, " I/O Settings ", "-"^30)
+    push!(lines, line)
+    line = string(formatword(addriver.OutFileRoot;quotes=false, desiredlength=length(addriver.OutFileRoot)+1),"   OutFileRoot     -   Root name for any output files (use \"\" for .dvr rootname) (-)")
+    push!(lines, line)
+    line = string(formatword(addriver.TabDel;quotes=false),"   TabDel          - When   generating formatted output (OutForm=True), make output tab-delimited     (fixed-width otherwise) (flag)")
+    push!(lines, line)
+    line = string(formatword(addriver.OutFmt;quotes=false),"   OutFmt          -    Format used for text tabular output, excluding the time channel.  Resulting field  should be 10 characters. (quoted string)")
+    push!(lines, line)
+    line = string(formatword(addriver.Beep;quotes=false),"   Beep            - Beep     on exit (flag)")
+    push!(lines, line)
+    line = string("-"^7, "  Combined-Case Analysis  ", "-"^30)
+    push!(lines, line)
+    line = string(formatword(string(addriver.NumCases);location="back", quotes=false)   , "   NumCases        - Number of cases to run")
+    push!(lines, line)
+    line = "WndSpeed       ShearExp       RotSpd        Pitch               Yaw           dT             Tmax"
+    push!(lines, line)
+    line = "(m/s)            (-)          (rpm)         (deg)               (deg)          (s)            (s)"
+    push!(lines, line)
+    line = formatmatrix(addriver.WindData)
+    append!(lines, line)
+
+
+
+    #Write lines to file
     cd(outputpath)
     fi = open(outputfile,"w+")
     i = 1
@@ -1221,7 +1364,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
 - importantnodes - the node numbers of the important radi that the user declared. 
 
 ### Notes
-- Note that this function does not place nodes in the transition region between the cylinder and the airfoils. It also does not interpolate the airfoils between nodes, but uses an interger fit to populate the airfoil id in the blade file. 
+- Note that this function does not place nodes in the transition region between the cylinder and the airfoils. It also does not interpolate the airfoils between nodes, but uses an integer fit to populate the airfoil id in the blade file. 
 
 ### Definitions 
 Below is a short list of the naming convention used in this function.
@@ -1243,7 +1386,8 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     conefit = Akima(rads, radscones)
     coneangfit = Akima(rads, radsconeangs)
     sweepfit = Akima(rads, radssweeps)
-    radsafid = nametonumber(radsafid).-1
+    radsafid = nametonumber(radsafid) #.-1 #TODO: Why do a subtract one here? 
+    # I was subtracting one to deal with the whole transition region thing, which isn't very general. So I need a general solution, then form to that. 
 
     # Need to add important locations to fracs
     minus = 2
@@ -1282,7 +1426,7 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     twist = twistfit.(locs)
     twist = twist.+(-twist[end]+pitch) #Correct twist to OpenFAST input style,  including blade pitch
     chords = chordfit.(locs)
-    afid = intergerfit(rads, radsafid, locs)
+    afid = integerfit(rads, radsafid, locs)
     adprops = hcat(blrads, precone, sweep, preconeangle, twist, chords, afid)
     directory = ["BlSpn" "BlCrvAC" "BlSwpAC" "BlCrvAng" "BlTwist" "BlChord" "BlAFID"]
 
@@ -1319,7 +1463,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
     - importantnodes - the node numbers of the important radi that the user declared. 
     
     ### Notes
-    - Note that this function does not place nodes in the transition region between the cylinder and the airfoils. It also does not interpolate the airfoils between nodes, but uses an interger fit to populate the airfoil id in the blade file. 
+    - Note that this function does not place nodes in the transition region between the cylinder and the airfoils. It also does not interpolate the airfoils between nodes, but uses an integer fit to populate the airfoil id in the blade file. 
     
     ### Definitions 
     Below is a short list of the naming convention used in this function.
@@ -1331,4 +1475,55 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
 function CreateAD15Blade(props, tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=true)
 
     return CreateAD15Blade(props[:,1], props[:,2], props[:,3], props[:,4], props[:,5], props[:,6], props[:,7], tiprad, hubrad, cylinderrad, airfoilrad, pitch; importantrads = [], notes = "This is a turbine.", verbose=false)
+end
+
+"""
+    CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimArea=1)
+
+Creates an Airfoil Input file object. 
+
+### Inputs
+- Polar::Array{Float64, 2} - nx4 array of the airfoil coefficients in order of aoa, cl, cd, cm
+- Re::Float64 - Reynolds number of the airfoil polar
+- NumCoords::String - file containing the coordinate file ("@\"s809_coords.dat\"")
+"""
+function CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimArea=1)
+    BL_file = "ununsed"
+    NumTabs = 1
+    UserProp = 0
+    InclUAdata = "false"
+    alpha0 = 0
+    alpha1 = 0
+    alpha2 = 0
+    eta_e = 0
+    C_nalpha = 0
+    T_f0 = 0
+    T_V0 = 0
+    T_p = 0
+    T_VL = 0
+    b1 = 0
+    b2 = 0
+    b5 = 0
+    A1 = 0
+    A2 = 0
+    A5 = 0
+    S1 = 0
+    S2 = 0
+    S3 = 0
+    S4 = 0
+    Cn1 = 0
+    Cn2 = 0
+    St_sh = 0
+    Cd0 = 0
+    Cm0 = 0
+    k0 = 0
+    k1 = 0
+    k2 = 0
+    k3 = 0
+    k1_hat = 0
+    x_cp_bar = 0
+    UACutout="Default"
+    filtCutOff="Default"
+    NumAlf, n = size(Polar)
+    return AirfoilInput(InterpOrd, NonDimArea, NumCoords, BL_file, NumTabs, Re, UserProp, InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1, b2, b5, A1, A2, A5, S1, S2, S3, S4, Cn1, Cn2, St_sh, Cd0, Cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, UACutout, filtCutOff, NumAlf, Polar)
 end
