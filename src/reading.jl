@@ -60,15 +60,19 @@ end
 """
 Fetch one of the beginning words from a FAST File.
 """
-function fetchword(line;lengthofword=11)
-    return line[2:endofword(line[1:lengthofword])-1]
-end
-
-"""
-Fetch one of the beginning words from a FAST File.
-"""
-function fetchword15(line;lengthofword=14, begword=1)
-    return line[begword:endofword(line[1:lengthofword])]
+function fetchword(line;lengthofword=14, begword=1, adapt=false, keepquotes=false)
+    word = line[begword:endofword(line[1:lengthofword])]
+    if adapt
+        if lowercase(word)=="true"
+            word = true
+        elseif lowercase(word)=="false" 
+            word = false
+        end
+    end
+    if !keepquotes & (word[1]=='\"')
+        word = word[2:end-1]
+    end
+    return word
 end
 
 """

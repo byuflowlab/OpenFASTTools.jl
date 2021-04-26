@@ -1,4 +1,5 @@
 function formatword(word;location="front",quotes=true, desiredlength=11)
+    word = string(word)
     if quotes
         word = "\""*word*"\""
     end

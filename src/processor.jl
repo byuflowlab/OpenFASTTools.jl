@@ -217,6 +217,9 @@ function integerfit(x, y, xnew)
                 ynew[i] = y[j]
                 break
             end
+            if j==length(x)
+                ynew[i] = y[end]
+            end
         end
     end
     return ynew
@@ -236,6 +239,7 @@ numbers - a 1D array of integers that represent the names you converted
 Note that this function is not case sensitive. Thus Afoil and afoil will receive the same number assignment. 
 """
 function nametonumber(list)
+    #TODO: This needs to be able to handle when we want the repeated names
     n = length(list)
     numbers = zeros(Int, n)
     uniquelist = unique(lowercase.(list))
@@ -263,6 +267,12 @@ function namefit(x, list, xnew)
         end
     end
     newnums = integerfit(x, numbers, xnew)
+    # println("NAMEFIT")
+    # println("x: ",x)
+    # println("xnew: ", xnew)
+    # println("numbers: ", numbers)
+    # println("length newnums: ", length(newnums))
+    # println("newnums: ", newnums)
     newnames = String[]
     for i=1:length(newnums)
         for j=1:length(uniquelist)

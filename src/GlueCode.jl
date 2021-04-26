@@ -23,8 +23,8 @@ A dictionary was chosen because the out file can have a lot of different outputs
 """
 function ReadOutput(filename, filepath)
         #Read in the file
-        cd(filepath)
-        fi = open(filename, "r")
+        # cd(filepath)
+        fi = open(filepath*"/"*filename, "r")
         lines = readlines(fi)
         close(fi)
         if length(lines)>2

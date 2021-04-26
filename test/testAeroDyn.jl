@@ -5,51 +5,51 @@
 
 @testset "AeroDyn" begin
 
-    @testset "Read AeroDyn" begin
+    @testset "Read AeroDyn" begin 
 
         file = "NREL5MWrefAD15.dat"
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-        adfile = of.ReadAD15File(file, path)
+        adfile = of.read_adfile(file, path)
 
-        @test lowercase(adfile.Echo)=="false"
-        @test lowercase(adfile.DTAero)=="\"default\"" #Note that this guy is different than the others, maybe should change. 
-        @test adfile.WakeMod==1
-        @test adfile.AFAeroMod==2
-        @test adfile.TwrPotent==1
-        @test lowercase(adfile.TwrShadow)=="false"
-        @test lowercase(adfile.TwrAero)=="true"
-        @test lowercase(adfile.FrozenWake)=="false"
-        @test lowercase(adfile.CavitCheck)=="false"
-        @test lowercase(adfile.CompAA)=="false"
-        @test adfile.AA_InputFile=="unused" #Should be case sensitive
-        @test isapprox(adfile.AirDens,1.225,atol=1e-8)
-        @test isapprox(adfile.KinVisc, 1.464e-5,atol=1e-10)
-        @test isapprox(adfile.SpdSound, 335,atol=1e-5)
-        @test isapprox(adfile.Patm, 103500, atol=1e-5)
-        @test isapprox(adfile.Pvap, 1700, atol=1e-5)
-        @test isapprox(adfile.FluidDepth, 0.5, atol=1e-5)
-        @test adfile.SkewMod==2
-        @test lowercase(adfile.SkewModFactor)=="default"
-        @test lowercase(adfile.TipLoss)=="true"
-        @test lowercase(adfile.HubLoss)=="true"
-        @test lowercase(adfile.TanInd)=="true"
-        @test lowercase(adfile.AIDrag)=="false"
-        @test lowercase(adfile.TIDrag)=="false"
-        @test lowercase(adfile.IndToler)=="default"
-        @test adfile.MaxIter==100
-        @test adfile.DBEMT_Mod==2
+        @test adfile.echo==false
+        @test lowercase(adfile.dtaero)=="default" #Note that this guy is different than the others, maybe should change. 
+        @test adfile.wakemod==1
+        @test adfile.afaeromod==2
+        @test adfile.twrpotent==1
+        @test adfile.twrshadow==false
+        @test adfile.twraero==true
+        @test adfile.frozenwake==false
+        @test adfile.cavitcheck==false
+        @test adfile.compaa==false
+        @test adfile.aa_inputfile=="unused" #Should be case sensitive
+        @test isapprox(adfile.airdens,1.225,atol=1e-8)
+        @test isapprox(adfile.kinvisc, 1.464e-5,atol=1e-10)
+        @test isapprox(adfile.spdsound, 335,atol=1e-5)
+        @test isapprox(adfile.patm, 103500, atol=1e-5)
+        @test isapprox(adfile.pvap, 1700, atol=1e-5)
+        @test isapprox(adfile.fluiddepth, 0.5, atol=1e-5)
+        @test adfile.skewmod==2
+        @test lowercase(adfile.skewmodfactor)=="default"
+        @test adfile.tiploss==true
+        @test adfile.hubloss==true
+        @test adfile.tanind==true
+        @test adfile.ai_drag==false
+        @test adfile.ti_drag==false
+        @test lowercase(adfile.ind_toler)=="default"
+        @test adfile.maxiter==100
+        @test adfile.dbemt_mod==2
         @test isapprox(adfile.tau1_const, 4, atol=1e-5)
-        @test adfile.OLAFInputFileName=="unused" #Should be case sensitive
-        @test adfile.UAMod==3
-        @test lowercase(adfile.FLookup)=="true"
-        @test adfile.AFTabMod==1
-        @test adfile.InCol_Alfa==1
-        @test adfile.InCol_Cl==2
-        @test adfile.InCol_Cd==3
-        @test adfile.InCol_Cm==4
-        @test adfile.InCol_Cpmin==0
-        @test adfile.NumAFfiles==8
-        @test adfile.Foils==["Airfoils/Cylinder1.dat"
+        @test adfile.olaf_inputfilename=="unused" #Should be case sensitive
+        @test adfile.uamod==3
+        @test adfile.flookup==true
+        @test adfile.aftabmod==1
+        @test adfile.incol_alfa==1
+        @test adfile.incol_cl==2
+        @test adfile.incol_cd==3
+        @test adfile.incol_cm==4
+        @test adfile.incol_cpmin==0
+        @test adfile.numaffiles==8
+        @test adfile.foils==["Airfoils/Cylinder1.dat"
         "Airfoils/Cylinder2.dat"
         "Airfoils/DU40_A17.dat"
         "Airfoils/DU35_A17.dat"
@@ -57,9 +57,9 @@
         "Airfoils/DU25_A17.dat"
         "Airfoils/DU21_A17.dat"
         "Airfoils/NACA64_A17.dat"] #Should be case sensitive
-        @test lowercase(adfile.UseBlCm)=="true"
-        @test adfile.Blades==["NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat"] #Should be case sensitive
-        @test adfile.NumTwrNds==12
+        @test adfile.useblcm==true
+        @test adfile.blades==["NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat"] #Should be case sensitive
+        @test adfile.numtwrnds==12
 
         twrnds = [0.0000000E+00  6.0000000E+00  1.0000000E+00
         8.5261000E+00  5.7870000E+00  1.0000000E+00
@@ -73,25 +73,25 @@
         7.6738000E+01  4.0830000E+00  1.0000000E+00
         8.5268000E+01  3.8700000E+00  1.0000000E+00
         8.7600000E+01  3.8700000E+00  1.0000000E+00]
-        @test isapprox(adfile.TwrNds,twrnds,atol=1e-5)
-        @test lowercase(adfile.SumPrint)=="true"
-        @test adfile.NBlOuts==3
+        @test isapprox(adfile.twrnds,twrnds,atol=1e-5)
+        @test adfile.sumprint==true
+        @test adfile.nblouts==3
 
         bloutnd = [1, 9, 19]
-        @test adfile.BlOutNd==bloutnd
-        @test adfile.NTwOuts==0
+        @test adfile.bloutnd==bloutnd
+        @test adfile.ntwouts==0
 
         twoutnd = [1, 2, 6]
-        @test adfile.TwOutNd==twoutnd
+        @test adfile.twoutnd==twoutnd
 
         outlist = ["RtAeroPwr"]
-        @test adfile.Outlist==outlist
-        @test adfile.BldNd_BladesOut==3
+        @test adfile.outlist==outlist
+        @test adfile.bldnd_bladesout==3
 
         outlist = ["VUndx", "VUndy", "VUndz"]
         bloutnd = [99]
-        @test adfile.BldNd_BlOutNd==bloutnd
-        @test adfile.NodeOutlist==outlist
+        @test adfile.bldnd_bloutnd==bloutnd
+        @test adfile.nodeoutlist==outlist
 
     end
 
@@ -103,49 +103,49 @@
         println("Note that if there are any errors in the read test set, they will propogate to the write test set.")
         file = "NREL5MWrefAD15.dat"
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-        adfiletemp = of.ReadAD15File(file, path)
-        of.WriteAD15File(adfiletemp, "testNREL5MWAD15.dat")
-        adfile = of.ReadAD15File("testNREL5MWAD15.dat", path)
+        adfiletemp = of.read_adfile(file, path)
+        of.write_adfile(adfiletemp, "testNREL5MWAD15.dat")
+        adfile = of.read_adfile(file, path)
 
-        @test lowercase(adfile.Echo)=="false"
-        @test lowercase(adfile.DTAero)=="\"default\"" #Note that this guy is different than the others, maybe should change. 
-        @test adfile.WakeMod==1
-        @test adfile.AFAeroMod==2
-        @test adfile.TwrPotent==1
-        @test lowercase(adfile.TwrShadow)=="false"
-        @test lowercase(adfile.TwrAero)=="true"
-        @test lowercase(adfile.FrozenWake)=="false"
-        @test lowercase(adfile.CavitCheck)=="false"
-        @test lowercase(adfile.CompAA)=="false"
-        @test adfile.AA_InputFile=="unused" #Should be case sensitive
-        @test isapprox(adfile.AirDens,1.225,atol=1e-8)
-        @test isapprox(adfile.KinVisc, 1.464e-5,atol=1e-10)
-        @test isapprox(adfile.SpdSound, 335,atol=1e-5)
-        @test isapprox(adfile.Patm, 103500, atol=1e-5)
-        @test isapprox(adfile.Pvap, 1700, atol=1e-5)
-        @test isapprox(adfile.FluidDepth, 0.5, atol=1e-5)
-        @test adfile.SkewMod==2
-        @test lowercase(adfile.SkewModFactor)=="default"
-        @test lowercase(adfile.TipLoss)=="true"
-        @test lowercase(adfile.HubLoss)=="true"
-        @test lowercase(adfile.TanInd)=="true"
-        @test lowercase(adfile.AIDrag)=="false"
-        @test lowercase(adfile.TIDrag)=="false"
-        @test lowercase(adfile.IndToler)=="default"
-        @test adfile.MaxIter==100
-        @test adfile.DBEMT_Mod==2
+        @test adfile.echo==false
+        @test lowercase(adfile.dtaero)=="default" #Note that this guy is different than the others, maybe should change. 
+        @test adfile.wakemod==1
+        @test adfile.afaeromod==2
+        @test adfile.twrpotent==1
+        @test adfile.twrshadow==false
+        @test adfile.twraero==true
+        @test adfile.frozenwake==false
+        @test adfile.cavitcheck==false
+        @test adfile.compaa==false
+        @test adfile.aa_inputfile=="unused" #Should be case sensitive
+        @test isapprox(adfile.airdens,1.225,atol=1e-8)
+        @test isapprox(adfile.kinvisc, 1.464e-5,atol=1e-10)
+        @test isapprox(adfile.spdsound, 335,atol=1e-5)
+        @test isapprox(adfile.patm, 103500, atol=1e-5)
+        @test isapprox(adfile.pvap, 1700, atol=1e-5)
+        @test isapprox(adfile.fluiddepth, 0.5, atol=1e-5)
+        @test adfile.skewmod==2
+        @test lowercase(adfile.skewmodfactor)=="default"
+        @test adfile.tiploss==true
+        @test adfile.hubloss==true
+        @test adfile.tanind==true
+        @test adfile.ai_drag==false
+        @test adfile.ti_drag==false
+        @test lowercase(adfile.ind_toler)=="default"
+        @test adfile.maxiter==100
+        @test adfile.dbemt_mod==2
         @test isapprox(adfile.tau1_const, 4, atol=1e-5)
-        @test adfile.OLAFInputFileName=="unused" #Should be case sensitive
-        @test adfile.UAMod==3
-        @test lowercase(adfile.FLookup)=="true"
-        @test adfile.AFTabMod==1
-        @test adfile.InCol_Alfa==1
-        @test adfile.InCol_Cl==2
-        @test adfile.InCol_Cd==3
-        @test adfile.InCol_Cm==4
-        @test adfile.InCol_Cpmin==0
-        @test adfile.NumAFfiles==8
-        @test adfile.Foils==["Airfoils/Cylinder1.dat"
+        @test adfile.olaf_inputfilename=="unused" #Should be case sensitive
+        @test adfile.uamod==3
+        @test adfile.flookup==true
+        @test adfile.aftabmod==1
+        @test adfile.incol_alfa==1
+        @test adfile.incol_cl==2
+        @test adfile.incol_cd==3
+        @test adfile.incol_cm==4
+        @test adfile.incol_cpmin==0
+        @test adfile.numaffiles==8
+        @test adfile.foils==["Airfoils/Cylinder1.dat"
         "Airfoils/Cylinder2.dat"
         "Airfoils/DU40_A17.dat"
         "Airfoils/DU35_A17.dat"
@@ -153,9 +153,9 @@
         "Airfoils/DU25_A17.dat"
         "Airfoils/DU21_A17.dat"
         "Airfoils/NACA64_A17.dat"] #Should be case sensitive
-        @test lowercase(adfile.UseBlCm)=="true"
-        @test adfile.Blades==["NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat"] #Should be case sensitive
-        @test adfile.NumTwrNds==12
+        @test adfile.useblcm==true
+        @test adfile.blades==["NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat", "NREL5MWrefAD_blade.dat"] #Should be case sensitive
+        @test adfile.numtwrnds==12
 
         twrnds = [0.0000000E+00  6.0000000E+00  1.0000000E+00
         8.5261000E+00  5.7870000E+00  1.0000000E+00
@@ -169,25 +169,25 @@
         7.6738000E+01  4.0830000E+00  1.0000000E+00
         8.5268000E+01  3.8700000E+00  1.0000000E+00
         8.7600000E+01  3.8700000E+00  1.0000000E+00]
-        @test isapprox(adfile.TwrNds,twrnds,atol=1e-5)
-        @test lowercase(adfile.SumPrint)=="true"
-        @test adfile.NBlOuts==3
+        @test isapprox(adfile.twrnds,twrnds,atol=1e-5)
+        @test adfile.sumprint==true
+        @test adfile.nblouts==3
 
         bloutnd = [1, 9, 19]
-        @test adfile.BlOutNd==bloutnd
-        @test adfile.NTwOuts==0
+        @test adfile.bloutnd==bloutnd
+        @test adfile.ntwouts==0
 
         twoutnd = [1, 2, 6]
-        @test adfile.TwOutNd==twoutnd
+        @test adfile.twoutnd==twoutnd
 
         outlist = ["RtAeroPwr"]
-        @test adfile.Outlist==outlist
-        @test adfile.BldNd_BladesOut==3
+        @test adfile.outlist==outlist
+        @test adfile.bldnd_bladesout==3
 
         outlist = ["VUndx", "VUndy", "VUndz"]
         bloutnd = [99]
-        @test adfile.BldNd_BlOutNd==bloutnd
-        @test adfile.NodeOutlist==outlist
+        @test adfile.bldnd_bloutnd==bloutnd
+        @test adfile.nodeoutlist==outlist
         
 
     end
@@ -199,9 +199,9 @@
     @testset "Read ADBlade" begin
         file = "NREL5MWrefAD_blade.dat"
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-        adblade = of.ReadADBlade(file, path)
+        adblade = of.read_adblade(file, path)
         
-        @test adblade.NumBlNds==19
+        @test adblade.numnds==19
         bldprops = [
 0.0000000E+00  0.0000000E+00  0.0000000E+00 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
 1.3667000E+00 -8.1531745E-04 -3.4468858E-03 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
@@ -224,41 +224,53 @@
 6.1499900E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
         ]
         
-        @test isapprox(adblade.BldProps,bldprops,atol=1e-6)
+        @test isapprox(adblade.radii,bldprops[:,1],atol=1e-6)
+        @test isapprox(adblade.curve,bldprops[:,2],atol=1e-6)
+        @test isapprox(adblade.sweep,bldprops[:,3],atol=1e-6)
+        @test isapprox(adblade.curveangle,bldprops[:,4],atol=1e-6)
+        @test isapprox(adblade.twist,bldprops[:,5],atol=1e-6)
+        @test isapprox(adblade.chord,bldprops[:,6],atol=1e-6)
+        @test isapprox(adblade.afid,bldprops[:,7],atol=1e-6)
         
     end #End testing ReadADBlade
 
     @testset "Write ADBlade" begin
         file = "NREL5MWrefAD_blade.dat"
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-        adbladetemp = of.ReadADBlade(file, path)
-        of.WriteADBlade(adbladetemp, "testadblade.dat";outputpath=path)
-        adblade = of.ReadADBlade("testadblade.dat", path)
+        adbladetemp = of.read_adblade(file, path)
+        of.write_adblade(adbladetemp, "testadblade.dat";outputpath=path)
+        adblade = of.read_adblade("testadblade.dat", path)
 
-        @test adblade.NumBlNds==19
+        @test adblade.numnds==19
         bldprops = [
-    0.0000000E+00  0.0000000E+00  0.0000000E+00 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
-    1.3667000E+00 -8.1531745E-04 -3.4468858E-03 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
-    4.1000000E+00 -2.4839790E-02 -1.0501421E-01 0.0000000E+00  1.3308000E+01  3.8540000E+00        1
-    6.8333000E+00 -5.9469375E-02 -2.5141635E-01 0.0000000E+00  1.3308000E+01  4.1670000E+00        2
-    1.0250000E+01 -1.0909141E-01 -4.6120149E-01 0.0000000E+00  1.3308000E+01  4.5570000E+00        3
-    1.4350000E+01 -1.1573354E-01 -5.6986665E-01 0.0000000E+00  1.1480000E+01  4.6520000E+00        4
-    1.8450000E+01 -9.8316709E-02 -5.4850833E-01 0.0000000E+00  1.0162000E+01  4.4580000E+00        4
-    2.2550000E+01 -8.3186967E-02 -5.2457001E-01 0.0000000E+00  9.0110000E+00  4.2490000E+00        5
-    2.6650000E+01 -6.7933232E-02 -4.9624675E-01 0.0000000E+00  7.7950000E+00  4.0070000E+00        6
-    3.0750000E+01 -5.3393159E-02 -4.6544755E-01 0.0000000E+00  6.5440000E+00  3.7480000E+00        6
-    3.4850000E+01 -4.0899260E-02 -4.3583519E-01 0.0000000E+00  5.3610000E+00  3.5020000E+00        7
-    3.8950000E+01 -2.9722933E-02 -4.0591323E-01 0.0000000E+00  4.1880000E+00  3.2560000E+00        7
-    4.3050000E+01 -2.0511081E-02 -3.7569051E-01 0.0000000E+00  3.1250000E+00  3.0100000E+00        8
-    4.7150000E+01 -1.3980013E-02 -3.4521705E-01 0.0000000E+00  2.3190000E+00  2.7640000E+00        8
-    5.1250000E+01 -8.3819737E-03 -3.1463837E-01 0.0000000E+00  1.5260000E+00  2.5180000E+00        8
-    5.4666700E+01 -4.3546914E-03 -2.8909220E-01 0.0000000E+00  8.6300000E-01  2.3130000E+00        8
-    5.7400000E+01 -1.6838383E-03 -2.6074456E-01 0.0000000E+00  3.7000000E-01  2.0860000E+00        8
-    6.0133300E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
-    6.1499900E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
+0.0000000E+00  0.0000000E+00  0.0000000E+00 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
+1.3667000E+00 -8.1531745E-04 -3.4468858E-03 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
+4.1000000E+00 -2.4839790E-02 -1.0501421E-01 0.0000000E+00  1.3308000E+01  3.8540000E+00        1
+6.8333000E+00 -5.9469375E-02 -2.5141635E-01 0.0000000E+00  1.3308000E+01  4.1670000E+00        2
+1.0250000E+01 -1.0909141E-01 -4.6120149E-01 0.0000000E+00  1.3308000E+01  4.5570000E+00        3
+1.4350000E+01 -1.1573354E-01 -5.6986665E-01 0.0000000E+00  1.1480000E+01  4.6520000E+00        4
+1.8450000E+01 -9.8316709E-02 -5.4850833E-01 0.0000000E+00  1.0162000E+01  4.4580000E+00        4
+2.2550000E+01 -8.3186967E-02 -5.2457001E-01 0.0000000E+00  9.0110000E+00  4.2490000E+00        5
+2.6650000E+01 -6.7933232E-02 -4.9624675E-01 0.0000000E+00  7.7950000E+00  4.0070000E+00        6
+3.0750000E+01 -5.3393159E-02 -4.6544755E-01 0.0000000E+00  6.5440000E+00  3.7480000E+00        6
+3.4850000E+01 -4.0899260E-02 -4.3583519E-01 0.0000000E+00  5.3610000E+00  3.5020000E+00        7
+3.8950000E+01 -2.9722933E-02 -4.0591323E-01 0.0000000E+00  4.1880000E+00  3.2560000E+00        7
+4.3050000E+01 -2.0511081E-02 -3.7569051E-01 0.0000000E+00  3.1250000E+00  3.0100000E+00        8
+4.7150000E+01 -1.3980013E-02 -3.4521705E-01 0.0000000E+00  2.3190000E+00  2.7640000E+00        8
+5.1250000E+01 -8.3819737E-03 -3.1463837E-01 0.0000000E+00  1.5260000E+00  2.5180000E+00        8
+5.4666700E+01 -4.3546914E-03 -2.8909220E-01 0.0000000E+00  8.6300000E-01  2.3130000E+00        8
+5.7400000E+01 -1.6838383E-03 -2.6074456E-01 0.0000000E+00  3.7000000E-01  2.0860000E+00        8
+6.0133300E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
+6.1499900E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
         ]
         
-        @test isapprox(adblade.BldProps, bldprops, atol=1e-6)
+        @test isapprox(adblade.radii,bldprops[:,1],atol=1e-6)
+        @test isapprox(adblade.curve,bldprops[:,2],atol=1e-6)
+        @test isapprox(adblade.sweep,bldprops[:,3],atol=1e-6)
+        @test isapprox(adblade.curveangle,bldprops[:,4],atol=1e-6)
+        @test isapprox(adblade.twist,bldprops[:,5],atol=1e-6)
+        @test isapprox(adblade.chord,bldprops[:,6],atol=1e-6)
+        @test isapprox(adblade.afid,bldprops[:,7],atol=1e-6)
         
 
 
@@ -271,17 +283,17 @@
     @testset "Read Aerodata" begin
     file = "DU21_A17.dat"
     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/AeroData"
-    aerodata = of.ReadAerodata(file, path)
+    aerodata = of.read_aerodata(file, path)
 
-    @test aerodata.NumAirfoils==1
-    @test isapprox(aerodata.TableID,0.0,atol=1e-5)
-    @test isapprox(aerodata.Aoa_stall,8.0, atol=1e-5)
-    @test isapprox(aerodata.Aoa_0Cn, -5.0609, atol=1e-8)
-    @test isapprox(aerodata.dCn_0L, 6.2047, atol=1e-8)
-    @test isapprox(aerodata.Cn_stall_positive, 1.4144, atol=1e-5)
-    @test isapprox(aerodata.Cn_stall_negative, -0.5324, atol=1e-5)
-    @test isapprox(aerodata.Aoa_minCd, -1.50, atol=1e-5)
-    @test isapprox(aerodata.Cd_min, 0.0057, atol=1e-5)
+    @test aerodata.numairfoils==1
+    @test isapprox(aerodata.tableid,0.0,atol=1e-5)
+    @test isapprox(aerodata.aoa_stall,8.0, atol=1e-5)
+    @test isapprox(aerodata.aoa_0cn, -5.0609, atol=1e-8)
+    @test isapprox(aerodata.dcn_0l, 6.2047, atol=1e-8)
+    @test isapprox(aerodata.cn_stall_positive, 1.4144, atol=1e-5)
+    @test isapprox(aerodata.cn_stall_negative, -0.5324, atol=1e-5)
+    @test isapprox(aerodata.aoa_mincd, -1.50, atol=1e-5)
+    @test isapprox(aerodata.cd_min, 0.0057, atol=1e-5)
 
     polar = [
         -180.00    0.000   0.0185   0.0000
@@ -427,28 +439,31 @@
  175.00   -0.394   0.0334  -0.1978
  180.00    0.000   0.0185   0.0000
     ]
-    @test isapprox(aerodata.Polar, polar, atol=1e-5)
+    @test isapprox(aerodata.aoa, polar[:,1], atol=1e-5)
+    @test isapprox(aerodata.cl, polar[:,2], atol=1e-5)
+    @test isapprox(aerodata.cd, polar[:,3], atol=1e-5)
+    @test isapprox(aerodata.cm, polar[:,4], atol=1e-5)
     end #End testing ReadAerodata
 
     @testset "Write Aerodata" begin
     file = "DU21_A17.dat"
     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/AeroData"
-    aerodatatemp = of.ReadAerodata(file, path)
-    of.WriteAerodata(aerodatatemp, "testingaerodata.dat")
-    aerodata = of.ReadAerodata("testingaerodata.dat", path)
+    aerodatatemp = of.read_aerodata(file, path)
+    of.write_aerodata(aerodatatemp, "testingaerodata.dat")
+    aerodata = of.read_aerodata("testingaerodata.dat", path)
 
-    @test aerodata.NumAirfoils==1
-    @test isapprox(aerodata.TableID,0.0,atol=1e-5)
-    @test isapprox(aerodata.Aoa_stall,8.0, atol=1e-5)
-    @test isapprox(aerodata.Aoa_0Cn, -5.0609, atol=1e-8)
-    @test isapprox(aerodata.dCn_0L, 6.2047, atol=1e-8)
-    @test isapprox(aerodata.Cn_stall_positive, 1.4144, atol=1e-5)
-    @test isapprox(aerodata.Cn_stall_negative, -0.5324, atol=1e-5)
-    @test isapprox(aerodata.Aoa_minCd, -1.50, atol=1e-5)
-    @test isapprox(aerodata.Cd_min, 0.0057, atol=1e-5)
+    @test aerodata.numairfoils==1
+    @test isapprox(aerodata.tableid,0.0,atol=1e-5)
+    @test isapprox(aerodata.aoa_stall,8.0, atol=1e-5)
+    @test isapprox(aerodata.aoa_0cn, -5.0609, atol=1e-8)
+    @test isapprox(aerodata.dcn_0l, 6.2047, atol=1e-8)
+    @test isapprox(aerodata.cn_stall_positive, 1.4144, atol=1e-5)
+    @test isapprox(aerodata.cn_stall_negative, -0.5324, atol=1e-5)
+    @test isapprox(aerodata.aoa_mincd, -1.50, atol=1e-5)
+    @test isapprox(aerodata.cd_min, 0.0057, atol=1e-5)
 
     polar = [
--180.00    0.000   0.0185   0.0000
+        -180.00    0.000   0.0185   0.0000
 -175.00    0.394   0.0332   0.1978
 -170.00    0.788   0.0945   0.3963
 -160.00    0.670   0.2809   0.2738
@@ -589,55 +604,308 @@
  160.00   -0.711   0.2922  -0.2954
  170.00   -0.788   0.0969  -0.3966
  175.00   -0.394   0.0334  -0.1978
- 180.00    0.000   0.0185   0.0000]
-    @test isapprox(aerodata.Polar, polar, atol=1e-4)
+ 180.00    0.000   0.0185   0.0000
+    ]
+    @test isapprox(aerodata.aoa, polar[:,1], atol=1e-5)
+    @test isapprox(aerodata.cl, polar[:,2], atol=1e-5)
+    @test isapprox(aerodata.cd, polar[:,3], atol=1e-5)
+    @test isapprox(aerodata.cm, polar[:,4], atol=1e-5)
     end # End testing write aerodata
 
-    @testset "Read AirfoilInput" begin
+    @testset "Read AirfoilInput - Steady" begin
+        file = "ccblade_S809_3.00E+05_Vinf-5.dat"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/uae20kw"
+        input = of.read_airfoilinput(file, path)
+
+        @test lowercase(input.interpord)=="default"
+        @test input.nondimarea==1
+        @test input.numcoords=="@\"s809_coords.txt\""
+        @test input.numtabs==1
+        @test isapprox(input.re,300000, atol=1e-5)
+        @test input.userprop==0
+        @test input.incluadata==false
+        @test input.numalf==227
+
+        polar = [
+            -180.00000  0.15265  0.26205  0.00000
+-178.20000  0.22455  0.01611  0.00000
+-176.40000  0.27359  0.02271  0.00000
+-174.60000  0.32223  0.03369  0.00000
+-172.80000  0.37030  0.04900  0.00000
+-171.00000  0.41759  0.06858  0.00000
+-169.20000  0.46394  0.09235  0.00000
+-167.40000  0.50914  0.12022  0.00000
+-165.60000  0.55302  0.15207  0.00000
+-163.80000  0.59541  0.18779  0.00000
+-162.00000  0.63615  0.22723  0.00000
+-160.20000  0.67507  0.27024  0.00000
+-158.40000  0.71201  0.31664  0.00000
+-156.60000  0.74684  0.36625  0.00000
+-154.80000  0.77941  0.41888  0.00000
+-153.00000  0.80959  0.47431  0.00000
+-151.20000  0.83728  0.53233  0.00000
+-149.40000  0.86235  0.59271  0.00000
+-147.60000  0.88471  0.65521  0.00000
+-145.80000  0.90427  0.71958  0.00000
+-144.00000  0.92095  0.78557  0.00000
+-142.20000  0.93469  0.85292  0.00000
+-140.40000  0.94544  0.92135  0.00000
+-138.60000  0.95314  0.99061  0.00000
+-136.80000  0.95778  1.06041  0.00000
+-135.00000  0.95933  1.13048  0.00000
+-133.20000  0.95778  1.20054  0.00000
+-131.40000  0.95314  1.27031  0.00000
+-129.60000  0.94544  1.33953  0.00000
+-127.80000  0.93469  1.40791  0.00000
+-126.00000  0.92095  1.47518  0.00000
+-124.20000  0.90427  1.54108  0.00000
+-122.40000  0.88471  1.60535  0.00000
+-120.60000  0.86235  1.66772  0.00000
+-118.80000  0.83728  1.72797  0.00000
+-117.00000  0.80959  1.78584  0.00000
+-115.20000  0.77941  1.84110  0.00000
+-113.40000  0.74684  1.89354  0.00000
+-111.60000  0.71201  1.94296  0.00000
+-109.80000  0.67507  1.98914  0.00000
+-108.00000  0.63615  2.03192  0.00000
+-106.20000  0.59541  2.07112  0.00000
+-104.40000  0.55302  2.10658  0.00000
+-102.60000  0.50914  2.13816  0.00000
+-100.80000  0.46394  2.16575  0.00000
+-99.00000  0.41759  2.18922  0.00000
+-97.20000  0.37030  2.20848  0.00000
+-95.40000  0.32223  2.22347  0.00000
+-93.60000  0.27359  2.23411  0.00000
+-91.80000  0.22455  2.24036  0.00000
+-90.00000  0.17533  2.24220  0.00000
+-88.20000  0.10500  2.24036  0.00000
+-86.40000  0.03495  2.23411  0.00000
+-84.60000 -0.03454  2.22347  0.00000
+-82.80000 -0.10321  2.20848  0.00000
+-81.00000 -0.17077  2.18922  0.00000
+-79.20000 -0.23697  2.16575  0.00000
+-77.40000 -0.30198  2.14244  0.00000
+-75.60000 -0.36900  2.14248  0.00000
+-73.80000 -0.43818  2.15231  0.00000
+-72.00000 -0.50882  2.16287  0.00000
+-70.20000 -0.58025  2.17022  0.00000
+-68.40000 -0.65182  2.17246  0.00000
+-66.60000 -0.72290  2.16863  0.00000
+-64.80000 -0.79289  2.15827  0.00000
+-63.00000 -0.86122  2.14118  0.00000
+-61.20000 -0.92732  2.11740  0.00000
+-59.40000 -0.99070  2.08703  0.00000
+-57.60000 -1.05086  2.05029  0.00000
+-55.80000 -1.10734  2.00748  0.00000
+-54.00000 -1.15973  1.95891  0.00000
+-52.20000 -1.20764  1.90495  0.00000
+-50.40000 -1.25071  1.84601  0.00000
+-48.60000 -1.28862  1.78251  0.00000
+-46.80000 -1.32108  1.71488  0.00000
+-45.00000 -1.34783  1.64359  0.00000
+-43.20000 -1.36866  1.56910  0.00000
+-41.40000 -1.38338  1.49190  0.00000
+-39.60000 -1.39181  1.41245  0.00000
+-37.80000 -1.39383  1.33125  0.00000
+-36.00000 -1.38933  1.24878  0.00000
+-34.20000 -1.37824  1.16552  0.00000
+-32.40000 -1.36050  1.08193  0.00000
+-30.60000 -1.33608  0.99851  0.00000
+-28.80000 -1.27928  0.89728  0.00000
+-27.00000 -1.20609  0.79302  0.00000
+-25.20000 -1.13008  0.69580  0.00000
+-23.40000 -1.05140  0.60545  0.00000
+-21.60000 -0.97018  0.52183  0.00000
+-19.80000 -0.88658  0.44482  0.00000
+-18.00000 -0.80076  0.37435  0.00000
+-16.20000 -0.71290  0.31034  0.00000
+-14.40000 -0.62318  0.25273  0.00000
+-12.60000 -0.53178  0.20149  0.00000
+-10.80000 -0.43889  0.15657  0.00000
+-9.00000 -0.34473  0.11794  0.00000
+-7.20000 -0.24950  0.08559  0.00000
+-5.40000 -0.15339  0.05948  0.00000
+-3.60000 -0.05664  0.03959  0.00000
+-1.80000  0.04055  0.02591  0.00000
+0.00000  0.08262  0.01439  0.00000
+1.99000  0.28808  0.01321  0.00000
+4.08000  0.52420  0.01490  0.00000
+6.11000  0.73138  0.01371  0.00000
+8.14000  0.88270  0.01986  0.00000
+10.20000  0.92927  0.03901  0.00000
+11.20000  0.94635  0.05042  0.00000
+12.20000  0.95713  0.05927  0.00000
+13.10000  0.99627  0.07498  0.00000
+14.10000  1.03302  0.09080  0.00000
+15.20000  1.05636  0.11079  0.00000
+16.30000  0.96719  0.25701  0.00000
+17.20000  0.86705  0.29845  0.00000
+18.10000  0.88887  0.32409  0.00000
+19.20000  0.90514  0.35023  0.00000
+20.20000  0.94740  0.37954  0.00000
+22.10000  0.97922  0.42971  0.00000
+26.20000  1.13878  0.57704  0.00000
+30.20000  1.44606  0.84895  0.00000
+35.20000  1.50166  1.05897  0.00000
+40.30000  1.51984  1.27365  0.00000
+45.20000  1.60202  1.60441  0.00000
+50.00000  1.52136  1.80195  0.00000
+60.00000  1.21755  2.08362  0.00000
+69.90000  0.84799  2.35458  0.00000
+80.00000  0.45600  2.16000  0.00000
+90.00000  0.12800  2.24000  0.00000
+90.90000  0.12800  2.24702  0.00000
+91.80000  0.10332  2.24942  0.00000
+92.70000  0.07863  2.25072  0.00000
+93.60000  0.05396  2.25091  0.00000
+94.50000  0.02933  2.25000  0.00000
+95.40000  0.00477  2.24800  0.00000
+96.30000 -0.01970  2.24491  0.00000
+97.20000 -0.04406  2.24073  0.00000
+98.10000 -0.06828  2.23547  0.00000
+99.00000 -0.09234  2.22914  0.00000
+99.90000 -0.11622  2.22175  0.00000
+100.80000 -0.13989  2.21330  0.00000
+101.70000 -0.16333  2.20382  0.00000
+102.60000 -0.18652  2.19331  0.00000
+103.50000 -0.20944  2.18179  0.00000
+104.40000 -0.23207  2.16927  0.00000
+105.30000 -0.25438  2.15576  0.00000
+106.20000 -0.27636  2.14129  0.00000
+107.10000 -0.29798  2.12586  0.00000
+108.00000 -0.31922  2.10950  0.00000
+108.90000 -0.34007  2.09223  0.00000
+109.80000 -0.36051  2.07406  0.00000
+110.70000 -0.38052  2.05502  0.00000
+111.60000 -0.40007  2.03513  0.00000
+112.50000 -0.41917  2.01441  0.00000
+113.40000 -0.43777  1.99288  0.00000
+114.30000 -0.45589  1.97057  0.00000
+115.20000 -0.47348  1.94751  0.00000
+116.10000 -0.49055  1.92371  0.00000
+117.00000 -0.50708  1.89921  0.00000
+117.90000 -0.52305  1.87402  0.00000
+118.80000 -0.53845  1.84819  0.00000
+119.70000 -0.55327  1.82173  0.00000
+120.60000 -0.56751  1.79468  0.00000
+121.50000 -0.58114  1.76707  0.00000
+122.40000 -0.59416  1.73892  0.00000
+123.30000 -0.60656  1.71026  0.00000
+124.20000 -0.61834  1.68113  0.00000
+125.10000 -0.62948  1.65156  0.00000
+126.00000 -0.63998  1.62158  0.00000
+126.90000 -0.64984  1.59122  0.00000
+127.80000 -0.65905  1.56051  0.00000
+128.70000 -0.66760  1.52948  0.00000
+129.60000 -0.67550  1.49818  0.00000
+130.50000 -0.68275  1.46663  0.00000
+131.40000 -0.68934  1.43486  0.00000
+132.30000 -0.69527  1.40292  0.00000
+133.20000 -0.70056  1.37082  0.00000
+134.10000 -0.70519  1.33861  0.00000
+135.00000 -0.70454  1.30633  0.00000
+135.90000 -0.68739  1.27400  0.00000
+136.80000 -0.67025  1.24166  0.00000
+137.70000 -0.65311  1.20934  0.00000
+138.60000 -0.63596  1.17707  0.00000
+139.50000 -0.61882  1.14490  0.00000
+140.40000 -0.60167  1.11286  0.00000
+141.30000 -0.58453  1.08097  0.00000
+142.20000 -0.56739  1.04927  0.00000
+143.10000 -0.55024  1.01779  0.00000
+144.00000 -0.53310  0.98658  0.00000
+144.90000 -0.51596  0.95565  0.00000
+145.80000 -0.49881  0.92505  0.00000
+146.70000 -0.48167  0.89480  0.00000
+147.60000 -0.46452  0.86493  0.00000
+148.50000 -0.44738  0.83549  0.00000
+149.40000 -0.43024  0.80649  0.00000
+150.30000 -0.41309  0.77796  0.00000
+151.20000 -0.39595  0.74995  0.00000
+152.10000 -0.37880  0.72247  0.00000
+153.00000 -0.36166  0.69556  0.00000
+153.90000 -0.34452  0.66923  0.00000
+154.80000 -0.32737  0.64353  0.00000
+155.70000 -0.31023  0.61848  0.00000
+156.60000 -0.29309  0.59410  0.00000
+157.50000 -0.27594  0.57042  0.00000
+158.40000 -0.25880  0.54745  0.00000
+159.30000 -0.24165  0.52524  0.00000
+160.20000 -0.22451  0.50380  0.00000
+161.10000 -0.20737  0.48314  0.00000
+162.00000 -0.19022  0.46330  0.00000
+162.90000 -0.17308  0.44430  0.00000
+163.80000 -0.15594  0.42614  0.00000
+164.70000 -0.13879  0.40886  0.00000
+165.60000 -0.12165  0.39247  0.00000
+166.50000 -0.10450  0.37698  0.00000
+167.40000 -0.08736  0.36242  0.00000
+168.30000 -0.07022  0.34880  0.00000
+169.20000 -0.05307  0.33613  0.00000
+170.10000 -0.03593  0.32442  0.00000
+171.00000 -0.01878  0.31369  0.00000
+171.90000 -0.00164  0.30395  0.00000
+172.80000  0.01550  0.29520  0.00000
+173.70000  0.03265  0.28747  0.00000
+174.60000  0.04979  0.28075  0.00000
+175.50000  0.06693  0.27505  0.00000
+176.40000  0.08408  0.27038  0.00000
+177.30000  0.10122  0.26674  0.00000
+178.20000  0.11837  0.26414  0.00000
+179.10000  0.13551  0.26258  0.00000
+180.00000  0.15265  0.26205  0.00000         
+        ]
+        @test input.aoa==polar[:,1]
+        @test input.cl==polar[:,2]
+        @test input.cd==polar[:,3]
+        @test input.cm==polar[:,4]
+    end #End read airfoil Input - Steady
+
+    @testset "Read AirfoilInput - Unsteady" begin
         file = "DU25_A17.dat"
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
-        input = of.ReadAirfoilInput(file, path)
+        input = of.read_airfoilinput(file, path)
 
-        @test lowercase(input.InterpOrd)=="default"
-        @test input.NonDimArea==1
-        @test input.NumCoords=="@\"DU25_A17_coords.txt\""
-        @test input.NumTabs==1
-        @test isapprox(input.Re,0.75, atol=1e-5)
-        @test input.UserProp==0
-        @test lowercase(input.InclUAdata)=="true"
+        @test lowercase(input.interpord)=="default"
+        @test input.nondimarea==1
+        @test input.numcoords=="@\"DU25_A17_coords.txt\""
+        @test input.numtabs==1
+        @test isapprox(input.re,0.75, atol=1e-5)
+        @test input.userprop==0
+        @test input.incluadata==true
         @test isapprox(input.alpha0,-3.2,atol=1e-5)
         @test isapprox(input.alpha1,8.5, atol=1e-5)
         @test isapprox(input.alpha2,-8.5, atol=1e-5)
         @test isapprox(input.eta_e,1, atol=1e-5)
-        @test isapprox(input.C_nalpha,6.4462, atol=1e-5)
-        @test isapprox(input.T_f0,3,atol=1e-5)
-        @test isapprox(input.T_V0,6, atol=1e-5)
-        @test isapprox(input.T_p,1.7, atol=1e-5)
-        @test isapprox(input.T_VL,11, atol=1e-5)
+        @test isapprox(input.c_nalpha,6.4462, atol=1e-5)
+        @test isapprox(input.t_f0,3,atol=1e-5)
+        @test isapprox(input.t_v0,6, atol=1e-5)
+        @test isapprox(input.t_p,1.7, atol=1e-5)
+        @test isapprox(input.t_vl,11, atol=1e-5)
         @test isapprox(input.b1,0.14, atol=1e-5)
         @test isapprox(input.b2,0.53,atol=1e-5)
         @test isapprox(input.b5,5, atol=1e-5)
-        @test isapprox(input.A1,0.3, atol=1e-5)
-        @test isapprox(input.A2,0.7, atol=1e-5)
-        @test isapprox(input.A5,1, atol=1e-5)
-        @test isapprox(input.S1,0.0,atol=1e-5)
-        @test isapprox(input.S2,0, atol=1e-5)
-        @test isapprox(input.S3,0, atol=1e-5)
-        @test isapprox(input.S4,0, atol=1e-5)
-        @test isapprox(input.Cn1,1.4336, atol=1e-5)
-        @test isapprox(input.Cn2,-0.6873,atol=1e-5)
-        @test isapprox(input.St_sh,0.19, atol=1e-5)
-        @test isapprox(input.Cd0,0.006, atol=1e-5)
-        @test isapprox(input.Cm0,-0.12, atol=1e-5)
+        @test isapprox(input.a1,0.3, atol=1e-5)
+        @test isapprox(input.a2,0.7, atol=1e-5)
+        @test isapprox(input.a5,1, atol=1e-5)
+        @test isapprox(input.s1,0.0,atol=1e-5)
+        @test isapprox(input.s2,0, atol=1e-5)
+        @test isapprox(input.s3,0, atol=1e-5)
+        @test isapprox(input.s4,0, atol=1e-5)
+        @test isapprox(input.cn1,1.4336, atol=1e-5)
+        @test isapprox(input.cn2,-0.6873,atol=1e-5)
+        @test isapprox(input.st_sh,0.19, atol=1e-5)
+        @test isapprox(input.cd0,0.006, atol=1e-5)
+        @test isapprox(input.cm0,-0.12, atol=1e-5)
         @test isapprox(input.k0,0, atol=1e-5)
         @test isapprox(input.k1,0,atol=1e-5)
         @test isapprox(input.k2,0, atol=1e-5)
         @test isapprox(input.k3,0, atol=1e-5)
         @test isapprox(input.k1_hat,0, atol=1e-5)
         @test isapprox(input.x_cp_bar,0.2, atol=1e-5)
-        @test lowercase(input.UACutout)=="\"default\""
-        @test lowercase(input.filtCutOff)=="\"default\""
-        @test input.NumAlf==140
+        @test lowercase(input.uacutout)=="default"
+        @test lowercase(input.filtcutoff)=="default"
+        @test input.numalf==140
 
         polar = [
             -180.00    0.000   0.0202   0.0000
@@ -781,211 +1049,470 @@
              175.00   -0.368   0.0356  -0.1846
              180.00    0.000   0.0202   0.0000         
         ]
-        @test input.Polar==polar
+        @test input.aoa==polar[:,1]
+        @test input.cl==polar[:,2]
+        @test input.cd==polar[:,3]
+        @test input.cm==polar[:,4]
     end # End testing Read AirfoilInput
 
-    @testset "Write AirfoilInput" begin
+    @testset "Write AirfoilInput - Steady" begin
+        file = "ccblade_S809_3.00E+05_Vinf-5.dat"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/uae20kw"
+        inputtemp = of.read_airfoilinput(file, path)
+        of.write_airfoilinput(inputtemp, "testingwriteairfoilinput.dat"; outputpath=path)
+        input = of.read_airfoilinput("testingwriteairfoilinput.dat", path)
+
+        @test lowercase(input.interpord)=="default"
+        @test input.nondimarea==1
+        @test input.numcoords=="@\"s809_coords.txt\""
+        @test input.numtabs==1
+        @test isapprox(input.re,300000, atol=1e-5)
+        @test input.userprop==0
+        @test input.incluadata==false
+        @test input.numalf==227
+
+        polar = [
+            -180.00000  0.15265  0.26205  0.00000
+-178.20000  0.22455  0.01611  0.00000
+-176.40000  0.27359  0.02271  0.00000
+-174.60000  0.32223  0.03369  0.00000
+-172.80000  0.37030  0.04900  0.00000
+-171.00000  0.41759  0.06858  0.00000
+-169.20000  0.46394  0.09235  0.00000
+-167.40000  0.50914  0.12022  0.00000
+-165.60000  0.55302  0.15207  0.00000
+-163.80000  0.59541  0.18779  0.00000
+-162.00000  0.63615  0.22723  0.00000
+-160.20000  0.67507  0.27024  0.00000
+-158.40000  0.71201  0.31664  0.00000
+-156.60000  0.74684  0.36625  0.00000
+-154.80000  0.77941  0.41888  0.00000
+-153.00000  0.80959  0.47431  0.00000
+-151.20000  0.83728  0.53233  0.00000
+-149.40000  0.86235  0.59271  0.00000
+-147.60000  0.88471  0.65521  0.00000
+-145.80000  0.90427  0.71958  0.00000
+-144.00000  0.92095  0.78557  0.00000
+-142.20000  0.93469  0.85292  0.00000
+-140.40000  0.94544  0.92135  0.00000
+-138.60000  0.95314  0.99061  0.00000
+-136.80000  0.95778  1.06041  0.00000
+-135.00000  0.95933  1.13048  0.00000
+-133.20000  0.95778  1.20054  0.00000
+-131.40000  0.95314  1.27031  0.00000
+-129.60000  0.94544  1.33953  0.00000
+-127.80000  0.93469  1.40791  0.00000
+-126.00000  0.92095  1.47518  0.00000
+-124.20000  0.90427  1.54108  0.00000
+-122.40000  0.88471  1.60535  0.00000
+-120.60000  0.86235  1.66772  0.00000
+-118.80000  0.83728  1.72797  0.00000
+-117.00000  0.80959  1.78584  0.00000
+-115.20000  0.77941  1.84110  0.00000
+-113.40000  0.74684  1.89354  0.00000
+-111.60000  0.71201  1.94296  0.00000
+-109.80000  0.67507  1.98914  0.00000
+-108.00000  0.63615  2.03192  0.00000
+-106.20000  0.59541  2.07112  0.00000
+-104.40000  0.55302  2.10658  0.00000
+-102.60000  0.50914  2.13816  0.00000
+-100.80000  0.46394  2.16575  0.00000
+-99.00000  0.41759  2.18922  0.00000
+-97.20000  0.37030  2.20848  0.00000
+-95.40000  0.32223  2.22347  0.00000
+-93.60000  0.27359  2.23411  0.00000
+-91.80000  0.22455  2.24036  0.00000
+-90.00000  0.17533  2.24220  0.00000
+-88.20000  0.10500  2.24036  0.00000
+-86.40000  0.03495  2.23411  0.00000
+-84.60000 -0.03454  2.22347  0.00000
+-82.80000 -0.10321  2.20848  0.00000
+-81.00000 -0.17077  2.18922  0.00000
+-79.20000 -0.23697  2.16575  0.00000
+-77.40000 -0.30198  2.14244  0.00000
+-75.60000 -0.36900  2.14248  0.00000
+-73.80000 -0.43818  2.15231  0.00000
+-72.00000 -0.50882  2.16287  0.00000
+-70.20000 -0.58025  2.17022  0.00000
+-68.40000 -0.65182  2.17246  0.00000
+-66.60000 -0.72290  2.16863  0.00000
+-64.80000 -0.79289  2.15827  0.00000
+-63.00000 -0.86122  2.14118  0.00000
+-61.20000 -0.92732  2.11740  0.00000
+-59.40000 -0.99070  2.08703  0.00000
+-57.60000 -1.05086  2.05029  0.00000
+-55.80000 -1.10734  2.00748  0.00000
+-54.00000 -1.15973  1.95891  0.00000
+-52.20000 -1.20764  1.90495  0.00000
+-50.40000 -1.25071  1.84601  0.00000
+-48.60000 -1.28862  1.78251  0.00000
+-46.80000 -1.32108  1.71488  0.00000
+-45.00000 -1.34783  1.64359  0.00000
+-43.20000 -1.36866  1.56910  0.00000
+-41.40000 -1.38338  1.49190  0.00000
+-39.60000 -1.39181  1.41245  0.00000
+-37.80000 -1.39383  1.33125  0.00000
+-36.00000 -1.38933  1.24878  0.00000
+-34.20000 -1.37824  1.16552  0.00000
+-32.40000 -1.36050  1.08193  0.00000
+-30.60000 -1.33608  0.99851  0.00000
+-28.80000 -1.27928  0.89728  0.00000
+-27.00000 -1.20609  0.79302  0.00000
+-25.20000 -1.13008  0.69580  0.00000
+-23.40000 -1.05140  0.60545  0.00000
+-21.60000 -0.97018  0.52183  0.00000
+-19.80000 -0.88658  0.44482  0.00000
+-18.00000 -0.80076  0.37435  0.00000
+-16.20000 -0.71290  0.31034  0.00000
+-14.40000 -0.62318  0.25273  0.00000
+-12.60000 -0.53178  0.20149  0.00000
+-10.80000 -0.43889  0.15657  0.00000
+-9.00000 -0.34473  0.11794  0.00000
+-7.20000 -0.24950  0.08559  0.00000
+-5.40000 -0.15339  0.05948  0.00000
+-3.60000 -0.05664  0.03959  0.00000
+-1.80000  0.04055  0.02591  0.00000
+0.00000  0.08262  0.01439  0.00000
+1.99000  0.28808  0.01321  0.00000
+4.08000  0.52420  0.01490  0.00000
+6.11000  0.73138  0.01371  0.00000
+8.14000  0.88270  0.01986  0.00000
+10.20000  0.92927  0.03901  0.00000
+11.20000  0.94635  0.05042  0.00000
+12.20000  0.95713  0.05927  0.00000
+13.10000  0.99627  0.07498  0.00000
+14.10000  1.03302  0.09080  0.00000
+15.20000  1.05636  0.11079  0.00000
+16.30000  0.96719  0.25701  0.00000
+17.20000  0.86705  0.29845  0.00000
+18.10000  0.88887  0.32409  0.00000
+19.20000  0.90514  0.35023  0.00000
+20.20000  0.94740  0.37954  0.00000
+22.10000  0.97922  0.42971  0.00000
+26.20000  1.13878  0.57704  0.00000
+30.20000  1.44606  0.84895  0.00000
+35.20000  1.50166  1.05897  0.00000
+40.30000  1.51984  1.27365  0.00000
+45.20000  1.60202  1.60441  0.00000
+50.00000  1.52136  1.80195  0.00000
+60.00000  1.21755  2.08362  0.00000
+69.90000  0.84799  2.35458  0.00000
+80.00000  0.45600  2.16000  0.00000
+90.00000  0.12800  2.24000  0.00000
+90.90000  0.12800  2.24702  0.00000
+91.80000  0.10332  2.24942  0.00000
+92.70000  0.07863  2.25072  0.00000
+93.60000  0.05396  2.25091  0.00000
+94.50000  0.02933  2.25000  0.00000
+95.40000  0.00477  2.24800  0.00000
+96.30000 -0.01970  2.24491  0.00000
+97.20000 -0.04406  2.24073  0.00000
+98.10000 -0.06828  2.23547  0.00000
+99.00000 -0.09234  2.22914  0.00000
+99.90000 -0.11622  2.22175  0.00000
+100.80000 -0.13989  2.21330  0.00000
+101.70000 -0.16333  2.20382  0.00000
+102.60000 -0.18652  2.19331  0.00000
+103.50000 -0.20944  2.18179  0.00000
+104.40000 -0.23207  2.16927  0.00000
+105.30000 -0.25438  2.15576  0.00000
+106.20000 -0.27636  2.14129  0.00000
+107.10000 -0.29798  2.12586  0.00000
+108.00000 -0.31922  2.10950  0.00000
+108.90000 -0.34007  2.09223  0.00000
+109.80000 -0.36051  2.07406  0.00000
+110.70000 -0.38052  2.05502  0.00000
+111.60000 -0.40007  2.03513  0.00000
+112.50000 -0.41917  2.01441  0.00000
+113.40000 -0.43777  1.99288  0.00000
+114.30000 -0.45589  1.97057  0.00000
+115.20000 -0.47348  1.94751  0.00000
+116.10000 -0.49055  1.92371  0.00000
+117.00000 -0.50708  1.89921  0.00000
+117.90000 -0.52305  1.87402  0.00000
+118.80000 -0.53845  1.84819  0.00000
+119.70000 -0.55327  1.82173  0.00000
+120.60000 -0.56751  1.79468  0.00000
+121.50000 -0.58114  1.76707  0.00000
+122.40000 -0.59416  1.73892  0.00000
+123.30000 -0.60656  1.71026  0.00000
+124.20000 -0.61834  1.68113  0.00000
+125.10000 -0.62948  1.65156  0.00000
+126.00000 -0.63998  1.62158  0.00000
+126.90000 -0.64984  1.59122  0.00000
+127.80000 -0.65905  1.56051  0.00000
+128.70000 -0.66760  1.52948  0.00000
+129.60000 -0.67550  1.49818  0.00000
+130.50000 -0.68275  1.46663  0.00000
+131.40000 -0.68934  1.43486  0.00000
+132.30000 -0.69527  1.40292  0.00000
+133.20000 -0.70056  1.37082  0.00000
+134.10000 -0.70519  1.33861  0.00000
+135.00000 -0.70454  1.30633  0.00000
+135.90000 -0.68739  1.27400  0.00000
+136.80000 -0.67025  1.24166  0.00000
+137.70000 -0.65311  1.20934  0.00000
+138.60000 -0.63596  1.17707  0.00000
+139.50000 -0.61882  1.14490  0.00000
+140.40000 -0.60167  1.11286  0.00000
+141.30000 -0.58453  1.08097  0.00000
+142.20000 -0.56739  1.04927  0.00000
+143.10000 -0.55024  1.01779  0.00000
+144.00000 -0.53310  0.98658  0.00000
+144.90000 -0.51596  0.95565  0.00000
+145.80000 -0.49881  0.92505  0.00000
+146.70000 -0.48167  0.89480  0.00000
+147.60000 -0.46452  0.86493  0.00000
+148.50000 -0.44738  0.83549  0.00000
+149.40000 -0.43024  0.80649  0.00000
+150.30000 -0.41309  0.77796  0.00000
+151.20000 -0.39595  0.74995  0.00000
+152.10000 -0.37880  0.72247  0.00000
+153.00000 -0.36166  0.69556  0.00000
+153.90000 -0.34452  0.66923  0.00000
+154.80000 -0.32737  0.64353  0.00000
+155.70000 -0.31023  0.61848  0.00000
+156.60000 -0.29309  0.59410  0.00000
+157.50000 -0.27594  0.57042  0.00000
+158.40000 -0.25880  0.54745  0.00000
+159.30000 -0.24165  0.52524  0.00000
+160.20000 -0.22451  0.50380  0.00000
+161.10000 -0.20737  0.48314  0.00000
+162.00000 -0.19022  0.46330  0.00000
+162.90000 -0.17308  0.44430  0.00000
+163.80000 -0.15594  0.42614  0.00000
+164.70000 -0.13879  0.40886  0.00000
+165.60000 -0.12165  0.39247  0.00000
+166.50000 -0.10450  0.37698  0.00000
+167.40000 -0.08736  0.36242  0.00000
+168.30000 -0.07022  0.34880  0.00000
+169.20000 -0.05307  0.33613  0.00000
+170.10000 -0.03593  0.32442  0.00000
+171.00000 -0.01878  0.31369  0.00000
+171.90000 -0.00164  0.30395  0.00000
+172.80000  0.01550  0.29520  0.00000
+173.70000  0.03265  0.28747  0.00000
+174.60000  0.04979  0.28075  0.00000
+175.50000  0.06693  0.27505  0.00000
+176.40000  0.08408  0.27038  0.00000
+177.30000  0.10122  0.26674  0.00000
+178.20000  0.11837  0.26414  0.00000
+179.10000  0.13551  0.26258  0.00000
+180.00000  0.15265  0.26205  0.00000         
+        ]
+        @test input.aoa==polar[:,1]
+        @test input.cl==polar[:,2]
+        @test input.cd==polar[:,3]
+        @test input.cm==polar[:,4]
+    end #End read airfoil Input - Steady
+
+    
+
+    @testset "Write AirfoilInput - Unsteady" begin
     file = "DU25_A17.dat"
     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
-    inputtemp = of.ReadAirfoilInput(file, path)
-    of.WriteAirfoilInput(inputtemp, "testingwriteairfoilinput.dat")
-    input = of.ReadAirfoilInput("testingwriteairfoilinput.dat", path)
+    inputtemp = of.read_airfoilinput(file, path)
+    of.write_airfoilinput(inputtemp, "testingwriteairfoilinput.dat")
+    input = of.read_airfoilinput("testingwriteairfoilinput.dat", path)
 
-    @test lowercase(input.InterpOrd)=="default"
-    @test input.NonDimArea==1
-    @test input.NumCoords=="@\"DU25_A17_coords.txt\""
-    @test input.NumTabs==1
-    @test isapprox(input.Re,0.75, atol=1e-5)
-    @test input.UserProp==0
-    @test lowercase(input.InclUAdata)=="true"
-    @test isapprox(input.alpha0,-3.2,atol=1e-5)
-    @test isapprox(input.alpha1,8.5, atol=1e-5)
-    @test isapprox(input.alpha2,-8.5, atol=1e-5)
-    @test isapprox(input.eta_e,1, atol=1e-5)
-    @test isapprox(input.C_nalpha,6.4462, atol=1e-5)
-    @test isapprox(input.T_f0,3,atol=1e-5)
-    @test isapprox(input.T_V0,6, atol=1e-5)
-    @test isapprox(input.T_p,1.7, atol=1e-5)
-    @test isapprox(input.T_VL,11, atol=1e-5)
-    @test isapprox(input.b1,0.14, atol=1e-5)
-    @test isapprox(input.b2,0.53,atol=1e-5)
-    @test isapprox(input.b5,5, atol=1e-5)
-    @test isapprox(input.A1,0.3, atol=1e-5)
-    @test isapprox(input.A2,0.7, atol=1e-5)
-    @test isapprox(input.A5,1, atol=1e-5)
-    @test isapprox(input.S1,0.0,atol=1e-5)
-    @test isapprox(input.S2,0, atol=1e-5)
-    @test isapprox(input.S3,0, atol=1e-5)
-    @test isapprox(input.S4,0, atol=1e-5)
-    @test isapprox(input.Cn1,1.4336, atol=1e-5)
-    @test isapprox(input.Cn2,-0.6873,atol=1e-5)
-    @test isapprox(input.St_sh,0.19, atol=1e-5)
-    @test isapprox(input.Cd0,0.006, atol=1e-5)
-    @test isapprox(input.Cm0,-0.12, atol=1e-5)
-    @test isapprox(input.k0,0, atol=1e-5)
-    @test isapprox(input.k1,0,atol=1e-5)
-    @test isapprox(input.k2,0, atol=1e-5)
-    @test isapprox(input.k3,0, atol=1e-5)
-    @test isapprox(input.k1_hat,0, atol=1e-5)
-    @test isapprox(input.x_cp_bar,0.2, atol=1e-5)
-    @test lowercase(input.UACutout)=="\"default\""
-    @test lowercase(input.filtCutOff)=="\"default\""
-    @test input.NumAlf==140
+    @test lowercase(input.interpord)=="default"
+        @test input.nondimarea==1
+        @test input.numcoords=="@\"DU25_A17_coords.txt\""
+        @test input.numtabs==1
+        @test isapprox(input.re,0.75, atol=1e-5)
+        @test input.userprop==0
+        @test input.incluadata==true
+        @test isapprox(input.alpha0,-3.2,atol=1e-5)
+        @test isapprox(input.alpha1,8.5, atol=1e-5)
+        @test isapprox(input.alpha2,-8.5, atol=1e-5)
+        @test isapprox(input.eta_e,1, atol=1e-5)
+        @test isapprox(input.c_nalpha,6.4462, atol=1e-5)
+        @test isapprox(input.t_f0,3,atol=1e-5)
+        @test isapprox(input.t_v0,6, atol=1e-5)
+        @test isapprox(input.t_p,1.7, atol=1e-5)
+        @test isapprox(input.t_vl,11, atol=1e-5)
+        @test isapprox(input.b1,0.14, atol=1e-5)
+        @test isapprox(input.b2,0.53,atol=1e-5)
+        @test isapprox(input.b5,5, atol=1e-5)
+        @test isapprox(input.a1,0.3, atol=1e-5)
+        @test isapprox(input.a2,0.7, atol=1e-5)
+        @test isapprox(input.a5,1, atol=1e-5)
+        @test isapprox(input.s1,0.0,atol=1e-5)
+        @test isapprox(input.s2,0, atol=1e-5)
+        @test isapprox(input.s3,0, atol=1e-5)
+        @test isapprox(input.s4,0, atol=1e-5)
+        @test isapprox(input.cn1,1.4336, atol=1e-5)
+        @test isapprox(input.cn2,-0.6873,atol=1e-5)
+        @test isapprox(input.st_sh,0.19, atol=1e-5)
+        @test isapprox(input.cd0,0.006, atol=1e-5)
+        @test isapprox(input.cm0,-0.12, atol=1e-5)
+        @test isapprox(input.k0,0, atol=1e-5)
+        @test isapprox(input.k1,0,atol=1e-5)
+        @test isapprox(input.k2,0, atol=1e-5)
+        @test isapprox(input.k3,0, atol=1e-5)
+        @test isapprox(input.k1_hat,0, atol=1e-5)
+        @test isapprox(input.x_cp_bar,0.2, atol=1e-5)
+        @test lowercase(input.uacutout)=="default"
+        @test lowercase(input.filtcutoff)=="default"
+        @test input.numalf==140
 
-    polar = [
-        -180.00    0.000   0.0202   0.0000
-        -175.00    0.368   0.0324   0.1845
-        -170.00    0.735   0.0943   0.3701
-        -160.00    0.695   0.2848   0.2679
-        -155.00    0.777   0.4001   0.3046
-        -150.00    0.828   0.5215   0.3329
-        -145.00    0.850   0.6447   0.3540
-        -140.00    0.846   0.7660   0.3693
-        -135.00    0.818   0.8823   0.3794
-        -130.00    0.771   0.9911   0.3854
-        -125.00    0.705   1.0905   0.3878
-        -120.00    0.624   1.1787   0.3872
-        -115.00    0.530   1.2545   0.3841
-        -110.00    0.426   1.3168   0.3788
-        -105.00    0.314   1.3650   0.3716
-        -100.00    0.195   1.3984   0.3629
-         -95.00    0.073   1.4169   0.3529
-         -90.00   -0.050   1.4201   0.3416
-         -85.00   -0.173   1.4081   0.3292
-         -80.00   -0.294   1.3811   0.3159
-         -75.00   -0.409   1.3394   0.3017
-         -70.00   -0.518   1.2833   0.2866
-         -65.00   -0.617   1.2138   0.2707
-         -60.00   -0.706   1.1315   0.2539
-         -55.00   -0.780   1.0378   0.2364
-         -50.00   -0.839   0.9341   0.2181
-         -45.00   -0.879   0.8221   0.1991
-         -40.00   -0.898   0.7042   0.1792
-         -35.00   -0.893   0.5829   0.1587
-         -30.00   -0.862   0.4616   0.1374
-         -25.00   -0.803   0.3441   0.1154
-         -24.00   -0.792   0.3209   0.1101
-         -23.00   -0.789   0.2972   0.1031
-         -22.00   -0.792   0.2730   0.0947
-         -21.00   -0.801   0.2485   0.0849
-         -20.00   -0.815   0.2237   0.0739
-         -19.00   -0.833   0.1990   0.0618
-         -18.00   -0.854   0.1743   0.0488
-         -17.00   -0.879   0.1498   0.0351
-         -16.00   -0.905   0.1256   0.0208
-         -15.00   -0.932   0.1020   0.0060
-         -14.00   -0.959   0.0789  -0.0091
-         -13.00   -0.985   0.0567  -0.0243
-         -12.01   -0.953   0.0271  -0.0349
-         -11.00   -0.900   0.0303  -0.0361
-          -9.98   -0.827   0.0287  -0.0464
-          -8.98   -0.753   0.0271  -0.0534
-          -8.47   -0.691   0.0264  -0.0650
-          -7.45   -0.555   0.0114  -0.0782
-          -6.42   -0.413   0.0094  -0.0904
-          -5.40   -0.271   0.0086  -0.1006
-          -5.00   -0.220   0.0073  -0.1107
-          -4.50   -0.152   0.0071  -0.1135
-          -4.00   -0.084   0.0070  -0.1162
-          -3.50   -0.018   0.0069  -0.1186
-          -3.00    0.049   0.0068  -0.1209
-          -2.50    0.115   0.0068  -0.1231
-          -2.00    0.181   0.0068  -0.1252
-          -1.50    0.247   0.0067  -0.1272
-          -1.00    0.312   0.0067  -0.1293
-          -0.50    0.377   0.0067  -0.1311
-           0.00    0.444   0.0065  -0.1330
-           0.50    0.508   0.0065  -0.1347
-           1.00    0.573   0.0066  -0.1364
-           1.50    0.636   0.0067  -0.1380
-           2.00    0.701   0.0068  -0.1396
-           2.50    0.765   0.0069  -0.1411
-           3.00    0.827   0.0070  -0.1424
-           3.50    0.890   0.0071  -0.1437
-           4.00    0.952   0.0073  -0.1448
-           4.50    1.013   0.0076  -0.1456
-           5.00    1.062   0.0079  -0.1445
-           6.00    1.161   0.0099  -0.1419
-           6.50    1.208   0.0117  -0.1403
-           7.00    1.254   0.0132  -0.1382
-           7.50    1.301   0.0143  -0.1362
-           8.00    1.336   0.0153  -0.1320
-           8.50    1.369   0.0165  -0.1276
-           9.00    1.400   0.0181  -0.1234
-           9.50    1.428   0.0211  -0.1193
-          10.00    1.442   0.0262  -0.1152
-          10.50    1.427   0.0336  -0.1115
-          11.00    1.374   0.0420  -0.1081
-          11.50    1.316   0.0515  -0.1052
-          12.00    1.277   0.0601  -0.1026
-          12.50    1.250   0.0693  -0.1000
-          13.00    1.246   0.0785  -0.0980
-          13.50    1.247   0.0888  -0.0969
-          14.00    1.256   0.1000  -0.0968
-          14.50    1.260   0.1108  -0.0973
-          15.00    1.271   0.1219  -0.0981
-          15.50    1.281   0.1325  -0.0992
-          16.00    1.289   0.1433  -0.1006
-          16.50    1.294   0.1541  -0.1023
-          17.00    1.304   0.1649  -0.1042
-          17.50    1.309   0.1754  -0.1064
-          18.00    1.315   0.1845  -0.1082
-          18.50    1.320   0.1953  -0.1110
-          19.00    1.330   0.2061  -0.1143
-          19.50    1.343   0.2170  -0.1179
-          20.00    1.354   0.2280  -0.1219
-          20.50    1.359   0.2390  -0.1261
-          21.00    1.360   0.2536  -0.1303
-          22.00    1.325   0.2814  -0.1375
-          23.00    1.288   0.3098  -0.1446
-          24.00    1.251   0.3386  -0.1515
-          25.00    1.215   0.3678  -0.1584
-          26.00    1.181   0.3972  -0.1651
-          28.00    1.120   0.4563  -0.1781
-          30.00    1.076   0.5149  -0.1904
-          32.00    1.056   0.5720  -0.2017
-          35.00    1.066   0.6548  -0.2173
-          40.00    1.064   0.7901  -0.2418
-          45.00    1.035   0.9190  -0.2650
-          50.00    0.980   1.0378  -0.2867
-          55.00    0.904   1.1434  -0.3072
-          60.00    0.810   1.2333  -0.3265
-          65.00    0.702   1.3055  -0.3446
-          70.00    0.582   1.3587  -0.3616
-          75.00    0.456   1.3922  -0.3775
-          80.00    0.326   1.4063  -0.3921
-          85.00    0.197   1.4042  -0.4057
-          90.00    0.072   1.3985  -0.4180
-          95.00   -0.050   1.3973  -0.4289
-         100.00   -0.170   1.3810  -0.4385
-         105.00   -0.287   1.3498  -0.4464
-         110.00   -0.399   1.3041  -0.4524
-         115.00   -0.502   1.2442  -0.4563
-         120.00   -0.596   1.1709  -0.4577
-         125.00   -0.677   1.0852  -0.4563
-         130.00   -0.743   0.9883  -0.4514
-         135.00   -0.792   0.8818  -0.4425
-         140.00   -0.821   0.7676  -0.4288
-         145.00   -0.826   0.6481  -0.4095
-         150.00   -0.806   0.5264  -0.3836
-         155.00   -0.758   0.4060  -0.3497
-         160.00   -0.679   0.2912  -0.3065
-         170.00   -0.735   0.0995  -0.3706
-         175.00   -0.368   0.0356  -0.1846
-         180.00    0.000   0.0202   0.0000         
-    ]
-    @test input.Polar==polar
+        polar = [
+            -180.00    0.000   0.0202   0.0000
+            -175.00    0.368   0.0324   0.1845
+            -170.00    0.735   0.0943   0.3701
+            -160.00    0.695   0.2848   0.2679
+            -155.00    0.777   0.4001   0.3046
+            -150.00    0.828   0.5215   0.3329
+            -145.00    0.850   0.6447   0.3540
+            -140.00    0.846   0.7660   0.3693
+            -135.00    0.818   0.8823   0.3794
+            -130.00    0.771   0.9911   0.3854
+            -125.00    0.705   1.0905   0.3878
+            -120.00    0.624   1.1787   0.3872
+            -115.00    0.530   1.2545   0.3841
+            -110.00    0.426   1.3168   0.3788
+            -105.00    0.314   1.3650   0.3716
+            -100.00    0.195   1.3984   0.3629
+             -95.00    0.073   1.4169   0.3529
+             -90.00   -0.050   1.4201   0.3416
+             -85.00   -0.173   1.4081   0.3292
+             -80.00   -0.294   1.3811   0.3159
+             -75.00   -0.409   1.3394   0.3017
+             -70.00   -0.518   1.2833   0.2866
+             -65.00   -0.617   1.2138   0.2707
+             -60.00   -0.706   1.1315   0.2539
+             -55.00   -0.780   1.0378   0.2364
+             -50.00   -0.839   0.9341   0.2181
+             -45.00   -0.879   0.8221   0.1991
+             -40.00   -0.898   0.7042   0.1792
+             -35.00   -0.893   0.5829   0.1587
+             -30.00   -0.862   0.4616   0.1374
+             -25.00   -0.803   0.3441   0.1154
+             -24.00   -0.792   0.3209   0.1101
+             -23.00   -0.789   0.2972   0.1031
+             -22.00   -0.792   0.2730   0.0947
+             -21.00   -0.801   0.2485   0.0849
+             -20.00   -0.815   0.2237   0.0739
+             -19.00   -0.833   0.1990   0.0618
+             -18.00   -0.854   0.1743   0.0488
+             -17.00   -0.879   0.1498   0.0351
+             -16.00   -0.905   0.1256   0.0208
+             -15.00   -0.932   0.1020   0.0060
+             -14.00   -0.959   0.0789  -0.0091
+             -13.00   -0.985   0.0567  -0.0243
+             -12.01   -0.953   0.0271  -0.0349
+             -11.00   -0.900   0.0303  -0.0361
+              -9.98   -0.827   0.0287  -0.0464
+              -8.98   -0.753   0.0271  -0.0534
+              -8.47   -0.691   0.0264  -0.0650
+              -7.45   -0.555   0.0114  -0.0782
+              -6.42   -0.413   0.0094  -0.0904
+              -5.40   -0.271   0.0086  -0.1006
+              -5.00   -0.220   0.0073  -0.1107
+              -4.50   -0.152   0.0071  -0.1135
+              -4.00   -0.084   0.0070  -0.1162
+              -3.50   -0.018   0.0069  -0.1186
+              -3.00    0.049   0.0068  -0.1209
+              -2.50    0.115   0.0068  -0.1231
+              -2.00    0.181   0.0068  -0.1252
+              -1.50    0.247   0.0067  -0.1272
+              -1.00    0.312   0.0067  -0.1293
+              -0.50    0.377   0.0067  -0.1311
+               0.00    0.444   0.0065  -0.1330
+               0.50    0.508   0.0065  -0.1347
+               1.00    0.573   0.0066  -0.1364
+               1.50    0.636   0.0067  -0.1380
+               2.00    0.701   0.0068  -0.1396
+               2.50    0.765   0.0069  -0.1411
+               3.00    0.827   0.0070  -0.1424
+               3.50    0.890   0.0071  -0.1437
+               4.00    0.952   0.0073  -0.1448
+               4.50    1.013   0.0076  -0.1456
+               5.00    1.062   0.0079  -0.1445
+               6.00    1.161   0.0099  -0.1419
+               6.50    1.208   0.0117  -0.1403
+               7.00    1.254   0.0132  -0.1382
+               7.50    1.301   0.0143  -0.1362
+               8.00    1.336   0.0153  -0.1320
+               8.50    1.369   0.0165  -0.1276
+               9.00    1.400   0.0181  -0.1234
+               9.50    1.428   0.0211  -0.1193
+              10.00    1.442   0.0262  -0.1152
+              10.50    1.427   0.0336  -0.1115
+              11.00    1.374   0.0420  -0.1081
+              11.50    1.316   0.0515  -0.1052
+              12.00    1.277   0.0601  -0.1026
+              12.50    1.250   0.0693  -0.1000
+              13.00    1.246   0.0785  -0.0980
+              13.50    1.247   0.0888  -0.0969
+              14.00    1.256   0.1000  -0.0968
+              14.50    1.260   0.1108  -0.0973
+              15.00    1.271   0.1219  -0.0981
+              15.50    1.281   0.1325  -0.0992
+              16.00    1.289   0.1433  -0.1006
+              16.50    1.294   0.1541  -0.1023
+              17.00    1.304   0.1649  -0.1042
+              17.50    1.309   0.1754  -0.1064
+              18.00    1.315   0.1845  -0.1082
+              18.50    1.320   0.1953  -0.1110
+              19.00    1.330   0.2061  -0.1143
+              19.50    1.343   0.2170  -0.1179
+              20.00    1.354   0.2280  -0.1219
+              20.50    1.359   0.2390  -0.1261
+              21.00    1.360   0.2536  -0.1303
+              22.00    1.325   0.2814  -0.1375
+              23.00    1.288   0.3098  -0.1446
+              24.00    1.251   0.3386  -0.1515
+              25.00    1.215   0.3678  -0.1584
+              26.00    1.181   0.3972  -0.1651
+              28.00    1.120   0.4563  -0.1781
+              30.00    1.076   0.5149  -0.1904
+              32.00    1.056   0.5720  -0.2017
+              35.00    1.066   0.6548  -0.2173
+              40.00    1.064   0.7901  -0.2418
+              45.00    1.035   0.9190  -0.2650
+              50.00    0.980   1.0378  -0.2867
+              55.00    0.904   1.1434  -0.3072
+              60.00    0.810   1.2333  -0.3265
+              65.00    0.702   1.3055  -0.3446
+              70.00    0.582   1.3587  -0.3616
+              75.00    0.456   1.3922  -0.3775
+              80.00    0.326   1.4063  -0.3921
+              85.00    0.197   1.4042  -0.4057
+              90.00    0.072   1.3985  -0.4180
+              95.00   -0.050   1.3973  -0.4289
+             100.00   -0.170   1.3810  -0.4385
+             105.00   -0.287   1.3498  -0.4464
+             110.00   -0.399   1.3041  -0.4524
+             115.00   -0.502   1.2442  -0.4563
+             120.00   -0.596   1.1709  -0.4577
+             125.00   -0.677   1.0852  -0.4563
+             130.00   -0.743   0.9883  -0.4514
+             135.00   -0.792   0.8818  -0.4425
+             140.00   -0.821   0.7676  -0.4288
+             145.00   -0.826   0.6481  -0.4095
+             150.00   -0.806   0.5264  -0.3836
+             155.00   -0.758   0.4060  -0.3497
+             160.00   -0.679   0.2912  -0.3065
+             170.00   -0.735   0.0995  -0.3706
+             175.00   -0.368   0.0356  -0.1846
+             180.00    0.000   0.0202   0.0000         
+        ]
+        @test input.aoa==polar[:,1]
+        @test input.cl==polar[:,2]
+        @test input.cd==polar[:,3]
+        @test input.cm==polar[:,4]
 
     end #End testing write airfoilInput
 
     @testset "Read Airfoil Coordinate" begin
     file = "DU35_A17_coords.txt"
     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
-    coords = of.ReadAirfoilCoordinates(file, path)
+    coords = of.read_airfoilcoordinates(file, path)
 
-    @test coords.NumCoords==400
+    @test coords.numcoords==400
     afref = [0.25 0]
-    @test isapprox(coords.AirfoilReference, afref, atol=1e-5)
+    @test isapprox(coords.airfoilreference, afref, atol=1e-5)
     coordinates = [
 1.00000   0.00283
 0.99660   0.00378
@@ -1387,20 +1914,20 @@
 0.99660  -0.00190
 1.00000  -0.00283
     ]
-    @test isapprox(coords.Coordinates, coordinates, atol=1e-8)
+    @test isapprox(coords.coordinates, coordinates, atol=1e-8)
 
     end #End testing read airfoil coordinates
 
     @testset "Write airfoil coordinates" begin
     file = "DU35_A17_coords.txt"
     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
-    coordstemp = of.ReadAirfoilCoordinates(file, path)
-    of.WriteAirfoilCoordinates(coordstemp, "testingairfoilcoords.txt")
-    coords = of.ReadAirfoilCoordinates("testingairfoilcoords.txt", path)
+    coordstemp = of.read_airfoilcoordinates(file, path)
+    of.write_airfoilcoordinates(coordstemp, "testingairfoilcoords.txt")
+    coords = of.read_airfoilcoordinates("testingairfoilcoords.txt", path)
 
-    @test coords.NumCoords==400
+    @test coords.numcoords==400
     afref = [0.25 0]
-    @test isapprox(coords.AirfoilReference, afref, atol=1e-5)
+    @test isapprox(coords.airfoilreference, afref, atol=1e-5)
     coordinates = [
 1.00000   0.00283
 0.99660   0.00378
@@ -1802,8 +2329,83 @@
 0.99660  -0.00190
 1.00000  -0.00283
     ]
-    @test isapprox(coords.Coordinates, coordinates, atol=1e-8)
+    @test isapprox(coords.coordinates, coordinates, atol=1e-8)
     end #End testing Write Airfoil Coordinates
+    
+    @testset "read_addriver" begin
+        file = "DTU10MWADdriver.inp"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/dtu10mw"
+        driver = of.read_addriver(file, path)
+
+        @test driver.echo==false
+        @test driver.ad_inputfile=="DTU10MWAD15.dat"
+        @test driver.numblades==3
+        @test isapprox(driver.hubrad, 2.8, atol=1e-3)
+        @test isapprox(driver.hubht, 119.0, atol=1e-3)
+        @test isapprox(driver.overhang, -7.1, atol=1e-3)
+        @test isapprox(driver.shfttilt, 0.0, atol=1e-3)
+        @test isapprox(driver.precone, 0.0, atol=1e-3)
+        @test driver.outfileroot=="DTU10MW"
+        @test driver.tabdel==true
+        @test driver.outfmt=="ES20.3E2"
+        @test driver.beep==false
+
+        winddata = [4.0000000E+00  0.0000000E+00  9.5377556E+00 -3.3575459E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        6.0000000E+00  0.0000000E+00  9.6000000E+00 -5.0000000E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        8.0000000E+00  0.0000000E+00  9.6000000E+00 -5.0000000E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        9.0000000E+00  0.0000000E+00  9.6000000E+00 -5.0000000E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        1.0000000E+01  0.0000000E+00  9.6000000E+00 -4.1395417E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        1.1000000E+01  0.0000000E+00  9.6000000E+00 -2.6488970E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        1.2000000E+01  0.0000000E+00  9.6000000E+00  7.1658584E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00]
+
+        @test isapprox(driver.windspeed, winddata[:,1], atol=1e-3)
+        @test isapprox(driver.shearexp, winddata[:,2], atol=1e-3)
+        @test isapprox(driver.rpm, winddata[:,3], atol=1e-3)
+        @test isapprox(driver.pitch, winddata[:,4], atol=1e-3)
+        @test isapprox(driver.yaw, winddata[:,5], atol=1e-3)
+        @test isapprox(driver.dt, winddata[:,6], atol=1e-3)
+        @test isapprox(driver.tmax, winddata[:,7], atol=1e-3)
+
+    end #End testing read addriver
+
+    @testset "Write AD Driver" begin
+        file = "DTU10MWADdriver.inp"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/dtu10mw"
+        drivertemp = of.read_addriver(file, path)
+        of.write_addriver(drivertemp, "testingwritedriver.inp"; outputpath=path)
+        driver = of.read_addriver("testingwritedriver.inp", path)
+
+        @test driver.echo==false
+        @test driver.ad_inputfile=="DTU10MWAD15.dat"
+        @test driver.numblades==3
+        @test isapprox(driver.hubrad, 2.8, atol=1e-3)
+        @test isapprox(driver.hubht, 119.0, atol=1e-3)
+        @test isapprox(driver.overhang, -7.1, atol=1e-3)
+        @test isapprox(driver.shfttilt, 0.0, atol=1e-3)
+        @test isapprox(driver.precone, 0.0, atol=1e-3)
+        @test driver.outfileroot=="DTU10MW"
+        @test driver.tabdel==true
+        @test driver.outfmt=="ES20.3E2"
+        @test driver.beep==false
+
+        winddata = [4.0000000E+00  0.0000000E+00  9.5377556E+00 -3.3575459E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        6.0000000E+00  0.0000000E+00  9.6000000E+00 -5.0000000E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        8.0000000E+00  0.0000000E+00  9.6000000E+00 -5.0000000E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        9.0000000E+00  0.0000000E+00  9.6000000E+00 -5.0000000E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        1.0000000E+01  0.0000000E+00  9.6000000E+00 -4.1395417E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        1.1000000E+01  0.0000000E+00  9.6000000E+00 -2.6488970E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00
+        1.2000000E+01  0.0000000E+00  9.6000000E+00  7.1658584E+00  0.0000000E+00  1.0000000E-01  2.0000000E+00]
+
+        @test isapprox(driver.windspeed, winddata[:,1], atol=1e-3)
+        @test isapprox(driver.shearexp, winddata[:,2], atol=1e-3)
+        @test isapprox(driver.rpm, winddata[:,3], atol=1e-3)
+        @test isapprox(driver.pitch, winddata[:,4], atol=1e-3)
+        @test isapprox(driver.yaw, winddata[:,5], atol=1e-3)
+        @test isapprox(driver.dt, winddata[:,6], atol=1e-3)
+        @test isapprox(driver.tmax, winddata[:,7], atol=1e-3)
+
+    end #End testing write addriver
+
 end #End testing AeroDyn
 
 nothing
