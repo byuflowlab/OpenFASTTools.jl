@@ -1,6 +1,7 @@
 using Documenter, OpenFASTsr
 
 makedocs(
+        modules = [OpenFASTsr],
         format = Documenter.HTML(),
         pages = [
             "Introduction" => "index.md", 
