@@ -5,4 +5,4 @@ FLOWMath = "6cb5d3fb-0fe8-4cc2-bd89-9fe0b19a99d3"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [compat]
-Documenter = "0.26"
+Documenter = "0.25"
