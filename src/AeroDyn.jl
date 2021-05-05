@@ -3,20 +3,20 @@
 ##################     STRUCTURES     ########################
 ##############################################################
 
-# Todo: Could I read an entire file with a package? 
-# Todo: does each file need to be in the format with the text? Could I just have a pure numbers input file? I don't know if that would be faster. (I don't know if that is worth looking into. )
+# TODO: Could I read an entire file with a package? 
+# TODO: does each file need to be in the format with the text? Could I just have a pure numbers input file? I don't know if that would be faster. (I don't know if that is worth looking into. )
 mutable struct ADfile{TS, TB, TF, TI}
     notes::TS
-    echo::Union{TB, TS}
-    dtaero::Union{TS, TF}
+    echo::TB
+    dtaero::TF
     wakemod::TI
     afaeromod::TI
     twrpotent::TI
-    twrshadow::Union{TB, TS}
-    twraero::Union{TB, TS}
-    frozenwake::Union{TB, TS}
-    cavitcheck::Union{TB, TS}
-    compaa::Union{TB, TS}
+    twrshadow::TB
+    twraero::TB
+    frozenwake::TB
+    cavitcheck::TB
+    compaa::TB
     aa_inputfile::TS
     airdens::TF
     kinvisc::TF
@@ -25,19 +25,19 @@ mutable struct ADfile{TS, TB, TF, TI}
     pvap::TF
     fluiddepth::TF
     skewmod::TI
-    skewmodfactor::TS
-    tiploss::Union{TB, TS}
-    hubloss::Union{TB, TS}
-    tanind::Union{TB, TS}
-    ai_drag::Union{TB, TS}
-    ti_drag::Union{TB, TS}
-    ind_toler::TS
+    skewmodfactor::TF
+    tiploss::TB
+    hubloss::TB
+    tanind::TB
+    ai_drag::TB
+    ti_drag::TB
+    ind_toler::TF
     maxiter::TI
     dbemt_mod::TI
     tau1_const::TI
     olaf_inputfilename::TS
     uamod::TI
-    flookup::Union{TB, TS}
+    flookup::TB
     aftabmod::TI
     incol_alfa::TI
     incol_cl::TI
@@ -46,11 +46,11 @@ mutable struct ADfile{TS, TB, TF, TI}
     incol_cpmin::TI
     numaffiles::TI
     foils::Array{TS}
-    useblcm::Union{TB, TS}
+    useblcm::TB
     blades::Array{TS}
     numtwrnds::TI
     twrnds::Array
-    sumprint::Union{TB, TS}
+    sumprint::TB
     nblouts::TI
     bloutnd::Array
     ntwouts::TI
@@ -64,7 +64,7 @@ end
 mutable struct ADBlade{TS, TI, TF}
     notes::TS
     numnds::TI
-    radii::Array{TF,1}
+    span::Array{TF,1}
     curve::Array{TF,1}
     sweep::Array{TF,1}
     curveangle::Array{TF,1}
@@ -111,16 +111,16 @@ end
 
 abstract type AirfoilInput end
 
-#Todo: Add inner constructors for base construction and construction without cm. 
+#TODO: Add inner constructors for base construction and construction without cm. 
 struct AirfoilInputSteady{TS, TI, TF, TB} <: AirfoilInput
-    interpord::Union{TS, TI}
+    interpord::TI
     nondimarea::TF
     numcoords::Union{TS, TI}
     bl_file::TS
     numtabs::TI
     re::TF
     userprop::TI
-    incluadata::Union{TS, TB}
+    incluadata::TB
     numalf::TI
     aoa::Array{TF, 1}
     cl::Array{TF, 1}
@@ -129,14 +129,14 @@ struct AirfoilInputSteady{TS, TI, TF, TB} <: AirfoilInput
 end
 
 struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
-    interpord::Union{TS, TI}
+    interpord::TI
     nondimarea::TF
     numcoords::Union{TS, TI}
     bl_file::TS
     numtabs::TI
     re::TF
     userprop::TI
-    incluadata::Union{TS, TB}
+    incluadata::TB
     alpha0::TF
     alpha1::TF
     alpha2::TF
@@ -167,8 +167,8 @@ struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
     k3::TF
     k1_hat::TF
     x_cp_bar::TF
-    uacutout::Union{TS, TF}
-    filtcutoff::Union{TS, TF}
+    uacutout::TF
+    filtcutoff::TF
     numalf::TI
     aoa::Array{TF, 1}
     cl::Array{TF, 1}
@@ -184,7 +184,7 @@ end
  
 mutable struct ADDriver{TF, TS, TI, TB}
     notes::TS
-    echo::Union{TS, TB}
+    echo::TB
     ad_inputfile::TS
     numblades::TI
     hubrad::TF
@@ -193,9 +193,9 @@ mutable struct ADDriver{TF, TS, TI, TB}
     shfttilt::TF
     precone ::TF
     outfileroot::TS
-    tabdel::Union{TS, TB}
+    tabdel::TB
     outfmt::TS
-    beep::Union{TS, TB}
+    beep::TB
     numcases::TI
     windspeed::Array{TF, 1}
     shearexp::Array{TF, 1}
@@ -206,7 +206,7 @@ mutable struct ADDriver{TF, TS, TI, TB}
     tmax::Array{TF, 1}
 
     ### Base Constructor
-    function ADDriver(notes::TS, echo::Union{TS, TB}, ad_inputfile::TS, numblades::TI, hubrad::TF, hubht::TF, overhang::TF, shfttilt::TF, precone ::TF, outfileroot::TS, tabdel::Union{TS, TB}, outfmt::TS, beep::Union{TS, TB}, numcases::TI, windspeed::Array{TF, 1}, shearexp::Array{TF, 1}, rpm::Array{TF, 1}, pitch::Array{TF, 1}, yaw::Array{TF, 1}, dt::Array{TF, 1}, tmax::Array{TF, 1}) where {TF, TS, TI, TB}
+    function ADDriver(notes::TS, echo::TB, ad_inputfile::TS, numblades::TI, hubrad::TF, hubht::TF, overhang::TF, shfttilt::TF, precone ::TF, outfileroot::TS, tabdel::TB, outfmt::TS, beep::TB, numcases::TI, windspeed::Array{TF, 1}, shearexp::Array{TF, 1}, rpm::Array{TF, 1}, pitch::Array{TF, 1}, yaw::Array{TF, 1}, dt::Array{TF, 1}, tmax::Array{TF, 1}) where {TF, TS, TI, TB}
 
         if length(windspeed) != length(shearexp) != length(rpm) != length(yaw) != length(dt) != numcases
             error("Did not provide an equal amount of wind information.")
@@ -216,7 +216,7 @@ mutable struct ADDriver{TF, TS, TI, TB}
     end
 
     ### Constructor where shear, yaw, dt, and tmax are constant
-    function ADDriver(notes::TS, echo::Union{TS, TB}, ad_inputfile::TS, numblades::TI, hubrad::TF, hubht::TF, overhang::TF, shfttilt::TF, precone ::TF, outfileroot::TS, windspeed::Array{TF, 1}, rpm::Array{TF, 1}, pitch::Array{TF, 1}, shearexp::TF, yaw::TF, dt::TF, tmax::TF; tabdel::Union{TS, TB}=true, outfmt::TS="ES20.3E2", beep::Union{TS, TB}=false) where {TF, TS, TI, TB}
+    function ADDriver(notes::TS, echo::TB, ad_inputfile::TS, numblades::TI, hubrad::TF, hubht::TF, overhang::TF, shfttilt::TF, precone ::TF, outfileroot::TS, windspeed::Array{TF, 1}, rpm::Array{TF, 1}, pitch::Array{TF, 1}, shearexp::TF, yaw::TF, dt::TF, tmax::TF; tabdel::TB=true, outfmt::TS="ES20.3E2", beep::TB=false) where {TF, TS, TI, TB}
 
         numcases = length(windspeed)
         shearexp = ones(numcases).*shearexp
@@ -230,7 +230,7 @@ mutable struct ADDriver{TF, TS, TI, TB}
     ### Constructor with TSR - Can't do a constructor with TSR cause this object doesn't have tip radius. 
 
     ### Constructor with scalar inputs
-    function ADDriver(notes::TS, echo::Union{TS, TB}, ad_inputfile::TS, numblades::TI, hubrad::TF, hubht::TF, overhang::TF, shfttilt::TF, precone ::TF, outfileroot::TS, windspeed::TF, shearexp::TF, rpm::TF, pitch::TF, yaw::TF, dt::TF, tmax::TF; tabdel::Union{TS, TB}=true, outfmt::TS="ES20.3E2", beep::Union{TS, TB}=true) where {TF, TS, TI, TB}
+    function ADDriver(notes::TS, echo::TB, ad_inputfile::TS, numblades::TI, hubrad::TF, hubht::TF, overhang::TF, shfttilt::TF, precone ::TF, outfileroot::TS, windspeed::TF, shearexp::TF, rpm::TF, pitch::TF, yaw::TF, dt::TF, tmax::TF; tabdel::TB=true, outfmt::TS="ES20.3E2", beep::TB=true) where {TF, TS, TI, TB}
 
         numcases = 1
         
@@ -266,7 +266,11 @@ function read_adfile(filename, filepath)
     Notes = lines[2]
     #Line 3 is a general title
     Echo = fetchword(lines[4]; adapt=true)
-    DTAero = fetchword(lines[5])
+    if contains(lowercase(lines[5][1:14]), "d")
+        DTAero = NaN
+    else
+        DTAero = parse(Float64, lines[5])
+    end
     WakeMod = parse(Int, lines[6][1:14])
     AFAeroMod = parse(Int, lines[7][1:14])
     TwrPotent = parse(Int, lines[8][1:14])
@@ -285,13 +289,21 @@ function read_adfile(filename, filepath)
     FluidDepth = parse(Float64, lines[21][1:14])
     #Line 22 is a general title
     SkewMod = parse(Int, lines[23][1:14])
-    SkewModFactor = fetchword(lines[24], lengthofword=14)
+    if contains(lowercase(lines[24][1:14]), 'd')
+        SkewModFactor = NaN
+    else
+        SkewModFactor = parse(Float64, lines[24][1:14])
+    end
     TipLoss = fetchword(lines[25]; adapt=true)
-    HubLoss = fetchword(lines[26]; adapt=true)
+    HubLoss = fetchword(lines[26]; adapt=true) #TODO: Maybe change fetchword to also parse numbers. That might be slick. Just no matter what goes in, one function to grab it. 
     TanInd = fetchword(lines[27]; adapt=true)
     AIDrag = fetchword(lines[28]; adapt=true)
     TIDrag = fetchword(lines[29]; adapt=true)
-    IndToler = fetchword(lines[30], lengthofword=14)
+    if contains(lowercase(lines[30][1:14]), 'd')
+        IndToler = NaN
+    else
+        IndToler = parse(Float64, lines[30][1:14])
+    end
     MaxIter = parse(Int, lines[31][1:14])
     #Line 32 is a general title
     DBEMT_Mod = parse(Int, lines[33][1:14])
@@ -337,7 +349,7 @@ function read_adfile(filename, filepath)
     #Line 57 + idx is a general title
     SumPrint = fetchword(lines[58+idx]; adapt=true)
     NBlOuts = parse(Int, lines[59+idx][1:14])
-    BlOutNd = readvector(lines[60+idx],NBlOuts) #Todo: Can I replace read with the cat(readdlm) command? 
+    BlOutNd = readvector(lines[60+idx],NBlOuts) #Todo Can I replace read with the cat(readdlm) command? -> No need to. The cat(readdlm) command is built into the readvector command. 
     NTwOuts = parse(Int, lines[61+idx][1:14])
     TwOutNd = readvector(lines[62+idx])
     #Line 63+idx is a general title
@@ -492,9 +504,17 @@ function read_airfoilinput(filename, filepath)
         end
     end
 
-    InterpOrd = fetchword(lines[1])
+    if contains(lowercase(lines[1][1:14]), "d")
+        InterpOrd = 0
+    else
+        InterpOrd = parse(Int, lines[1][1:14])
+    end
     NonDimArea = parse(Float64,lines[2][1:14])
-    NumCoords = fetchword(lines[3], lengthofword=length(lines[3])-115)
+    if contains(lines[3][1:5], '@')
+        NumCoords = fetchword(lines[3], lengthofword=length(lines[3])-115) #Can't be forced into an Int or Float because the text pushes it towards another file. 
+    else
+        NumCoords = parse(Int, lines[3][1:14])
+    end
     BL_file = fetchword(lines[4], lengthofword=length(lines[4])-145)
     NumTabs = parse(Int,lines[5][1:14])
     Re = parse(Float64,lines[6][1:14])
@@ -507,23 +527,80 @@ function read_airfoilinput(filename, filepath)
         alpha2 = parse(Float64,lines[11][1:14])
         eta_e = parse(Float64,lines[12][1:14])
         C_nalpha = parse(Float64,lines[13][1:14])
-        T_f0 = parse(Float64,lines[14][1:14])
-        T_V0 = parse(Float64,lines[15][1:14])
-        T_p = parse(Float64,lines[16][1:14])
-        T_VL = parse(Float64,lines[17][1:14])
-        b1 = parse(Float64,lines[18][1:14]) #Todo: Need to fix this reader when there is a "default" value. There are several values in this file that do this. -> Try: using a try-catch statement? 
-        b2 = parse(Float64,lines[19][1:14])
-        b5 = parse(Float64,lines[20][1:14])
-        A1 = parse(Float64,lines[21][1:14])
-        A2 = parse(Float64,lines[22][1:14])
-        A5 = parse(Float64,lines[23][1:14])
+        
+        if contains(lowercase(lines[14][1:14]), "d")
+            T_f0 = NaN
+        else
+            T_f0 = parse(Float64,lines[14][1:14])
+        end
+        
+        if contains(lowercase(lines[15][1:14]), "d")
+            T_V0 = NaN
+        else
+            T_V0 = parse(Float64,lines[15][1:14])
+        end
+        
+        if contains(lowercase(lines[16][1:14]), "d")
+            T_p = NaN
+        else
+            T_p = parse(Float64,lines[16][1:14])
+        end
+        
+        if contains(lowercase(lines[17][1:14]), "d")
+            T_VL = NaN
+        else
+            T_VL = parse(Float64,lines[17][1:14])
+        end
+        
+        if contains(lowercase(lines[18][1:14]), "d")
+            b1 = NaN
+        else
+            b1 = parse(Float64,lines[18][1:14]) 
+        end
+        
+        if contains(lowercase(lines[19][1:14]), "d")
+            b2 = NaN
+        else
+            b2 = parse(Float64,lines[19][1:14])
+        end
+        
+        if contains(lowercase(lines[20][1:14]), "d")
+            b5 = NaN
+        else
+            b5 = parse(Float64,lines[20][1:14])
+        end
+        
+        if contains(lowercase(lines[21][1:14]), "d")
+            A1 = NaN
+        else
+            A1 = parse(Float64,lines[21][1:14])
+        end
+        
+        if contains(lowercase(lines[22][1:14]), "d")
+            A2 = NaN
+        else
+            A2 = parse(Float64,lines[22][1:14])
+        end
+        
+        if contains(lowercase(lines[23][1:14]), "d")
+            A5 = NaN
+        else
+            A5 = parse(Float64,lines[23][1:14])
+        end
+
         S1 = parse(Float64,lines[24][1:14])
         S2 = parse(Float64,lines[25][1:14])
         S3 = parse(Float64,lines[26][1:14])
         S4 = parse(Float64,lines[27][1:14])
         Cn1 = parse(Float64,lines[28][1:14])
         Cn2 = parse(Float64,lines[29][1:14])
-        St_sh = parse(Float64,lines[30][1:14])
+        
+        if contains(lowercase(lines[30][1:14]), "d")
+            St_sh = NaN
+        else
+            St_sh = parse(Float64,lines[30][1:14])
+        end
+
         Cd0 = parse(Float64,lines[31][1:14])
         Cm0 = parse(Float64,lines[32][1:14])
         k0 = parse(Float64,lines[33][1:14])
@@ -531,15 +608,29 @@ function read_airfoilinput(filename, filepath)
         k2 = parse(Float64,lines[35][1:14])
         k3 = parse(Float64,lines[36][1:14])
         k1_hat = parse(Float64,lines[37][1:14])
-        x_cp_bar = parse(Float64,lines[38][1:14])
-        UACutout = fetchword(lines[39])
-        filtCutOff = fetchword(lines[40])
-        # println(lines[41])
+        
+        if contains(lowercase(lines[38][1:14]), "d")
+            x_cp_bar = NaN
+        else
+            x_cp_bar = parse(Float64,lines[38][1:14])
+        end
+        
+        if contains(lowercase(lines[39][1:14]), "d")
+            UACutout = NaN
+        else
+            UACutout = parse(Float64, lines[39][1:14])
+        end
+        
+        if contains(lowercase(lines[40][1:14]), "d")
+            filtCutOff = NaN
+        else
+            filtCutOff = parse(Float64, lines[40][1:14])
+        end
+
         NumAlf = parse(Int,lines[41][1:14])
         for i = 42:length(lines)
             lines[i] = rmspaces(lines[i])
         end
-        # Polar = readmatrix(lines[42:end],4) #TODO: This is having troubles reading the lines that have a different number of characters per entry. say 180.0 and 80.0/ There is the idea of using readdlm and iobuffer. 
         Polar = cat(readdlm.(IOBuffer.(lines[42:end]))...,dims=1)
         Aoa = Polar[:,1]
         Cl = Polar[:,2]
@@ -688,7 +779,7 @@ Writes a AeroDyn v15 object to file.
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute path of the written file.
 """
-function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd()) #Todo: Add \" to applicable variables for writing (Anything with default or unused. )
+function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd()) 
     lines = String[]
     line = string("-"^7, " AERODYN v15 for OpenFAST INPUT FILE ", "-"^47)
     push!(lines,line)
@@ -697,7 +788,11 @@ function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd
     push!(lines, line)
     line = string(formatword(adfile.echo;quotes=false),"   Echo               - Echo the input to \"<rootname>.AD.ech\"?  (flag)")
     push!(lines, line)
-    line = string(formatword(adfile.dtaero;quotes=false),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
+    if isnan(adfile.dtaero)
+        line = string(formatword("Default";quotes=true),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
+    else
+        line = string(formatword(adfile.dtaero;quotes=false, location="back"),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
+    end
     push!(lines, line)
     line = string(formatword(string(adfile.wakemod);location="back",quotes=false), "   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
     push!(lines, line)
@@ -735,7 +830,11 @@ function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd
     push!(lines, line)
     line = string(formatword(string(adfile.skewmod);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(adfile.skewmodfactor), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+    if isnan(adfile.skewmodfactor)
+        line = string(formatword("Default"), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+    else
+        line = string(formatword(adfile.skewmodfactor; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+    end
     push!(lines, line)
     line = string(formatword(adfile.tiploss;quotes=false), "   TipLoss            - Use the Prandtl tip-loss model? (flag) [unused when WakeMod=0]")
     push!(lines, line)
@@ -747,7 +846,11 @@ function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd
     push!(lines, line)
     line = string(formatword(adfile.ti_drag;quotes=false), "   TIDrag             - Include the drag term in the tangential-induction calculation? (flag) [unused when WakeMod=0 or TanInd=FALSE]")
     push!(lines, line)
-    line = string(formatword(adfile.ind_toler), "   IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or \"default\"} (-) [unused when WakeMod=0]")
+    if isnan(adfile.ind_toler)
+        line = string(formatword("Default"), "   IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or \"default\"} (-) [unused when WakeMod=0]")
+    else
+        line = string(formatword(adfile.ind_toler; quotes=false, location="back"), "   IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or \"default\"} (-) [unused when WakeMod=0]")
+    end
     push!(lines, line)
     line = string(formatword(string(adfile.maxiter);location="back", quotes=false), "   MaxIter            - Maximum number of iteration steps (-) [unused when WakeMod=0]")
     push!(lines, line)
@@ -814,7 +917,7 @@ function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd
     push!(lines, line)
     line = "(m)              (m)           (-)"
     push!(lines, line)
-    line = formatmatrix(adfile.twrnds) #Todo: Can I accomplish this with writedlm instead of a homegrown function? 
+    line = formatmatrix(adfile.twrnds) #TODO: Can I accomplish this with writedlm instead of a homegrown function? 
     append!(lines,line)
     line = string("="^6, "  Outputs  ", "="^84)
     push!(lines, line)
@@ -904,15 +1007,14 @@ function write_adblade(adblade::ADBlade, outputfile::String; outputpath::String=
     push!(lines, line)
     line = "   (m)           (m)            (m)            (deg)         (deg)           (m)              (-)"
     push!(lines, line)
-    BldProps = hcat(adblade.radii, adblade.curve, adblade.sweep, adblade.curveangle, adblade.twist, adblade.chord, adblade.afid)
+    BldProps = hcat(adblade.span, adblade.curve, adblade.sweep, adblade.curveangle, adblade.twist, adblade.chord, adblade.afid)
     line = formatmatrix(BldProps[:,1:end-1])
     newcolumn = formatwidecolumn(Int.(BldProps[:,end]))
     line = formatmatrix_appendcolumn(line, newcolumn)
     append!(lines, line)
 
-    #Write lines to file
-    # cd(outputpath)
-    fi = open(outputpath*"/"*outputfile,"w+") #Todo: Test this change and make sure it didn't break nothing. (Also add this to all the other functions. )
+    ### Write lines to file
+    fi = open(outputpath*"/"*outputfile,"w+") 
     i = 1
     for i = 1:length(lines)-1
          write(fi,lines[i])
@@ -979,106 +1081,218 @@ function write_airfoilinput(airfoilinput::AirfoilInput, outputfile::String; outp
     lines = String[]
     line = "! ------------ AirfoilInfo v1.01.x Input File ----------------------------------"
     push!(lines, line)
-    line = string(formatword(string(airfoilinput.interpord);location="front", quotes=true),"   InterpOrd         ! Interpolation order to use for quasi-steady table lookup {1=linear; 3=cubic spline; \"default\"} [default=1]" )
+
+    if airfoilinput.interpord==0
+        line = string(formatword("Default";location="front", quotes=true),"   InterpOrd         ! Interpolation order to use for quasi-steady table lookup {1=linear; 3=cubic spline; \"default\"} [default=1]" )
+    else
+        line = string(formatword(string(airfoilinput.interpord);location="back", quotes=false),"   InterpOrd         ! Interpolation order to use for quasi-steady table lookup {1=linear; 3=cubic spline; \"default\"} [default=1]" )
+    end
     push!(lines, line)
+
     line = string(formatword(string(airfoilinput.nondimarea);location="back", quotes=false),"   NonDimArea        ! The non-dimensional area of the airfoil (area/chord^2) (set to 1.0 if unsure or unneeded)")
     push!(lines, line)
-    line = string(formatword(string(airfoilinput.numcoords);location="front", quotes=false, desiredlength=27),"   NumCoords         ! The number of coordinates in the airfoil shape file.  Set to zero if coordinates not included.")
+
+    if isa(airfoilinput.numcoords, String)
+        line = string(formatword(string(airfoilinput.numcoords);location="front", quotes=false, desiredlength=length(string(airfoilinput.numcoords))+5),"   NumCoords         ! The number of coordinates in the airfoil shape file.  Set to zero if coordinates not included.")
+    else
+        line = string(formatword(string(airfoilinput.numcoords);location="back", quotes=false),"   NumCoords         ! The number of coordinates in the airfoil shape file.  Set to zero if coordinates not included.")
+    end
     push!(lines, line)
-    line = string(formatword(string(airfoilinput.bl_file);location="front", quotes=false, desiredlength=length(airfoilinput.bl_file)+0), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
+
+    line = string(formatword(string(airfoilinput.bl_file);location="front", quotes=true, desiredlength=length(airfoilinput.bl_file)+5), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
     push!(lines, line)
+
     line = string(formatword(string(airfoilinput.numtabs);location="back", quotes=false),"   NumTabs           ! Number of airfoil tables in this file.")
     push!(lines, line)
+
     line = "! ------------------------------------------------------------------------------"
     push!(lines, line)
+
     line = "! data for table 1"
     push!(lines, line)
+
     line = "! ------------------------------------------------------------------------------"
     push!(lines, line)
+
     line = string(formatword(string(airfoilinput.re);location="back", quotes=false),"   Re                ! Reynolds number in millions")
     push!(lines, line)
+
     line = string(formatword(string(airfoilinput.userprop);location="back", quotes=false),"   UserProp          ! User property (control) setting")
     push!(lines, line)
+
     line = string(formatword(string(airfoilinput.incluadata);location="front", quotes=false),"   InclUAdata        ! Is unsteady aerodynamics data included in this table? If TRUE, then include 30 UA coefficients below this line")
     push!(lines, line)
     if airfoilinput.incluadata
         line = "!........................................"
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.alpha0);location="back",   quotes=false),"   alpha0            ! 0-lift angle of attack, depends on  airfoil.")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.alpha1);location="back",   quotes=false),"   alpha1            ! Angle of attack at f=0.7,   (approximately the stall angle) for AOA>alpha0. (deg)")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.alpha2);location="back",   quotes=false),"   alpha2            ! Angle of attack at f=0.7,   (approximately the stall angle) for AOA<alpha0. (deg)")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.eta_e);location="back",    quotes=false),"   eta_e             ! Recovery factor in the range [0.85 - 0.  95] used only for UAMOD=1, it is set to 1 in the code when flookup=True. (-)  ")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.c_nalpha);location="back",     quotes=false),"   C_nalpha          ! Slope of the 2D normal force  coefficient curve. (1/rad)")
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.t_f0);location="back",     quotes=false),"   T_f0              ! Initial value of the time constant    associated with Df in the expression of Df and f''. [default = 3]")
+
+        if isnan(airfoilinput.t_f0)
+            line = string(formatword("Default";location="front",     quotes=true),"   T_f0              ! Initial value of the time constant    associated with Df in the expression of Df and f''. [default = 3]")
+        else
+            line = string(formatword(string(airfoilinput.t_f0);location="back",     quotes=false),"   T_f0              ! Initial value of the time constant    associated with Df in the expression of Df and f''. [default = 3]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.t_v0);location="back",     quotes=false),"   T_V0              ! Initial value of the time constant    associated with the vortex lift decay process; it is used in the expression    of Cvn. It depends on Re,M, and airfoil class. [default = 6]")
+
+        if isnan(airfoilinput.t_v0)
+            line = string(formatword("Default";location="front",     quotes=true),"   T_V0              ! Initial value of the time constant    associated with the vortex lift decay process; it is used in the expression    of Cvn. It depends on Re,M, and airfoil class. [default = 6]")
+        else
+            line = string(formatword(string(airfoilinput.t_v0);location="back",     quotes=false),"   T_V0              ! Initial value of the time constant    associated with the vortex lift decay process; it is used in the expression    of Cvn. It depends on Re,M, and airfoil class. [default = 6]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.t_p);location="back",  quotes=false),"   T_p               ! Boundary-layer,leading edge pressure   gradient time constant in the expression of Dp. It should be tuned based on   airfoil experimental data. [default = 1.7]")
+
+        if isnan(airfoilinput.t_p)
+            line = string(formatword("Default";location="front",  quotes=true),"   T_p               ! Boundary-layer,leading edge pressure   gradient time constant in the expression of Dp. It should be tuned based on   airfoil experimental data. [default = 1.7]")
+        else
+            line = string(formatword(string(airfoilinput.t_p);location="back",  quotes=false),"   T_p               ! Boundary-layer,leading edge pressure   gradient time constant in the expression of Dp. It should be tuned based on   airfoil experimental data. [default = 1.7]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.t_vl);location="back",     quotes=false),"   T_VL              ! Initial value of the time constant    associated with the vortex advection process; it represents the    non-dimensional time in semi-chords, needed for a vortex to travel from LE     to trailing edge (TE); it is used in the expression of Cvn. It depends on   Re, M (weakly), and airfoil. [valid range = 6 - 13, default = 11]")
+
+        if isnan(airfoilinput.t_vl)
+            line = string(formatword("Default";location="front",     quotes=true),"   T_VL              ! Initial value of the time constant    associated with the vortex advection process; it represents the    non-dimensional time in semi-chords, needed for a vortex to travel from LE     to trailing edge (TE); it is used in the expression of Cvn. It depends on   Re, M (weakly), and airfoil. [valid range = 6 - 13, default = 11]")
+        else
+            line = string(formatword(string(airfoilinput.t_vl);location="back",     quotes=false),"   T_VL              ! Initial value of the time constant    associated with the vortex advection process; it represents the    non-dimensional time in semi-chords, needed for a vortex to travel from LE     to trailing edge (TE); it is used in the expression of Cvn. It depends on   Re, M (weakly), and airfoil. [valid range = 6 - 13, default = 11]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.b1);location="back",   quotes=false),"   b1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.14]")
+
+        if isnan(airfoilinput.b1)
+            line = string(formatword("Default";location="front",   quotes=true),"   b1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.14]")
+        else
+            line = string(formatword(string(airfoilinput.b1);location="back",   quotes=false),"   b1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.14]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.b2);location="back",   quotes=false),"   b2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.53]")
+
+        if isnan(airfoilinput.b2)
+            line = string(formatword("Default";location="front",   quotes=true),"   b2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.53]")
+        else
+            line = string(formatword(string(airfoilinput.b2);location="back",   quotes=false),"   b2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.53]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.b5);location="back",   quotes=false),"   b5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q.  [from  experimental results, defaults to 5]")
+
+        if isnan(airfoilinput.b5)
+            line = string(formatword("Default";location="front",   quotes=true),"   b5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q.  [from  experimental results, defaults to 5]")
+        else
+            line = string(formatword(string(airfoilinput.b5);location="back",   quotes=false),"   b5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q.  [from  experimental results, defaults to 5]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.a1);location="back",   quotes=false),"   A1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.3]")
+
+        if isnan(airfoilinput.a1)
+            line = string(formatword("Default";location="front",   quotes=true),"   A1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.3]")
+        else
+            line = string(formatword(string(airfoilinput.a1);location="back",   quotes=false),"   A1                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.3]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.a2);location="back",   quotes=false),"   A2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.7]")
+
+        if isnan(airfoilinput.a2)
+            line = string(formatword("Default";location="front", quotes=true),"   A2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.7]")
+        else
+            line = string(formatword(string(airfoilinput.a2);location="back",   quotes=false),"   A2                ! Constant in the expression of   phi_alpha^c and phi_q^c.  This value is relatively insensitive for thin   airfoils, but may be different for turbine airfoils. [from experimental   results, defaults to 0.7]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.a5);location="back",   quotes=false),"   A5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q. [from experimental results, defaults to 1]")
+
+        if isnan(airfoilinput.a5)
+            line = string(formatword("Default";location="front",   quotes=true),"   A5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q. [from experimental results, defaults to 1]")
+        else
+            line = string(formatword(string(airfoilinput.a5);location="back",   quotes=false),"   A5                ! Constant in the expression of K'''_q,   Cm_q^nc, and k_m,q. [from experimental results, defaults to 1]")
+        end
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.s1);location="back",   quotes=false),"   S1                ! Constant in the f curve best-fit for    alpha0<=AOA<=alpha1; by definition it depends on the airfoil. [ignored if  UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.s2);location="back",   quotes=false),"   S2                ! Constant in the f curve best-fit    for         AOA> alpha1; by definition it depends on the airfoil. [ignored     if UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.s3);location="back",   quotes=false),"   S3                ! Constant in the f curve best-fit for    alpha2<=AOA< alpha0; by definition it depends on the airfoil. [ignored if  UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.s4);location="back",   quotes=false),"   S4                ! Constant in the f curve best-fit    for         AOA< alpha2; by definition it depends on the airfoil. [ignored     if UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.cn1);location="back",  quotes=false),"   Cn1               ! Critical value of C0n at leading edge  separation. It should be extracted from airfoil data at a given Mach and     Reynolds number. It can be calculated from the static value of Cn at either     the break in the pitching moment or the loss of chord force at the onset of     stall. It is close to the condition of maximum lift of the airfoil at low   Mach numbers.")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.cn2);location="back",  quotes=false),"   Cn2               ! As Cn1 for negative AOAs.")
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.st_sh);location="back",    quotes=false),"   St_sh             ! Strouhal's shedding frequency    constant.  [default = 0.19]")
+
+        if isnan(airfoilinput.st_sh)
+            line = string(formatword("Default";location="front",    quotes=true),"   St_sh             ! Strouhal's shedding frequency    constant.  [default = 0.19]")
+        else
+            line = string(formatword(string(airfoilinput.st_sh);location="back",    quotes=false),"   St_sh             ! Strouhal's shedding frequency    constant.  [default = 0.19]")
+        end
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.cd0);location="back",  quotes=false),"   Cd0               ! 2D drag coefficient value at 0-lift.")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.cm0);location="back",  quotes=false),"   Cm0               ! 2D pitching moment coefficient about 1/    4-chord location, at 0-lift, positive if nose up. [If the aerodynamics  coefficients table does not include a column for Cm, this needs to be set to     0.0]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.k0);location="back",   quotes=false),"   k0                ! Constant in the hat(x)_cp curve     best-fit; = (hat(x)_AC-0.25).  [ignored if UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.k1);location="back",   quotes=false),"   k1                ! Constant in the hat(x)_cp curve     best-fit.  [ignored if UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.k2);location="back",   quotes=false),"   k2                ! Constant in the hat(x)_cp curve     best-fit.  [ignored if UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.k3);location="back",   quotes=false),"   k3                ! Constant in the hat(x)_cp curve     best-fit.  [ignored if UAMod<>1]")
         push!(lines, line)
+
         line = string(formatword(string(airfoilinput.k1_hat);location="back",   quotes=false),"   k1_hat            ! Constant in the expression of Cc due    to leading edge vortex effects.  [ignored if UAMod<>1]")
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.x_cp_bar);location="back",     quotes=false),"   x_cp_bar          ! Constant in the expression of hat(x)  _cp^v. [ignored if UAMod<>1, default = 0.2]")
+
+        if isnan(airfoilinput.x_cp_bar)
+            line = string(formatword("Default";location="front",     quotes=true),"   x_cp_bar          ! Constant in the expression of hat(x)  _cp^v. [ignored if UAMod<>1, default = 0.2]")
+        else
+            line = string(formatword(string(airfoilinput.x_cp_bar);location="back",     quotes=false),"   x_cp_bar          ! Constant in the expression of hat(x)  _cp^v. [ignored if UAMod<>1, default = 0.2]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.uacutout);location="front",    quotes=false),"   UACutout          ! Angle of attack above which unsteady     aerodynamics are disabled (deg). [Specifying the string \"Default\" sets    UACutout to 45 degrees]")
+
+        if isnan(airfoilinput.uacutout)
+            line = string(formatword("Default";location="front",    quotes=true),"   UACutout          ! Angle of attack above which unsteady     aerodynamics are disabled (deg). [Specifying the string \"Default\" sets    UACutout to 45 degrees]")
+        else
+            line = string(formatword(string(airfoilinput.uacutout);location="back",    quotes=false),"   UACutout          ! Angle of attack above which unsteady     aerodynamics are disabled (deg). [Specifying the string \"Default\" sets    UACutout to 45 degrees]")
+        end
         push!(lines, line)
-        line = string(formatword(string(airfoilinput.filtcutoff);location="front", quotes=false),"   filtCutOff        ! Cut-off frequency (-3 dB corner frequency) for low-pass filtering the AoA input to UA, as well as the 1st and 2nd derivatives (Hz) [default = 20]")
+
+        if isnan(airfoilinput.filtcutoff)
+            line = string(formatword("Default";location="front", quotes=true),"   filtCutOff        ! Cut-off frequency (-3 dB corner frequency) for low-pass filtering the AoA input to UA, as well as the 1st and 2nd derivatives (Hz) [default = 20]")
+        else
+            line = string(formatword(string(airfoilinput.filtcutoff);location="back", quotes=false),"   filtCutOff        ! Cut-off frequency (-3 dB corner frequency) for low-pass filtering the AoA input to UA, as well as the 1st and 2nd derivatives (Hz) [default = 20]")
+        end
         push!(lines, line)
     end
     line = "!........................................"
     push!(lines, line)
+
     line = "! Table of aerodynamics coefficients"
     push!(lines, line)
+
     line = string(formatword(string(airfoilinput.numalf);location="back", quotes=false),"   NumAlf            ! Number of data lines in the following table")
     push!(lines, line)
+
     line = "!    Alpha      Cl      Cd        Cm"
     push!(lines, line)
+
     line = "!    (deg)      (-)     (-)       (-)"
     push!(lines, line)
+
     Polar = hcat(airfoilinput.aoa, airfoilinput.cl, airfoilinput.cd, airfoilinput.cm)
     line = formatcoordinates(Polar)
     append!(lines, line)
@@ -1165,51 +1379,70 @@ function write_addriver(addriver::ADDriver, outputfile::String; outputpath::Stri
     lines = []
     line = string("-"^7, " AeroDyn Driver v1.00.x Input File ", "-"^37)
     push!(lines, line)
+
     line = addriver.notes
     push!(lines, line)
+
     line = string("="^7, "  General Options  ", "="^30)
     push!(lines, line)
+
     line = string(formatword(addriver.echo;quotes=false),"   Echo               -   Echo the input to \"<rootname>.ech\"?  (flag)")
     push!(lines, line)
-    line = string(formatword(addriver.ad_inputfile;quotes=false,desiredlength=length(addriver.ad_inputfile)+1),"   AD_InputFile    -  Name of the primary AeroDyn input file")
+
+    line = string(formatword(addriver.ad_inputfile;quotes=true,desiredlength=length(addriver.ad_inputfile)+5),"   AD_InputFile    -  Name of the primary AeroDyn input file")
     push!(lines, line)
+
     line = string("-"^7, " Turbine Data ", "-"^30)
     push!(lines, line)
+
     line = string(formatword(string(addriver.numblades);location="back", quotes=false)  , "   NumBlades       - Number of blades (-)")
     push!(lines, line)
+
     line = string(formatword(string(addriver.hubrad);location="back", quotes=false),    "   HubRad          - Hub radius (m)")
     push!(lines, line)
+
     line = string(formatword(string(addriver.hubht);location="back", quotes=false),     "   HubHt           - Hub height (m)")
     push!(lines, line)
+
     line = string(formatword(string(addriver.overhang);location="back", quotes=false)   , "   Overhang        - Overhang (m)")
     push!(lines, line)
+
     line = string(formatword(string(addriver.shfttilt);location="back", quotes=false)   , "   ShftTilt        - Shaft tilt (deg)")
     push!(lines, line)
+
     line = string(formatword(string(addriver.precone);location="back", quotes=false),   "   Precone         - Blade precone (deg)")
     push!(lines, line)
+
     line = string("-"^7, " I/O Settings ", "-"^30)
     push!(lines, line)
-    line = string(formatword(addriver.outfileroot;quotes=false, desiredlength=length(addriver.outfileroot)+1),"   OutFileRoot     -   Root name for any output files (use \"\" for .dvr rootname) (-)")
+
+    line = string(formatword(addriver.outfileroot;quotes=true, desiredlength=length(addriver.outfileroot)+5),"   OutFileRoot     -   Root name for any output files (use \"\" for .dvr rootname) (-)")
     push!(lines, line)
+
     line = string(formatword(addriver.tabdel;quotes=false),"   TabDel          - When   generating formatted output (OutForm=True), make output tab-delimited     (fixed-width otherwise) (flag)")
     push!(lines, line)
-    line = string(formatword(addriver.outfmt;quotes=false),"   OutFmt          -    Format used for text tabular output, excluding the time channel.  Resulting field  should be 10 characters. (quoted string)")
+
+    line = string(formatword(addriver.outfmt;quotes=true),"   OutFmt          -    Format used for text tabular output, excluding the time channel.  Resulting field  should be 10 characters. (quoted string)")
     push!(lines, line)
+
     line = string(formatword(addriver.beep;quotes=false),"   Beep            - Beep     on exit (flag)")
     push!(lines, line)
+
     line = string("-"^7, "  Combined-Case Analysis  ", "-"^30)
     push!(lines, line)
+
     line = string(formatword(string(addriver.numcases);location="back", quotes=false)   , "   NumCases        - Number of cases to run")
     push!(lines, line)
+
     line = "WndSpeed       ShearExp       RotSpd        Pitch               Yaw           dT             Tmax"
     push!(lines, line)
+
     line = "(m/s)            (-)          (rpm)         (deg)               (deg)          (s)            (s)"
     push!(lines, line)
+
     WindData = hcat(addriver.windspeed, addriver.shearexp, addriver.rpm, addriver.pitch, addriver.yaw, addriver.dt, addriver.tmax)
     line = formatmatrix(WindData)
     append!(lines, line)
-
-
 
     #Write lines to file
     fi = open(outputpath*"/"*outputfile,"w+")

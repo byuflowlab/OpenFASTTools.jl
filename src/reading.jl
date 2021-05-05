@@ -199,6 +199,26 @@ function readcoordinates(lines; type=Float64)
     end
     return matrix
 end
+"""
+    readflag(line::String)
+
+Reads in a line (you'll need to chop off all the description portion) and determines what type of flag it is. 
+
+### Inputs: 
+- line::String - A line from a OpenFAST file
+
+### Outputs:
+- flag::Flag - one of the flag types. 
+"""
+function readflag(line)
+    if contains(lowercase(line), "d")
+        return Default()
+    elseif contains(lowercase(line), "true")
+        return True()
+    else
+        return False()
+    end
+end
 
 """
 parse a matrix that is seperated by a single space, not distances
@@ -276,6 +296,22 @@ function readmatrix(lines, numcolumns::Int64; type=Float64)
     return matrix
 end
 
+function readinteger(line)
+    if contains(lowercase(line[1:14]), "d")
+        return 0
+    else
+        return parse(Int64, line[1:14])
+    end
+end
+
+function readnumber(line)
+    if contains(lowercase(line[1:14]), "d")
+        return NaN
+    else
+        return parse(Float64, line[1:14])
+    end
+end
+
 function readoutlist(lines)
     count = 0
     outlist = String[]
@@ -330,14 +366,14 @@ readvector takes a string that includes a comma delimited vector and ends with t
 finds the values in the vector.
 """
 function readvector(line,veclength)
-   vector = []
+   vector = Int64[]
    idx = 1
    count = 0
    for i=1:length(line)
       # println(line[i])
       if line[i]==',' && veclength!=0
          # println(line[idx:i])
-         number = parse(Int,line[idx:i-1])
+         number = parse(Int64,line[idx:i-1])
          # println("Number: ", number)
          push!(vector,number)
          idx = i+1
@@ -350,7 +386,7 @@ function readvector(line,veclength)
 
    for i=idx:length(line)-1
       if line[i]!=' ' && line[i+1]==' ' && veclength!=0
-         number = parse(Int,line[idx:i])
+         number = parse(Int64,line[idx:i])
          # println("Number: ", number)
          push!(vector,number)
          break

@@ -2,150 +2,230 @@
 ##################     STRUCTURES     ########################
 ##############################################################
 
-mutable struct EDFile
-    Directory::Array{String}
-    Notes::String
-    Echo::String
-    Method::Int
-    DT
-    Gravity::Float64
-    FlapDOF1::String
-    FlapDOF2::String
-    EdgeDOF::String
-    TeetDOF::String
-    DrTrDOF::String
-    GenDOF::String
-    YawDOF::String
-    TwFADOF1::String
-    TwFADOF2::String
-    TwSSDOF1::String
-    TwSSDOF2::String
-    PtfmSgDOF::String
-    PtfmSwDOF::String
-    PtfmHvDOF::String
-    PtfmRDOF::String
-    PtfmPDOF::String
-    PtfmYDOF::String
-    OoPDefl::Float64
-    IPDefl::Float64
-    BlPitch1::Float64 #TODO: Should make this an array. 
-    BlPitch2::Float64
-    BlPitch3::Float64
-    TeetDefl::Float64
-    Azimuth::Float64
-    RotSpeed::Float64
-    NacYaw::Float64
-    TTDspFA::Float64
-    TTDspSS::Float64
-    PtfmSurge::Float64
-    PtfmSway::Float64
-    PtfmHeave::Float64
-    PtfmRoll::Float64
-    PtfmPitch::Float64
-    PtfmYaw::Float64
-    NumBl::Int
-    TipRad::Float64
-    HubRad::Float64
-    PreCone1::Float64
-    PreCone2::Float64
-    PreCone3::Float64
-    HubCM::Float64
-    UndSling::Float64
-    Delta3::Float64
-    AzimB1Up::Float64
-    OverHang::Float64
-    ShftGagL::Float64
-    ShftTilt::Float64
-    NacCMxn::Float64 #TODO: Should make this an array
-    NacCMyn::Float64
-    NacCMzn::Float64
-    NcIMUxn::Float64 #TODO: Should make this an array
-    NcIMUyn::Float64
-    NcIMUzn::Float64
-    Twr2Shft::Float64
-    TowerHt::Float64
-    TowerBsHt::Float64
-    PtfmCMxt::Float64 #TODO: Should make this an array
-    PtfmCMyt::Float64
-    PtfmCMzt::Float64
-    PtfmRefzt::Float64
-    TipMass1::Float64 #TODO: Should make this an array
-    TipMass2::Float64
-    TipMass3::Float64
-    HubMass::Float64
-    HubIner::Float64
-    GenIner::Float64
-    NacMass::Float64
-    NacYIner::Float64
-    YawBrMass::Float64
-    PtfmMass::Float64
-    PtfmRIner::Float64
-    PtfmPIner::Float64
-    PtfmYIner::Float64
-    BldNodes::Int
-    BldFile1::String #Should make this an array
-    BldFile2::String
-    BldFile3::String
-    TeetMod::Int
-    TeetDmpP::Float64
-    TeetDmp::Float64
-    TeetCDmp::Float64
-    TeetSStP::Float64
-    TeetHStP::Float64
-    TeetSSSp::Float64
-    TeetHSSp::Float64
-    GBoxEff::Float64
-    GBRatio::Float64
-    DTTorSpr::Float64
-    DTTorDmp::Float64
-    Furling::String
-    FurlFile::String
-    TwrNodes::Int
-    TwrFile::String
-    SumPrint::String
-    OutFile::Int
-    TabDelim::String #Currently Unused
-    OutFmt::String #Currently Unused
-    TStart::Float64 #Currently Unused
-    DecFact::Int #Currently Unused
-    NTwGages::Int
-    TwrGagNd::Array{Int}
-    NBlGages::Int
-    BldGagNd::Array{Int}
-    Outlist::Array{String}
-    BldNd_BladesOut::Int
-    BldNd_BlOutNd::Array{Int} #Currently Unused
-    NodeOutlist::Array{String}
+mutable struct EDFile{TS, TF, TI, TB}
+    notes::TS
+    echo::TB
+    method::TI
+    dt::TF
+    gravity::TF
+    flapdof1::TB
+    flapdof2::TB
+    edgedof::TB
+    teetdof::TB
+    drtrdof::TB
+    gendof::TB
+    yawdof::TB
+    twfadof1::TB
+    twfadof2::TB
+    twssdof1::TB
+    twssdof2::TB
+    ptfmsgdof::TB
+    ptfmswdof::TB
+    ptfmhvdof::TB
+    ptfmrdof::TB
+    ptfmpdof::TB
+    ptfmydof::TB
+    oopdefl::TF
+    ipdefl::TF
+    blpitchs::Array{TF, 1} 
+    teetdefl::TF
+    azimuth::TF
+    rotspeed::TF
+    nacyaw::TF
+    ttdspfa::TF
+    ttdspss::TF
+    ptfmsurge::TF
+    ptfmsway::TF
+    ptfmheave::TF
+    ptfmroll::TF
+    ptfmpitch::TF
+    ptfmyaw::TF
+    numbl::TI
+    tiprad::TF
+    hubrad::TF
+    precones::Array{TF, 1} #Todo. length 3 -> There might be an issue using tuples. I suggest using Arrays, then forcing the length. 
+    hubcm::TF
+    undsling::TF
+    delta3::TF
+    azimb1up::TF
+    overhang::TF
+    shftgagl::TF
+    shfttilt::TF
+    naccmxyzn::Array{TF, 1} 
+    ncimuxyzn::Array{TF, 1} 
+    twr2shft::TF
+    towerht::TF
+    towerbsht::TF
+    ptfmcmxyzt::Array{TF, 1} 
+    ptfmrefzt::TF
+    tipmasses::Array{TF, 1} 
+    hubmass::TF
+    hubiner::TF
+    geniner::TF
+    nacmass::TF
+    nacyiner::TF
+    yawbrmass::TF
+    ptfmmass::TF
+    ptfmriner::TF
+    ptfmpiner::TF
+    ptfmyiner::TF
+    bldnodes::TI
+    bldfiles::Array{TS, 1} 
+    teetmod::TI
+    teetdmpp::TF
+    teetdmp::TF
+    teetcdmp::TF
+    teetsstp::TF
+    teethstp::TF
+    teetsssp::TF
+    teethssp::TF
+    gboxeff::TF
+    gbratio::TF
+    dttorspr::TF
+    dttordmp::TF
+    furling::TB
+    furlfile::TS
+    twrnodes::TI
+    twrfile::TS
+    sumprint::TB
+    outfile::TI
+    tabdelim::TB #currently unused
+    outfmt::TS #currently unused
+    tstart::TF #currently unused
+    decfact::TI #currently unused
+    ntwgages::TI
+    twrgagnd::Array{TI, 1}
+    nblgages::TI
+    bldgagnd::Array{TI, 1}
+    outlist::Array{TS, 1}
+    bldnd_bladesout::TI
+    bldnd_bloutnd::Array{TI, 1} #currently unused
+    nodeoutlist::Array{TS, 1}
+
+    ### Base constructor
+    function EDFile(notes::TS, echo::TB, method::TI, dt::TF, gravity::TF, flapdof1::TB, flapdof2::TB, edgedof::TB, teetdof::TB, drtrdof::TB, gendof::TB, yawdof::TB, twfadof1::TB, twfadof2::TB, twssdof1::TB, twssdof2::TB, ptfmsgdof::TB, ptfmswdof::TB, ptfmhvdof::TB, ptfmrdof::TB, ptfmpdof::TB, ptfmydof::TB, oopdefl::TF, ipdefl::TF, blpitchs::Array{TF ,1}, teetdefl::TF, azimuth::TF, rotspeed::TF, nacyaw::TF, ttdspfa::TF, ttdspss::TF, ptfmsurge::TF, ptfmsway::TF, ptfmheave::TF, ptfmroll::TF, ptfmpitch::TF, ptfmyaw::TF, numbl::TI, tiprad::TF, hubrad::TF, precones::Array{TF, 1}, hubcm::TF, undsling::TF, delta3::TF, azimb1up::TF, overhang::TF, shftgagl::TF, shfttilt::TF, naccmxyzn::Array{TF, 1}, ncimuxyzn::Array{TF, 1}, twr2shft::TF, towerht::TF, towerbsht::TF, ptfmcmxyzt::Array{TF, 1}, ptfmrefzt::TF, tipmasses::Array{TF, 1}, hubmass::TF, hubiner::TF, geniner::TF, nacmass::TF, nacyiner::TF, yawbrmass::TF, ptfmmass::TF, ptfmriner::TF, ptfmpiner::TF, ptfmyiner::TF, bldnodes::TI, bldfiles::Array{TS, 1}, teetmod::TI, teetdmpp::TF, teetdmp::TF, teetcdmp::TF, teetsstp::TF, teethstp::TF, teetsssp::TF, teethssp::TF, gboxeff::TF, gbratio::TF, dttorspr::TF, dttordmp::TF, furling::TB, furlfile::TS, twrnodes::TI, twrfile::TS, sumprint::TB, outfile::TI, tabdelim::TB, outfmt::TS, tstart::TF, decfact::TI, ntwgages::TI, twrgagnd::Array{TI,1}, nblgages::TI, bldgagnd::Array{TI,1}, outlist::Array{TS,1}, bldnd_bladesout::TI, bldnd_bloutnd::Array{TI,1}, nodeoutlist::Array{TS,1}) where {TS, TF, TI, TB}
+
+        ### Check the lengths of each of the blade characteristics
+        if length(blpitchs) != numbl
+            error("Please provide pitch information for the given number of blades.")
+        end
+        if length(blpitchs) > 3
+            error("Too many blades described - pitch. OpenFAST can only handle up to 3 bladed turbines.")
+        end
+        tf = eltype(blpitchs)
+        if length(blpitchs) < 3
+            while blpitchs <= 2
+                push!(blpitchs, tf(0))
+            end
+        end
+
+        if length(precones) != numbl
+            error("Please provide precone information for the given number of blades.")
+        end
+        if length(precones) > 3
+            error("Too many blades described - precone. OpenFAST can only handle up to 3 bladed turbines.")
+        end
+        if length(precones) < 3
+            while precones <= 2
+                push!(precones, tf(0))
+            end
+        end
+
+        if length(tipmasses) != numbl
+            error("Please provide tip mass information for the given number of blades.")
+        end
+        if length(tipmasses) > 3
+            error("Too many blades described - tip mass. OpenFAST can only handle up to 3 bladed turbines.")
+        end
+        if length(tipmasses) < 3
+            while tipmasses <= 2
+                push!(tipmasses, tf(0))
+            end
+        end
+
+        if length(bldfiles) != numbl
+            error("Please provide bldfiles information for the given number of blades.")
+        end
+        if length(bldfiles) > 3
+            error("Too many blades described - bldfiles. OpenFAST can only handle up to 3 bladed turbines.")
+        end
+        if length(bldfiles) < 3
+            while bldfiles <= 2
+                push!(bldfiles, "")
+            end
+        end
+
+        return new{TS, TF, TI, TB}(notes, echo, method, dt, gravity, flapdof1, flapdof2, edgedof, teetdof, drtrdof, gendof, yawdof, twfadof1, twfadof2, twssdof1, twssdof2, ptfmsgdof, ptfmswdof, ptfmhvdof, ptfmrdof, ptfmpdof, ptfmydof, oopdefl, ipdefl, blpitchs, teetdefl, azimuth, rotspeed, nacyaw, ttdspfa, ttdspss, ptfmsurge, ptfmsway, ptfmheave, ptfmroll, ptfmpitch, ptfmyaw, numbl, tiprad, hubrad, precones, hubcm, undsling, delta3, azimb1up, overhang, shftgagl, shfttilt, naccmxyzn, ncimuxyzn, twr2shft, towerht, towerbsht, ptfmcmxyzt, ptfmrefzt, tipmasses, hubmass, hubiner, geniner, nacmass, nacyiner, yawbrmass, ptfmmass, ptfmriner, ptfmpiner, ptfmyiner, bldnodes, bldfiles, teetmod, teetdmpp, teetdmp, teetcdmp, teetsstp, teethstp, teetsssp, teethssp, gboxeff, gbratio, dttorspr, dttordmp, furling, furlfile, twrnodes, twrfile, sumprint, outfile, tabdelim, outfmt, tstart, decfact, ntwgages, twrgagnd, nblgages, bldgagnd, outlist, bldnd_bladesout, bldnd_bloutnd, nodeoutlist)
+    end
+
 end
 
-mutable struct EDBlade
-    Directory
-    Notes
-    NBlInpSt::Int
-    BldFlDmp1::AbstractFloat #TODO: This could be an array
-    BldFlDmp2::AbstractFloat
-    BldEdDmp1::AbstractFloat
-    FlStTunr1::AbstractFloat #TODO: This could be an array
-    FlStTunr2::AbstractFloat
-    AdjBlMs::AbstractFloat
-    AdjFlSt::AbstractFloat
-    AdjEdSt::AbstractFloat
-    BldProps::Array{Float64,2}
-    BldFl1Sh2::AbstractFloat #TODO: This could be an array
-    BldFl1Sh3::AbstractFloat
-    BldFl1Sh4::AbstractFloat
-    BldFl1Sh5::AbstractFloat
-    BldFl1Sh6::AbstractFloat
-    BldFl2Sh2::AbstractFloat #TODO: This could be an array
-    BldFl2Sh3::AbstractFloat
-    BldFl2Sh4::AbstractFloat
-    BldFl2Sh5::AbstractFloat
-    BldFl2Sh6::AbstractFloat
-    BldEdgSh2::AbstractFloat #TODO: This could be an array
-    BldEdgSh3::AbstractFloat
-    BldEdgSh4::AbstractFloat
-    BldEdgSh5::AbstractFloat
-    BldEdgSh6::AbstractFloat
+mutable struct EDBlade{TS, TF, TI}
+    notes::TS
+    numnds::TI
+    flapdamp::Array{TF, 1} #Flapwise damping length 2
+    edgedamp::TF #Edgewise damping
+    flsttunr::Array{TF, 1} #length 2
+    adjblms::TF
+    adjflst::TF
+    adjedst::TF
+    frac::Array{TF, 1}
+    pitchaxis::Array{TF, 1}
+    twist::Array{TF, 1}
+    massdensity::Array{TF, 1}
+    flapstiff::Array{TF, 1}
+    edgestiff::Array{TF, 1}
+    flapmode1::Array{TF, 1} #length 5
+    flapmode2::Array{TF, 1} #length 5
+    edgemode1::Array{TF, 1} #length 5
+
+    ### Base Constructor
+    function EDBlade(notes::TS, numnds::TI, flapdamp::Array{TF, 1}, edgedamp::TF , flsttunr::Array{TF, 1}, adjblms::TF, adjflst::TF, adjedst::TF, frac::Array{TF, 1}, pitchaxis::Array{TF, 1}, twist::Array{TF, 1}, massdensity::Array{TF, 1}, flapstiff::Array{TF, 1}, edgestiff::Array{TF, 1}, flapmode1::Array{TF, 1}, flapmode2::Array{TF, 1}, edgemode1::Array{TF, 1}) where {TS, TI, TF}
+
+        if length(flapdamp) > 2
+            error("Too many flap modes described. - EDBlade")
+        end
+        if length(flapdamp) < 2
+            push!(flapdamp, flapdamp[1])
+        end
+
+        if length(flsttunr) > 2
+            error("Too many flapwise modal stiffness tuners described. - EDBlade")
+        end
+        if length(flsttunr) < 2
+            push!(flsttunr, flsttunr[1])
+        end
+
+        if length(flapmode1) > 5
+            error("Too many flap mode 1 coefficients provided. - EDBlade")
+        end
+        tf = eltype(flapmode1)
+        if length(flapmode1) < 5
+            while length(flapmode1) < 5
+                push!(flapmode1, tf(0))
+            end
+        end
+
+        if length(flapmode2) > 5
+            error("Too many flap mode 2 coefficients provided. - EDBlade")
+        end
+        if length(flapmode2) < 5
+            while length(flapmode2) < 5
+                push!(flapmode2, tf(0))
+            end
+        end
+
+        if length(edgemode1) > 5
+            error("Too many edge mode 1 coefficients provided. - EDBlade")
+        end
+        if length(edgemode1) < 5
+            while length(edgemode1) < 5
+                push!(edgemode1, tf(0))
+            end
+        end
+        
+        return new{TS, TF, TI}(notes, numnds, flapdamp, edgedamp, flsttunr, adjblms, adjflst, adjedst, frac, pitchaxis, twist, massdensity, flapstiff, edgestiff, flapmode1, flapmode2, edgemode1)
+    end
 end
 
 ##############################################################
@@ -153,236 +233,213 @@ end
 ##############################################################
 
 """
-ReadEDFile(filename, filepath)
+    read_edfile(filename, filepath)
 This function reads in a ElastoDyn input file and stores the values in an ED structure.
+
+### Inputs: 
+- filename::String - The name of the file to be read. 
+- filepath::String - The path of the file to be read. 
+
+### Outputs:
+-edfile::EDFile - and ElastoDyn file object
 """
-function ReadEDFile(filename, filepath)
-    cd(filepath)
-    fi = open(filename, "r")
+function read_edfile(filename::String, filepath::String)
+    fi = open(filepath*"/"*filename, "r")
     lines = readlines(fi)
     close(fi)
 
-    directory = ["Title", "Notes", "Simulation Control", "Echo", "Integration Method",
-    "DT", "Gravity", "FlapDOF1", "FlapDOF2", "EdgeDOF", "TeetDOF", "DrTrDOF", "GenDOF",
-    "YawDOF", "TwFADOF1", "TwFADOF2", "TwSSDOF1", "TwSSDOF2", "PtfmSgDOF", "PtfmSwDOF",
-    "PtfmHvDOF", "PtfmRDOF", "PtfmPDOF", "PtfmYDOF", "Initial Conditions", "ooFDefl",
-    "IPDefl", "BlPitch(1)", "BlPitch(2)", "BlPitch(3)", "TeetDefl", "Azimuth", "RotSpeed",
-    "NacYaw", "TTDspFA", "TTDspSS", "PtfmSurge", "PtfmSway", "PtfmHeave", "PtfmRoll",
-    "PtfmPitch", "PtfmYaw", "Turbine Configuration", "NumBl", "TipRad", "HubRad", "PreCone(1)",
-    "PreCone(2)", "PreCone(3)", "HubCM", "UndSling", "Delta3", "AximB1UP", "OverHang",
-    "ShftGagL", "ShftTilt", "NacCMxn", "NacCMyn", "NacCMzn", "NcIMUxn", "NcIMUyn", "NcIMUzn",
-    "Twr2Shft", "TowerHt", "TowerBsHt", "PtfmCMxt", "PtfmCMyt", "PtfmCMzt", "PtfmRefzt",
-    "Mass and Inertia", "TipMass(1)", "TipMass(2)", "TipMass(3)", "HubMass", "HubIner",
-    "GenIner", "NacMass", "NacYIner", "YawBrMass", "PtfmMass", "PtfmRIner", "PtfmPIner",
-    "PtfmYIner", "Blade", "BldNodes", "BldFile(1)", "BldFile(2)", "BldFile(3)", "Rotor-Teeter",
-    "TeetMod", "TeetDmpP", "TeetDmp", "TeetCDmp", "TeetSStP", "TeetHStP", "TeetSSSp", "TeetHSSp",
-    "Drivetrain", "GBoxEff", "GBRatio", "DTTorSpr", "DTTorDmp", "Furling Title", "Furling", "FurlFile",
-    "Tower", "TwrNodes", "TwrFile", "Output", "SumPrint", "OutFile", "TabDelim", "OutFmt",
-    "TStart", "DecFact", "NTwGages", "TwrGagNd", "NBlGages", "BldGagNd", "Outlist"]
-
     #Line 1 is the main title
-    Notes = lines[2]
+    notes = lines[2]
     #line 3 is a general title
-    Echo = fetchword15(lines[4])
-    Method = parse(Int, lines[5][1:14])
-    DT = fetchword15(lines[6]) ### TODO: This can be an float as well. 
+    echo = fetchword(lines[4]; adapt=true)
+    method = parse(Int, lines[5][1:14])
+    if contains(lowercase(lines[6][1:14]), "d") #If it says default, set the value to zero, and then we'll deal with it in the write function. 
+        dt = NaN
+    else
+        dt = parse(Float64, lines[6][1:14])
+    end
     #line 7 is a general title
-    Gravity = parse(Float64, lines[8][1:14])
+    gravity = parse(Float64, lines[8][1:14])
     #line 9 is a general title
-    FlapDOF1 = fetchword15(lines[10]) ######## Fix lines starting here
-    FlapDOF2 = fetchword15(lines[11])
-    EdgeDOF = fetchword15(lines[12])
-    TeetDOF = fetchword15(lines[13])
-    DrTrDOF = fetchword15(lines[14])
-    GenDOF = fetchword15(lines[15])
-    YawDOF = fetchword15(lines[16])
-    TwFADOF1 = fetchword15(lines[17])
-    TwFADOF2 = fetchword15(lines[18])
-    TwSSDOF1 = fetchword15(lines[19])
-    TwSSDOF2 = fetchword15(lines[20])
-    PtfmSgDOF = fetchword15(lines[21])
-    PtfmSwDOF = fetchword15(lines[22])
-    PtfmHvDOF = fetchword15(lines[23])
-    PtfmRDOF = fetchword15(lines[24])
-    PtfmPDOF = fetchword15(lines[25])
-    PtfmYDOF = fetchword15(lines[26])
+    flapdof1 = fetchword(lines[10]; adapt=true) 
+    flapdof2 = fetchword(lines[11]; adapt=true)
+    edgedof = fetchword(lines[12]; adapt=true)
+    teetdof = fetchword(lines[13]; adapt=true)
+    drtrdof = fetchword(lines[14]; adapt=true)
+    gendof = fetchword(lines[15]; adapt=true)
+    yawdof = fetchword(lines[16]; adapt=true)
+    twfadof1 = fetchword(lines[17]; adapt=true)
+    twfadof2 = fetchword(lines[18]; adapt=true)
+    twssdof1 = fetchword(lines[19]; adapt=true)
+    twssdof2 = fetchword(lines[20]; adapt=true)
+    ptfmsgdof = fetchword(lines[21]; adapt=true)
+    ptfmswdof = fetchword(lines[22]; adapt=true)
+    ptfmhvdof = fetchword(lines[23]; adapt=true)
+    ptfmrdof = fetchword(lines[24]; adapt=true)
+    ptfmpdof = fetchword(lines[25]; adapt=true)
+    ptfmydof = fetchword(lines[26]; adapt=true)
     #line 27 is a general title
-    OoPDefl = parse(Float64, lines[28][1:14])
-    IPDefl = parse(Float64, lines[29][1:14])
-    BlPitch1 = parse(Float64, lines[30][1:14])
-    BlPitch2 = parse(Float64, lines[31][1:14])
-    BlPitch3 = parse(Float64, lines[32][1:14])
-    TeetDefl = parse(Float64, lines[33][1:14])
-    Azimuth = parse(Float64, lines[34][1:14])
-    RotSpeed = parse(Float64, lines[35][1:14])
-    NacYaw = parse(Float64, lines[36][1:14])
-    TTDspFA = parse(Float64, lines[37][1:14])
-    TTDspSS = parse(Float64, lines[38][1:14])
-    PtfmSurge = parse(Float64, lines[39][1:14])
-    PtfmSway = parse(Float64, lines[40][1:14])
-    PtfmHeave = parse(Float64, lines[41][1:14])
-    PtfmRoll = parse(Float64, lines[42][1:14])
-    PtfmPitch = parse(Float64, lines[43][1:14])
-    PtfmYaw = parse(Float64, lines[44][1:14])
+    oopdefl = parse(Float64, lines[28][1:14])
+    ipdefl = parse(Float64, lines[29][1:14])
+    blpitchs = zeros(3)
+    blpitchs[1] = parse(Float64, lines[30][1:14])
+    blpitchs[2] = parse(Float64, lines[31][1:14])
+    blpitchs[3] = parse(Float64, lines[32][1:14])
+    teetdefl = parse(Float64, lines[33][1:14])
+    azimuth = parse(Float64, lines[34][1:14])
+    rotspeed = parse(Float64, lines[35][1:14])
+    nacyaw = parse(Float64, lines[36][1:14])
+    ttdspfa = parse(Float64, lines[37][1:14])
+    ttdspss = parse(Float64, lines[38][1:14])
+    ptfmsurge = parse(Float64, lines[39][1:14])
+    ptfmsway = parse(Float64, lines[40][1:14])
+    ptfmheave = parse(Float64, lines[41][1:14])
+    ptfmroll = parse(Float64, lines[42][1:14])
+    ptfmpitch = parse(Float64, lines[43][1:14])
+    ptfmyaw = parse(Float64, lines[44][1:14])
     #Line 45 is a general title
-    NumBl = parse(Int, lines[46][1:14])
-    TipRad = parse(Float64, lines[47][1:14])
-    HubRad = parse(Float64, lines[48][1:14])
-    PreCone1 = parse(Float64, lines[49][1:14])
-    PreCone2 = parse(Float64, lines[50][1:14])
-    PreCone3 = parse(Float64, lines[51][1:14])
-    HubCM = parse(Float64, lines[52][1:14])
-    UndSling = parse(Float64, lines[53][1:14])
-    Delta3 = parse(Float64, lines[54][1:14])
-    AzimB1Up = parse(Float64, lines[55][1:14])
-    OverHang = parse(Float64, lines[56][1:14])
-    ShftGagL = parse(Float64, lines[57][1:14])
-    ShftTilt = parse(Float64, lines[58][1:14])
-    NacCMxn = parse(Float64, lines[59][1:14])
-    NacCMyn = parse(Float64, lines[60][1:14])
-    NacCMzn = parse(Float64, lines[61][1:14])
-    NcIMUxn = parse(Float64, lines[62][1:14])
-    NcIMUyn = parse(Float64, lines[63][1:14])
-    NcIMUzn = parse(Float64, lines[64][1:14])
-    Twr2Shft = parse(Float64, lines[65][1:14])
-    TowerHt = parse(Float64, lines[66][1:14])
-    TowerBsHt = parse(Float64, lines[67][1:14])
-    PtfmCMxt = parse(Float64, lines[68][1:14])
-    PtfmCMyt = parse(Float64, lines[69][1:14])
-    PtfmCMzt = parse(Float64, lines[70][1:14])
-    PtfmRefzt = parse(Float64, lines[71][1:14])
+    numbl = parse(Int, lines[46][1:14])
+    tiprad = parse(Float64, lines[47][1:14])
+    hubrad = parse(Float64, lines[48][1:14])
+    precones = zeros(3)
+    precones[1] = parse(Float64, lines[49][1:14])
+    precones[2] = parse(Float64, lines[50][1:14])
+    precones[3] = parse(Float64, lines[51][1:14])
+    hubcm = parse(Float64, lines[52][1:14])
+    undsling = parse(Float64, lines[53][1:14])
+    delta3 = parse(Float64, lines[54][1:14])
+    azimb1up = parse(Float64, lines[55][1:14])
+    overhang = parse(Float64, lines[56][1:14])
+    shftgagl = parse(Float64, lines[57][1:14])
+    shfttilt = parse(Float64, lines[58][1:14])
+    naccmxyzn = zeros(3)
+    naccmxyzn[1] = parse(Float64, lines[59][1:14])
+    naccmxyzn[2] = parse(Float64, lines[60][1:14])
+    naccmxyzn[3] = parse(Float64, lines[61][1:14])
+    ncimuxyzn = zeros(3)
+    ncimuxyzn[1] = parse(Float64, lines[62][1:14])
+    ncimuxyzn[2] = parse(Float64, lines[63][1:14])
+    ncimuxyzn[3] = parse(Float64, lines[64][1:14])
+    twr2shft = parse(Float64, lines[65][1:14])
+    towerht = parse(Float64, lines[66][1:14])
+    towerbsht = parse(Float64, lines[67][1:14])
+    ptfmcmxyzt = zeros(3)
+    ptfmcmxyzt[1] = parse(Float64, lines[68][1:14])
+    ptfmcmxyzt[2] = parse(Float64, lines[69][1:14])
+    ptfmcmxyzt[3] = parse(Float64, lines[70][1:14])
+    ptfmrefzt = parse(Float64, lines[71][1:14])
     #Line 72 is a general title
-    TipMass1 = parse(Float64, lines[73][1:14])
-    TipMass2 = parse(Float64, lines[74][1:14])
-    TipMass3 = parse(Float64, lines[75][1:14])
-    HubMass = parse(Float64, lines[76][1:14])
-    HubIner = parse(Float64, lines[77][1:14])
-    GenIner = parse(Float64, lines[78][1:14])
-    NacMass = parse(Float64, lines[79][1:14])
-    NacYIner = parse(Float64, lines[80][1:14])
-    YawBrMass = parse(Float64, lines[81][1:14])
-    PtfmMass = parse(Float64, lines[82][1:14])
-    PtfmRIner = parse(Float64, lines[83][1:14])
-    PtfmPIner = parse(Float64, lines[84][1:14])
-    PtfmYIner = parse(Float64, lines[85][1:14])
-    #Line 86 is a general title
-    BldNodes = parse(Int, lines[87][1:14])
-    BldFile1 = fetchword15(lines[88];lengthofword=35)
-    BldFile2 = fetchword15(lines[89];lengthofword=35)
-    BldFile3 = fetchword15(lines[90];lengthofword=35)
-    #Line 91 is a general title
-    TeetMod = parse(Int, lines[92][1:14])
-    TeetDmpP = parse(Float64, lines[93][1:14])
-    TeetDmp = parse(Float64, lines[94][1:14])
-    TeetCDmp = parse(Float64, lines[95][1:14])
-    TeetSStP = parse(Float64, lines[96][1:14])
-    TeetHStP = parse(Float64, lines[97][1:14])
-    TeetSSSp = parse(Float64, lines[98][1:14])
-    TeetHSSp = parse(Float64, lines[99][1:14])
-    #Line 100 is a general title
-    GBoxEff = parse(Float64, lines[101][1:14])
-    GBRatio = parse(Float64, lines[102][1:14])
-    DTTorSpr = parse(Float64, lines[103][1:14])
-    DTTorDmp = parse(Float64, lines[104][1:14])
-    #Line 105 is a general title
-    Furling = fetchword15(lines[106])
-    FurlFile = fetchword15(lines[107];lengthofword=30)
-    #Line 108 is a general title
-    TwrNodes = parse(Int, lines[109][1:14])
-    TwrFile = fetchword15(lines[110];lengthofword=30)
+    tipmasses = zeros(3)
+    tipmasses[1] = parse(Float64, lines[73][1:14])
+    tipmasses[2] = parse(Float64, lines[74][1:14])
+    tipmasses[3] = parse(Float64, lines[75][1:14])
+    hubmass = parse(Float64, lines[76][1:14])
+    hubiner = parse(Float64, lines[77][1:14])
+    geniner = parse(Float64, lines[78][1:14])
+    nacmass = parse(Float64, lines[79][1:14])
+    nacyiner = parse(Float64, lines[80][1:14])
+    yawbrmass = parse(Float64, lines[81][1:14])
+    ptfmmass = parse(Float64, lines[82][1:14])
+    ptfmriner = parse(Float64, lines[83][1:14])
+    ptfmpiner = parse(Float64, lines[84][1:14])
+    ptfmyiner = parse(Float64, lines[85][1:14])
+    #line 86 is a general title
+    bldnodes = parse(Int, lines[87][1:14])
+    bldfiles = [fetchword(lines[88];lengthofword=35), fetchword(lines[89];lengthofword=35), fetchword(lines[90];lengthofword=35)]
+    #line 91 is a general title
+    teetmod = parse(Int, lines[92][1:14])
+    teetdmpp = parse(Float64, lines[93][1:14])
+    teetdmp = parse(Float64, lines[94][1:14])
+    teetcdmp = parse(Float64, lines[95][1:14])
+    teetsstp = parse(Float64, lines[96][1:14])
+    teethstp = parse(Float64, lines[97][1:14])
+    teetsssp = parse(Float64, lines[98][1:14])
+    teethssp = parse(Float64, lines[99][1:14])
+    #line 100 is a general title
+    gboxeff = parse(Float64, lines[101][1:14])
+    gbratio = parse(Float64, lines[102][1:14])
+    dttorspr = parse(Float64, lines[103][1:14])
+    dttordmp = parse(Float64, lines[104][1:14])
+    #line 105 is a general title
+    furling = fetchword(lines[106]; adapt=true)
+    furlfile = fetchword(lines[107];lengthofword=30)
+    #line 108 is a general title
+    twrnodes = parse(Int, lines[109][1:14])
+    twrfile = fetchword(lines[110];lengthofword=30)
     #line 111 is a general title
-    SumPrint = fetchword15(lines[112])
-    OutFile = parse(Int, lines[113][1:14])
-    TabDelim = fetchword15(lines[114])
-    OutFmt = fetchword15(lines[115])
-    TStart = parse(Float64, lines[116][1:14])
-    DecFact = parse(Int, lines[117][1:14])
-    NTwGages = parse(Int, lines[118][1:14])
-    TwrGagNd = readvector(lines[119], NTwGages)
-    NBlGages = parse(Int, lines[120][1:14])
-    BldGagNd = readvector(lines[121], NBlGages)
-    #Line 122 is the outlist parameter
-    Outlist = readoutlist(lines[123:end])
+    sumprint = fetchword(lines[112]; adapt=true)
+    outfile = parse(Int, lines[113][1:14])
+    tabdelim = fetchword(lines[114]; adapt=true)
+    outfmt = fetchword(lines[115])
+    tstart = parse(Float64, lines[116][1:14])
+    decfact = parse(Int, lines[117][1:14])
+    ntwgages = parse(Int, lines[118][1:14])
+    twrgagnd = readvector(lines[119], ntwgages) #this one returns Ints
+    nblgages = parse(Int, lines[120][1:14])
+    bldgagnd = readvector(lines[121], nblgages)
+    #line 122 is the outlist parameter
+    outlist = readoutlist(lines[123:end])
     nodeoutputstitleidx = 0 
     for i = 1:length(lines)
         if lowercase(lines[i][1:3]) == "end"
-            nodeoutputstitleidx = i+1 #This is the title index
+            nodeoutputstitleidx = i+1 #this is the title index
             break
         end
     end
-    BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
-    BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2], BldNd_BladesOut) 
+    bldnd_bladesout = parse(Int, lines[nodeoutputstitleidx+1][1:14])
+    bldnd_bloutnd = readvector(lines[nodeoutputstitleidx+2], bldnd_bladesout) 
     # nodeoutputstitleidx+3 is a general title
-    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
+    nodeoutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
 
-    file = EDFile(directory, Notes, Echo, Method, DT, Gravity, FlapDOF1, FlapDOF2,
-            EdgeDOF, TeetDOF, DrTrDOF, GenDOF, YawDOF, TwFADOF1, TwFADOF2, TwSSDOF1,
-            TwSSDOF2, PtfmSgDOF, PtfmSwDOF, PtfmHvDOF, PtfmRDOF, PtfmPDOF, PtfmYDOF,
-            OoPDefl, IPDefl, BlPitch1, BlPitch2, BlPitch3, TeetDefl, Azimuth, RotSpeed,
-            NacYaw, TTDspFA, TTDspSS, PtfmSurge, PtfmSway, PtfmHeave, PtfmRoll, PtfmPitch,
-            PtfmYaw, NumBl, TipRad, HubRad, PreCone1, PreCone2, PreCone3, HubCM, UndSling,
-            Delta3, AzimB1Up, OverHang, ShftGagL, ShftTilt, NacCMxn, NacCMyn, NacCMzn,
-            NcIMUxn, NcIMUyn, NcIMUzn, Twr2Shft, TowerHt, TowerBsHt, PtfmCMxt, PtfmCMyt,
-            PtfmCMzt, PtfmRefzt, TipMass1, TipMass2, TipMass3, HubMass, HubIner, GenIner,
-            NacMass, NacYIner, YawBrMass, PtfmMass, PtfmRIner, PtfmPIner, PtfmYIner,
-            BldNodes, BldFile1, BldFile2, BldFile3, TeetMod, TeetDmpP, TeetDmp, TeetCDmp,
-            TeetSStP, TeetHStP, TeetSSSp, TeetHSSp, GBoxEff, GBRatio, DTTorSpr, DTTorDmp,
-            Furling, FurlFile, TwrNodes, TwrFile, SumPrint, OutFile, TabDelim, OutFmt,
-            TStart, DecFact, NTwGages, TwrGagNd, NBlGages, BldGagNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
-    return file
+    return EDFile(notes, echo, method, dt, gravity, flapdof1, flapdof2, edgedof, teetdof, drtrdof, gendof, yawdof, twfadof1, twfadof2, twssdof1, twssdof2, ptfmsgdof, ptfmswdof, ptfmhvdof, ptfmrdof, ptfmpdof, ptfmydof, oopdefl, ipdefl, blpitchs, teetdefl, azimuth, rotspeed, nacyaw, ttdspfa, ttdspss, ptfmsurge, ptfmsway, ptfmheave, ptfmroll, ptfmpitch, ptfmyaw, numbl, tiprad, hubrad, precones, hubcm, undsling, delta3, azimb1up, overhang, shftgagl, shfttilt, naccmxyzn, ncimuxyzn, twr2shft, towerht, towerbsht, ptfmcmxyzt, ptfmrefzt, tipmasses, hubmass, hubiner, geniner, nacmass, nacyiner, yawbrmass, ptfmmass, ptfmriner, ptfmpiner, ptfmyiner, bldnodes, bldfiles, teetmod, teetdmpp, teetdmp, teetcdmp, teetsstp, teethstp, teetsssp, teethssp, gboxeff, gbratio, dttorspr, dttordmp, furling, furlfile, twrnodes, twrfile, sumprint, outfile, tabdelim, outfmt, tstart, decfact, ntwgages, twrgagnd, nblgages, bldgagnd, outlist, bldnd_bladesout, bldnd_bloutnd, nodeoutlist)
 end
 
-function ReadEDBlade(filename, filepath)
-    cd(filepath)
-    fi = open(filename, "r")
+"""
+    read_edblade(filename, filepath)
+
+Reads in an ElastoDyn Blade from file. 
+
+### Inputs:
+- filename::String - The name of the file to be read in.
+- filepath::String - The path to the file to be read in. 
+
+### Outputs:
+- edfile::EDBlade - An ElastoDyn blade object. 
+"""
+function read_edblade(filename::String, filepath::String)
+    fi = open(filepath*"/"*filename, "r")
     lines = readlines(fi)
     close(fi)
 
-    Directory = ["Title", "Notes", "Blade Parameters", "NBlInpSt", "BldFlDmp(1)", "BldFlDmp(2)",
-                    "BldEdDmp(1)", "Blade Adjustment Factors", "FlStTunr(1)", "FlStTunr(2)",
-                    "AdjBlMs", "AdjFlSt", "AdjEdSt", "Distributed Blade Properties", "BldProps",
-                    "BldFl1Sh2", "BldFl1Sh3", "BldFl1Sh4", "BldFl1Sh5", "BldFl1Sh6", "BldFl2Sh2",
-                    "BldFl2Sh3", "BldFl2Sh4", "BldFl2Sh5", "BldFl2Sh6", "BldEdgSh2", "BldEdgSh3",
-                    "BldEdgSh4", "BldEdgSh5", "BldEdgSh6"]
-
-    Notes = lines[2]
+    notes = lines[2]
     #Line 3 is a general title
-    NBlInpSt = parse(Int, lines[4][1:14])
-    BldFlDmp1 = parse(Float64, lines[5][1:14])
-    BldFlDmp2 = parse(Float64, lines[6][1:14])
-    BldEdDmp1 = parse(Float64, lines[7][1:14])
-    #Line 8 is a general title
-    FlStTunr1 = parse(Float64, lines[9][1:14])
-    FlStTunr2 = parse(Float64, lines[10][1:14])
-    AdjBlMs = parse(Float64, lines[11][1:14])
-    AdjFlSt = parse(Float64, lines[12][1:14])
-    AdjEdSt = parse(Float64, lines[13][1:14])
-    #Lines 14-16 are general titles
-    BldProps = fetchmatrix(lines[17:16+NBlInpSt], 88, 6)
-    #Line 17+NBlInpSt is a general title
-    BldFl1Sh2 = parse(Float64, lines[18+NBlInpSt][1:14])
-    BldFl1Sh3 = parse(Float64, lines[19+NBlInpSt][1:14])
-    BldFl1Sh4 = parse(Float64, lines[20+NBlInpSt][1:14])
-    BldFl1Sh5 = parse(Float64, lines[21+NBlInpSt][1:14])
-    BldFl1Sh6 = parse(Float64, lines[22+NBlInpSt][1:14])
-    BldFl2Sh2 = parse(Float64, lines[23+NBlInpSt][1:14])
-    BldFl2Sh3 = parse(Float64, lines[24+NBlInpSt][1:14])
-    BldFl2Sh4 = parse(Float64, lines[25+NBlInpSt][1:14])
-    BldFl2Sh5 = parse(Float64, lines[26+NBlInpSt][1:14])
-    BldFl2Sh6 = parse(Float64, lines[27+NBlInpSt][1:14])
-    BldEdgSh2 = parse(Float64, lines[28+NBlInpSt][1:14])
-    BldEdgSh3 = parse(Float64, lines[29+NBlInpSt][1:14])
-    BldEdgSh4 = parse(Float64, lines[30+NBlInpSt][1:14])
-    BldEdgSh5 = parse(Float64, lines[31+NBlInpSt][1:14])
-    BldEdgSh6 = parse(Float64, lines[32+NBlInpSt][1:14])
+    numnds = parse(Int, lines[4][1:14])
+    flapdamp = [parse(Float64, lines[5][1:14]), parse(Float64, lines[6][1:14])]
+    edgedamp = parse(Float64, lines[7][1:14])
 
+    #line 8 is a general title
+    flsttunr = [parse(Float64, lines[9][1:14]), parse(Float64, lines[10][1:14])]
+    adjblms = parse(Float64, lines[11][1:14])
+    adjflst = parse(Float64, lines[12][1:14])
+    adjedst = parse(Float64, lines[13][1:14])
 
-    edblade = EDBlade(Directory, Notes, NBlInpSt, BldFlDmp1, BldFlDmp2, BldEdDmp1,
-                FlStTunr1, FlStTunr2, AdjBlMs, AdjFlSt, AdjEdSt, BldProps,
-                BldFl1Sh2, BldFl1Sh3, BldFl1Sh4, BldFl1Sh5, BldFl1Sh6, BldFl2Sh2,
-                BldFl2Sh3, BldFl2Sh4, BldFl2Sh5, BldFl2Sh6, BldEdgSh2, BldEdgSh3,
-                BldEdgSh4, BldEdgSh5, BldEdgSh6)
-    return edblade
+    #lines 14-16 are general titles
+    bldprops = fetchmatrix(lines[17:16+numnds], 88, 6)
+    frac = bldprops[:,1]
+    pitchaxis = bldprops[:,2]
+    twist = bldprops[:,3]
+    massdensity = bldprops[:,4]
+    flapstiff = bldprops[:,5]
+    edgestiff = bldprops[:,6]
+
+    #line 17+numnds is a general title
+    flapmode1 = [parse(Float64, lines[18+numnds][1:14]), parse(Float64, lines[19+numnds][1:14]), parse(Float64, lines[20+numnds][1:14]), parse(Float64, lines[21+numnds][1:14]), parse(Float64, lines[22+numnds][1:14])]
+
+    flapmode2 = [parse(Float64, lines[23+numnds][1:14]), parse(Float64, lines[24+numnds][1:14]), parse(Float64, lines[25+numnds][1:14]), parse(Float64, lines[26+numnds][1:14]), parse(Float64, lines[27+numnds][1:14])]
+
+    edgemode1 = [parse(Float64, lines[28+numnds][1:14]), parse(Float64, lines[29+numnds][1:14]), parse(Float64, lines[30+numnds][1:14]), parse(Float64, lines[31+numnds][1:14]), parse(Float64, lines[32+numnds][1:14])]
+
+    return EDBlade(notes, numnds, flapdamp, edgedamp, flsttunr, adjblms, adjflst, adjedst, frac, pitchaxis, twist, massdensity, flapstiff, edgestiff, flapmode1, flapmode2, edgemode1)
 end
 
 
@@ -392,279 +449,414 @@ end
 ##############################################################
 
 """
-WriteEDFile(edfile, outputfile)
+    write_edfile(edfile, outputfile)
 
-    This function takes an ElastoDyn structure and writes it to file.
+This function takes an ElastoDyn structure and writes it to file.
+
+### Inputs:
+- edfile::EDFile - The edfile object
+- outputfile::String - The name of the file to be written
+- outputpath::String - The location to write the file. 
+
+### Outputs:
+- A written file. 
 """
-function WriteEDFile(edfile, outputfile; outputpath=pwd())
+function write_edfile(edfile::EDFile, outputfile::String; outputpath::String=pwd())
     lines = String[]
     line = string("-"^7, " ELASTODYN v1.03.* INPUT FILE ", "-"^43)
     push!(lines, line)
-    line = edfile.Notes
+
+    line = edfile.notes
     push!(lines, line)
+
     line = string("-"^22, " SIMULATION CONTROL ", "-"^38)
     push!(lines, line)
-    line = string(formatword(edfile.Echo;quotes=false),"   Echo        - Echo input data to \"<RootName>.ech\" (flag)")
+
+    line = string(formatword(edfile.echo;quotes=false),"   Echo        - Echo input data to \"<RootName>.ech\" (flag)")
     push!(lines, line)
-    line = string(formatword(string(edfile.Method);location="back",quotes=false), "   Method      - Integration method: {1: RK4, 2: AB4, or 3: ABM4} (-)")
+
+    line = string(formatword(string(edfile.method);location="back",quotes=false), "   Method      - Integration method: {1: RK4, 2: AB4, or 3: ABM4} (-)")
     push!(lines, line)
-    line = string(formatword(edfile.DT;quotes=false),"   DT          - Integration time step (s)")
+    if isnan(edfile.dt)
+        line = string(formatword("Default";quotes=true),"   DT          - Integration time step (s)")
+    else
+        line = string(formatword(edfile.dt;quotes=false),"   DT          - Integration time step (s)")
+    end
+    
     push!(lines, line)
+
     line = string("-"^22, " ENVIRONMENTAL CONDITION ", "-"^33)
     push!(lines, line)
-    line = string(formatword(string(edfile.Gravity);location="back",quotes=false),"   Gravity     - Gravitational acceleration (m/s^2)")
+
+    line = string(formatword(string(edfile.gravity);location="back",quotes=false),"   Gravity     - Gravitational acceleration (m/s^2)")
     push!(lines, line)
+
     line = string("-"^22, " DEGREES OF FREEDOM ", "-"^38)
     push!(lines, line)
-    line = string(formatword(edfile.FlapDOF1;quotes=false),"   FlapDOF1    - First flapwise blade mode DOF (flag)")
+
+    line = string(formatword(edfile.flapdof1;quotes=false),"   FlapDOF1    - First flapwise blade mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.FlapDOF2;quotes=false), "   FlapDOF2    - Second flapwise blade mode DOF (flag)")
+
+    line = string(formatword(edfile.flapdof2;quotes=false), "   FlapDOF2    - Second flapwise blade mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.EdgeDOF;quotes=false), "   EdgeDOF     - First edgewise blade mode DOF (flag)")
+
+    line = string(formatword(edfile.edgedof;quotes=false), "   EdgeDOF     - First edgewise blade mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.TeetDOF;quotes=false), "   TeetDOF     - Rotor-teeter DOF (flag) [unused for 3 blades]")
+
+    line = string(formatword(edfile.teetdof;quotes=false), "   TeetDOF     - Rotor-teeter DOF (flag) [unused for 3 blades]")
     push!(lines, line)
-    line = string(formatword(edfile.DrTrDOF;quotes=false), "   DrTrDOF     - Drivetrain rotational-flexibility DOF (flag)")
+
+    line = string(formatword(edfile.drtrdof;quotes=false), "   DrTrDOF     - Drivetrain rotational-flexibility DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.GenDOF;quotes=false), "   GenDOF      - Generator DOF (flag)")
+
+    line = string(formatword(edfile.gendof;quotes=false), "   GenDOF      - Generator DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.YawDOF;quotes=false), "   YawDOF      - Yaw DOF (flag)")
+
+    line = string(formatword(edfile.yawdof;quotes=false), "   YawDOF      - Yaw DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.TwFADOF1;quotes=false), "   TwFADOF1    - First fore-aft tower bending-mode DOF (flag)")
+
+    line = string(formatword(edfile.twfadof1;quotes=false), "   TwFADOF1    - First fore-aft tower bending-mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.TwFADOF2;quotes=false), "   TwFADOF2    - Second fore-aft tower bending-mode DOF (flag)")
+
+    line = string(formatword(edfile.twfadof2;quotes=false), "   TwFADOF2    - Second fore-aft tower bending-mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.TwSSDOF1;quotes=false), "   TwSSDOF1    - First side-to-side tower bending-mode DOF (flag)")
+
+    line = string(formatword(edfile.twssdof1;quotes=false), "   TwSSDOF1    - First side-to-side tower bending-mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.TwSSDOF2;quotes=false), "   TwSSDOF2    - Second side-to-side tower bending-mode DOF (flag)")
+
+    line = string(formatword(edfile.twssdof2;quotes=false), "   TwSSDOF2    - Second side-to-side tower bending-mode DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.PtfmSgDOF;quotes=false), "   PtfmSgDOF   - Platform horizontal surge translation DOF (flag)")
+
+    line = string(formatword(edfile.ptfmsgdof;quotes=false), "   PtfmSgDOF   - Platform horizontal surge translation DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.PtfmSwDOF;quotes=false), "   PtfmSwDOF   - Platform horizontal sway translation DOF (flag)")
+
+    line = string(formatword(edfile.ptfmswdof;quotes=false), "   PtfmSwDOF   - Platform horizontal sway translation DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.PtfmHvDOF;quotes=false), "   PtfmHvDOF   - Platform vertical heave translation DOF (flag)")
+
+    line = string(formatword(edfile.ptfmhvdof;quotes=false), "   PtfmHvDOF   - Platform vertical heave translation DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.PtfmRDOF;quotes=false), "   PtfmRDOF    - Platform roll tilt rotation DOF (flag)")
+
+    line = string(formatword(edfile.ptfmrdof;quotes=false), "   PtfmRDOF    - Platform roll tilt rotation DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.PtfmPDOF;quotes=false), "   PtfmPDOF    - Platform pitch tilt rotation DOF (flag)")
+
+    line = string(formatword(edfile.ptfmpdof;quotes=false), "   PtfmPDOF    - Platform pitch tilt rotation DOF (flag)")
     push!(lines, line)
-    line = string(formatword(edfile.PtfmYDOF;quotes=false), "   PtfmYDOF    - Platform yaw rotation DOF (flag)")
+
+    line = string(formatword(edfile.ptfmydof;quotes=false), "   PtfmYDOF    - Platform yaw rotation DOF (flag)")
     push!(lines, line)
+
     line = string("-"^22, " INITIAL CONDITIONS ", "-"^38)
     push!(lines, line)
-    line = string(formatword(string(edfile.OoPDefl);location="back",quotes=false),"   OoPDefl     - Initial out-of-plane blade-tip displacement (meters)")
+
+    line = string(formatword(string(edfile.oopdefl);location="back",quotes=false),"   OoPDefl     - Initial out-of-plane blade-tip displacement (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.IPDefl);location="back",quotes=false),"   IPDefl      - Initial in-plane blade-tip deflection (meters)")
+
+    line = string(formatword(string(edfile.ipdefl);location="back",quotes=false),"   IPDefl      - Initial in-plane blade-tip deflection (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.BlPitch1);location="back",quotes=false),"   BlPitch(1)  - Blade 1 initial pitch (degrees)")
+
+    line = string(formatword(string(edfile.blpitchs[1]);location="back",quotes=false),"   BlPitch(1)  - Blade 1 initial pitch (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.BlPitch2);location="back",quotes=false),"   BlPitch(2)  - Blade 2 initial pitch (degrees)")
+
+    line = string(formatword(string(edfile.blpitchs[2]);location="back",quotes=false),"   BlPitch(2)  - Blade 2 initial pitch (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.BlPitch3);location="back",quotes=false),"   BlPitch(3)  - Blade 3 initial pitch (degrees) [unused for 2 blades]")
+
+    line = string(formatword(string(edfile.blpitchs[3]);location="back",quotes=false),"   BlPitch(3)  - Blade 3 initial pitch (degrees) [unused for 2 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetDefl);location="back",quotes=false),"   TeetDefl    - Initial or fixed teeter angle (degrees) [unused for 3 blades]")
+
+    line = string(formatword(string(edfile.teetdefl);location="back",quotes=false),"   TeetDefl    - Initial or fixed teeter angle (degrees) [unused for 3 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.Azimuth);location="back",quotes=false),"   Azimuth     - Initial azimuth angle for blade 1 (degrees)")
+
+    line = string(formatword(string(edfile.azimuth);location="back",quotes=false),"   Azimuth     - Initial azimuth angle for blade 1 (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.RotSpeed);location="back",quotes=false),"   RotSpeed    - Initial or fixed rotor speed (rpm)")
+
+    line = string(formatword(string(edfile.rotspeed);location="back",quotes=false),"   RotSpeed    - Initial or fixed rotor speed (rpm)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NacYaw);location="back",quotes=false),"   NacYaw      - Initial or fixed nacelle-yaw angle (degrees)")
+
+    line = string(formatword(string(edfile.nacyaw);location="back",quotes=false),"   NacYaw      - Initial or fixed nacelle-yaw angle (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TTDspFA);location="back",quotes=false),"   TTDspFA     - Initial fore-aft tower-top displacement (meters)")
+
+    line = string(formatword(string(edfile.ttdspfa);location="back",quotes=false),"   TTDspFA     - Initial fore-aft tower-top displacement (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TTDspSS);location="back",quotes=false),"   TTDspSS     - Initial side-to-side tower-top displacement (meters)")
+
+    line = string(formatword(string(edfile.ttdspss);location="back",quotes=false),"   TTDspSS     - Initial side-to-side tower-top displacement (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmSurge);location="back",quotes=false),"   PtfmSurge   - Initial or fixed horizontal surge translational displacement of platform (meters)")
+
+    line = string(formatword(string(edfile.ptfmsurge);location="back",quotes=false),"   PtfmSurge   - Initial or fixed horizontal surge translational displacement of platform (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmSway);location="back",quotes=false),"   PtfmSway    - Initial or fixed horizontal sway translational displacement of platform (meters)")
+
+    line = string(formatword(string(edfile.ptfmsway);location="back",quotes=false),"   PtfmSway    - Initial or fixed horizontal sway translational displacement of platform (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmHeave);location="back",quotes=false),"   PtfmHeave   - Initial or fixed vertical heave translational displacement of platform (meters)")
+
+    line = string(formatword(string(edfile.ptfmheave);location="back",quotes=false),"   PtfmHeave   - Initial or fixed vertical heave translational displacement of platform (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmRoll);location="back",quotes=false),"   PtfmRoll    - Initial or fixed roll tilt rotational displacement of platform (degrees)")
+
+    line = string(formatword(string(edfile.ptfmroll);location="back",quotes=false),"   PtfmRoll    - Initial or fixed roll tilt rotational displacement of platform (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmPitch);location="back",quotes=false),"   PtfmPitch   - Initial or fixed pitch tilt rotational displacement of platform (degrees)")
+
+    line = string(formatword(string(edfile.ptfmpitch);location="back",quotes=false),"   PtfmPitch   - Initial or fixed pitch tilt rotational displacement of platform (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmYaw);location="back",quotes=false),"   PtfmYaw     - Initial or fixed yaw rotational displacement of platform (degrees)")
+
+    line = string(formatword(string(edfile.ptfmyaw);location="back",quotes=false),"   PtfmYaw     - Initial or fixed yaw rotational displacement of platform (degrees)")
     push!(lines, line)
+
     line = string("-"^22, " TURBINE CONFIGURATION ", "-"^35)
     push!(lines, line)
-    line = string(formatword(string(edfile.NumBl);location="back",quotes=false),"   NumBl       - Number of blades (-)")
+
+    line = string(formatword(string(edfile.numbl);location="back",quotes=false),"   NumBl       - Number of blades (-)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TipRad);location="back",quotes=false),"   TipRad      - The distance from the rotor apex to the blade tip (meters)")
+
+    line = string(formatword(string(edfile.tiprad);location="back",quotes=false),"   TipRad      - The distance from the rotor apex to the blade tip (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.HubRad);location="back",quotes=false),"   HubRad      - The distance from the rotor apex to the blade root (meters)")
+
+    line = string(formatword(string(edfile.hubrad);location="back",quotes=false),"   HubRad      - The distance from the rotor apex to the blade root (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PreCone1);location="back",quotes=false),"   PreCone(1)  - Blade 1 cone angle (degrees)")
+
+    line = string(formatword(string(edfile.precones[1]);location="back",quotes=false),"   PreCone(1)  - Blade 1 cone angle (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PreCone2);location="back",quotes=false),"   PreCone(2)  - Blade 2 cone angle (degrees)")
+
+    line = string(formatword(string(edfile.precones[2]);location="back",quotes=false),"   PreCone(2)  - Blade 2 cone angle (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PreCone3);location="back",quotes=false),"   PreCone(3)  - Blade 3 cone angle (degrees) [unused for 2 blades]")
+
+    line = string(formatword(string(edfile.precones[3]);location="back",quotes=false),"   PreCone(3)  - Blade 3 cone angle (degrees) [unused for 2 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.HubCM);location="back",quotes=false),"   HubCM       - Distance from rotor apex to hub mass [positive downwind] (meters)")
+
+    line = string(formatword(string(edfile.hubcm);location="back",quotes=false),"   HubCM       - Distance from rotor apex to hub mass [positive downwind] (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.UndSling);location="back",quotes=false),"   UndSling    - Undersling length [distance from teeter pin to the rotor apex] (meters) [unused for 3 blades]")
+
+    line = string(formatword(string(edfile.undsling);location="back",quotes=false),"   UndSling    - Undersling length [distance from teeter pin to the rotor apex] (meters) [unused for 3 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.Delta3);location="back",quotes=false),"   Delta3      - Delta-3 angle for teetering rotors (degrees) [unused for 3 blades]")
+
+    line = string(formatword(string(edfile.delta3);location="back",quotes=false),"   Delta3      - Delta-3 angle for teetering rotors (degrees) [unused for 3 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.AzimB1Up);location="back",quotes=false),"   AzimB1Up    - Azimuth value to use for I/O when blade 1 points up (degrees)")
+
+    line = string(formatword(string(edfile.azimb1up);location="back",quotes=false),"   AzimB1Up    - Azimuth value to use for I/O when blade 1 points up (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.OverHang);location="back",quotes=false),"   OverHang    - Distance from yaw axis to rotor apex [3 blades] or teeter pin [2 blades] (meters)")
+
+    line = string(formatword(string(edfile.overhang);location="back",quotes=false),"   OverHang    - Distance from yaw axis to rotor apex [3 blades] or teeter pin [2 blades] (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.ShftGagL);location="back",quotes=false),"   ShftGagL    - Distance from rotor apex [3 blades] or teeter pin [2 blades] to shaft strain gages [positive for upwind rotors] (meters)")
+
+    line = string(formatword(string(edfile.shftgagl);location="back",quotes=false),"   ShftGagL    - Distance from rotor apex [3 blades] or teeter pin [2 blades] to shaft strain gages [positive for upwind rotors] (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.ShftTilt);location="back",quotes=false),"   ShftTilt    - Rotor shaft tilt angle (degrees)")
+
+    line = string(formatword(string(edfile.shfttilt);location="back",quotes=false),"   ShftTilt    - Rotor shaft tilt angle (degrees)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NacCMxn);location="back",quotes=false),"   NacCMxn     - Downwind distance from the tower-top to the nacelle CM (meters)")
+
+    line = string(formatword(string(edfile.naccmxyzn[1]);location="back",quotes=false),"   NacCMxn     - Downwind distance from the tower-top to the nacelle CM (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NacCMyn);location="back",quotes=false),"   NacCMyn     - Lateral  distance from the tower-top to the nacelle CM (meters)")
+
+    line = string(formatword(string(edfile.naccmxyzn[2]);location="back",quotes=false),"   NacCMyn     - Lateral  distance from the tower-top to the nacelle CM (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NacCMzn);location="back",quotes=false),"   NacCMzn     - Vertical distance from the tower-top to the nacelle CM (meters)")
+
+    line = string(formatword(string(edfile.naccmxyzn[3]);location="back",quotes=false),"   NacCMzn     - Vertical distance from the tower-top to the nacelle CM (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NcIMUxn);location="back",quotes=false),"   NcIMUxn     - Downwind distance from the tower-top to the nacelle IMU (meters)")
+
+    line = string(formatword(string(edfile.ncimuxyzn[1]);location="back",quotes=false),"   NcIMUxn     - Downwind distance from the tower-top to the nacelle IMU (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NcIMUyn);location="back",quotes=false),"   NcIMUyn     - Lateral  distance from the tower-top to the nacelle IMU (meters)")
+
+    line = string(formatword(string(edfile.ncimuxyzn[2]);location="back",quotes=false),"   NcIMUyn     - Lateral  distance from the tower-top to the nacelle IMU (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NcIMUzn);location="back",quotes=false),"   NcIMUzn     - Vertical distance from the tower-top to the nacelle IMU (meters)")
+
+    line = string(formatword(string(edfile.ncimuxyzn[3]);location="back",quotes=false),"   NcIMUzn     - Vertical distance from the tower-top to the nacelle IMU (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.Twr2Shft);location="back",quotes=false),"   Twr2Shft    - Vertical distance from the tower-top to the rotor shaft (meters)")
+
+    line = string(formatword(string(edfile.twr2shft);location="back",quotes=false),"   Twr2Shft    - Vertical distance from the tower-top to the rotor shaft (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TowerHt);location="back",quotes=false),"   TowerHt     - Height of tower above ground level [onshore] or MSL [offshore] (meters)")
+
+    line = string(formatword(string(edfile.towerht);location="back",quotes=false),"   TowerHt     - Height of tower above ground level [onshore] or MSL [offshore] (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TowerBsHt);location="back",quotes=false),"   TowerBsHt   - Height of tower base above ground level [onshore] or MSL [offshore] (meters)")
+
+    line = string(formatword(string(edfile.towerbsht);location="back",quotes=false),"   TowerBsHt   - Height of tower base above ground level [onshore] or MSL [offshore] (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmCMxt);location="back",quotes=false),"   PtfmCMxt    - Downwind distance from the ground level [onshore] or MSL [offshore] to the platform CM (meters)")
+
+    line = string(formatword(string(edfile.ptfmcmxyzt[1]);location="back",quotes=false),"   PtfmCMxt    - Downwind distance from the ground level [onshore] or MSL [offshore] to the platform CM (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmCMyt);location="back",quotes=false),"   PtfmCMyt    - Lateral distance from the ground level [onshore] or MSL [offshore] to the platform CM (meters)")
+
+    line = string(formatword(string(edfile.ptfmcmxyzt[2]);location="back",quotes=false),"   PtfmCMyt    - Lateral distance from the ground level [onshore] or MSL [offshore] to the platform CM (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmCMzt);location="back",quotes=false),"   PtfmCMzt    - Vertical distance from the ground level [onshore] or MSL [offshore] to the platform CM (meters)")
+
+    line = string(formatword(string(edfile.ptfmcmxyzt[3]);location="back",quotes=false),"   PtfmCMzt    - Vertical distance from the ground level [onshore] or MSL [offshore] to the platform CM (meters)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmRefzt);location="back",quotes=false),"   PtfmRefzt   - Vertical distance from the ground level [onshore] or MSL [offshore] to the platform reference point (meters)")
+
+    line = string(formatword(string(edfile.ptfmrefzt);location="back",quotes=false),"   PtfmRefzt   - Vertical distance from the ground level [onshore] or MSL [offshore] to the platform reference point (meters)")
     push!(lines, line)
+
     line = string("-"^22, " MASS AND INERTIA ", "-"^40)
     push!(lines, line)
-    line = string(formatword(string(edfile.TipMass1);location="back",quotes=false),"   TipMass(1)  - Tip-brake mass, blade 1 (kg)")
+
+    line = string(formatword(string(edfile.tipmasses[1]);location="back",quotes=false),"   TipMass(1)  - Tip-brake mass, blade 1 (kg)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TipMass2);location="back",quotes=false),"   TipMass(2)  - Tip-brake mass, blade 2 (kg)")
+
+    line = string(formatword(string(edfile.tipmasses[2]);location="back",quotes=false),"   TipMass(2)  - Tip-brake mass, blade 2 (kg)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TipMass3);location="back",quotes=false),"   TipMass(3)  - Tip-brake mass, blade 3 (kg) [unused for 2 blades]")
+
+    line = string(formatword(string(edfile.tipmasses[3]);location="back",quotes=false),"   TipMass(3)  - Tip-brake mass, blade 3 (kg) [unused for 2 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.HubMass);location="back",quotes=false),"   HubMass     - Hub mass (kg)")
+
+    line = string(formatword(string(edfile.hubmass);location="back",quotes=false),"   HubMass     - Hub mass (kg)")
     push!(lines, line)
-    line = string(formatword(string(edfile.HubIner);location="back",quotes=false),"   HubIner     - Hub inertia about rotor axis [3 blades] or teeter axis [2 blades] (kg m^2)")
+
+    line = string(formatword(string(edfile.hubiner);location="back",quotes=false),"   HubIner     - Hub inertia about rotor axis [3 blades] or teeter axis [2 blades] (kg m^2)")
     push!(lines, line)
-    line = string(formatword(string(edfile.GenIner);location="back",quotes=false),"   GenIner     - Generator inertia about HSS (kg m^2)")
+
+    line = string(formatword(string(edfile.geniner);location="back",quotes=false),"   GenIner     - Generator inertia about HSS (kg m^2)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NacMass);location="back",quotes=false),"   NacMass     - Nacelle mass (kg)")
+
+    line = string(formatword(string(edfile.nacmass);location="back",quotes=false),"   NacMass     - Nacelle mass (kg)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NacYIner);location="back",quotes=false),"   NacYIner    - Nacelle inertia about yaw axis (kg m^2)")
+
+    line = string(formatword(string(edfile.nacyiner);location="back",quotes=false),"   NacYIner    - Nacelle inertia about yaw axis (kg m^2)")
     push!(lines, line)
-    line = string(formatword(string(edfile.YawBrMass);location="back",quotes=false),"   YawBrMass   - Yaw bearing mass (kg)")
+
+    line = string(formatword(string(edfile.yawbrmass);location="back",quotes=false),"   YawBrMass   - Yaw bearing mass (kg)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmMass);location="back",quotes=false),"   PtfmMass    - Platform mass (kg)")
+
+    line = string(formatword(string(edfile.ptfmmass);location="back",quotes=false),"   PtfmMass    - Platform mass (kg)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmRIner);location="back",quotes=false),"   PtfmRIner   - Platform inertia for roll tilt rotation about the platform CM (kg m^2)")
+
+    line = string(formatword(string(edfile.ptfmriner);location="back",quotes=false),"   PtfmRIner   - Platform inertia for roll tilt rotation about the platform CM (kg m^2)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmPIner);location="back",quotes=false),"   PtfmPIner   - Platform inertia for pitch tilt rotation about the platform CM (kg m^2)")
+
+    line = string(formatword(string(edfile.ptfmpiner);location="back",quotes=false),"   PtfmPIner   - Platform inertia for pitch tilt rotation about the platform CM (kg m^2)")
     push!(lines, line)
-    line = string(formatword(string(edfile.PtfmYIner);location="back",quotes=false),"   PtfmYIner   - Platform inertia for yaw rotation about the platform CM (kg m^2)")
+
+    line = string(formatword(string(edfile.ptfmyiner);location="back",quotes=false),"   PtfmYIner   - Platform inertia for yaw rotation about the platform CM (kg m^2)")
     push!(lines, line)
+
     line = string("-"^22, " BLADE ", "-"^51)
     push!(lines, line)
-    line = string(formatword(string(edfile.BldNodes);location="back",quotes=false),"   BldNodes    - Number of blade nodes (per blade) used for analysis (-)")
+
+    line = string(formatword(string(edfile.bldnodes);location="back",quotes=false),"   BldNodes    - Number of blade nodes (per blade) used for analysis (-)")
     push!(lines, line)
-    line = string(formatword(edfile.BldFile1;quotes=false,desiredlength=35), "   BldFile(1)  - Name of file containing properties for blade 1 (quoted string)")
+
+    line = string(formatword(edfile.bldfiles[1];quotes=true,desiredlength=35), "   BldFile(1)  - Name of file containing properties for blade 1 (quoted string)")
     push!(lines, line)
-    line = string(formatword(edfile.BldFile2;quotes=false,desiredlength=35), "   BldFile(2)  - Name of file containing properties for blade 2 (quoted string)")
+
+    line = string(formatword(edfile.bldfiles[2];quotes=true,desiredlength=35), "   BldFile(2)  - Name of file containing properties for blade 2 (quoted string)")
     push!(lines, line)
-    line = string(formatword(edfile.BldFile3;quotes=false,desiredlength=35), "   BldFile(3)  - Name of file containing properties for blade 3 (quoted string) [unused for 2 blades]")
+
+    line = string(formatword(edfile.bldfiles[3];quotes=true,desiredlength=35), "   BldFile(3)  - Name of file containing properties for blade 3 (quoted string) [unused for 2 blades]")
     push!(lines, line)
+
     line = string("_"^22, " ROTOR-TEETER ", "-"^44)
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetMod);location="back",quotes=false),"   TeetMod     - Rotor-teeter spring/damper model {0: none, 1: standard, 2: user-defined from routine UserTeet} (switch) [unused for 3 blades]")
+
+    line = string(formatword(string(edfile.teetmod);location="back",quotes=false),"   TeetMod     - Rotor-teeter spring/damper model {0: none, 1: standard, 2: user-defined from routine UserTeet} (switch) [unused for 3 blades]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetDmpP);location="back",quotes=false),"   TeetDmpP    - Rotor-teeter damper position (degrees) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teetdmpp);location="back",quotes=false),"   TeetDmpP    - Rotor-teeter damper position (degrees) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetDmp);location="back",quotes=false),"   TeetDmp     - Rotor-teeter damping constant (N-m/(rad/s)) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teetdmp);location="back",quotes=false),"   TeetDmp     - Rotor-teeter damping constant (N-m/(rad/s)) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetCDmp);location="back",quotes=false),"   TeetCDmp    - Rotor-teeter rate-independent Coulomb-damping moment (N-m) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teetcdmp);location="back",quotes=false),"   TeetCDmp    - Rotor-teeter rate-independent Coulomb-damping moment (N-m) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetSStP);location="back",quotes=false),"   TeetSStP    - Rotor-teeter soft-stop position (degrees) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teetsstp);location="back",quotes=false),"   TeetSStP    - Rotor-teeter soft-stop position (degrees) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetHStP);location="back",quotes=false),"   TeetHStP    - Rotor-teeter hard-stop position (degrees) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teethstp);location="back",quotes=false),"   TeetHStP    - Rotor-teeter hard-stop position (degrees) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetSSSp);location="back",quotes=false),"   TeetSSSp    - Rotor-teeter soft-stop linear-spring constant (N-m/rad) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teetsssp);location="back",quotes=false),"   TeetSSSp    - Rotor-teeter soft-stop linear-spring constant (N-m/rad) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
-    line = string(formatword(string(edfile.TeetHSSp);location="back",quotes=false),"   TeetHSSp    - Rotor-teeter hard-stop linear-spring constant (N-m/rad) [used only for 2 blades and when TeetMod=1]")
+
+    line = string(formatword(string(edfile.teethssp);location="back",quotes=false),"   TeetHSSp    - Rotor-teeter hard-stop linear-spring constant (N-m/rad) [used only for 2 blades and when TeetMod=1]")
     push!(lines, line)
+
     line = string("-"^22, " DRIVETRAIN ", "-"^46)
     push!(lines, line)
-    line = string(formatword(string(edfile.GBoxEff);location="back",quotes=false),"   GBoxEff     - Gearbox efficiency (%)")
+
+    line = string(formatword(string(edfile.gboxeff);location="back",quotes=false),"   GBoxEff     - Gearbox efficiency (%)")
     push!(lines, line)
-    line = string(formatword(string(edfile.GBRatio);location="back",quotes=false),"   GBRatio     - Gearbox ratio (-)")
+
+    line = string(formatword(string(edfile.gbratio);location="back",quotes=false),"   GBRatio     - Gearbox ratio (-)")
     push!(lines, line)
-    line = string(formatword(string(edfile.DTTorSpr);location="back",quotes=false),"   DTTorSpr    - Drivetrain torsional spring (N-m/rad)")
+
+    line = string(formatword(string(edfile.dttorspr);location="back",quotes=false),"   DTTorSpr    - Drivetrain torsional spring (N-m/rad)")
     push!(lines, line)
-    line = string(formatword(string(edfile.DTTorDmp);location="back",quotes=false),"   DTTorDmp    - Drivetrain torsional damper (N-m/(rad/s))")
+
+    line = string(formatword(string(edfile.dttordmp);location="back",quotes=false),"   DTTorDmp    - Drivetrain torsional damper (N-m/(rad/s))")
     push!(lines, line)
+
     line = string("-"^22, " FURLING ", "-"^49)
     push!(lines, line)
-    line = string(formatword(string(edfile.Furling);location="front",quotes=false),"   Furling     - Read in additional model properties for furling turbine (flag) [must currently be FALSE)")
+
+    line = string(formatword(string(edfile.furling);location="front",quotes=false),"   Furling     - Read in additional model properties for furling turbine (flag) [must currently be FALSE)")
     push!(lines, line)
-    line = string(formatword(edfile.FurlFile;quotes=false,desiredlength=35),"   FurlFile    - Name of file containing furling properties (quoted string) [unused when Furling=False]")
+
+    line = string(formatword(edfile.furlfile;quotes=false,desiredlength=35),"   FurlFile    - Name of file containing furling properties (quoted string) [unused when Furling=False]")
     push!(lines, line)
+
     line = string("-"^22, " TOWER ", "-"^51)
     push!(lines,line)
-    line = string(formatword(string(edfile.TwrNodes);location="back",quotes=false),"   TwrNodes    - Number of tower nodes used for analysis (-)")
+    line = string(formatword(string(edfile.twrnodes);location="back",quotes=false),"   TwrNodes    - Number of tower nodes used for analysis (-)")
     push!(lines, line)
-    line = string(formatword(edfile.TwrFile;quotes=false,desiredlength=35),"   TwrFile     - Name of file containing tower properties (quoted string)")
+
+    line = string(formatword(edfile.twrfile;quotes=false,desiredlength=35),"   TwrFile     - Name of file containing tower properties (quoted string)")
     push!(lines, line)
+
     line = string("-"^22, " OUTPUT ", "-"^50)
     push!(lines, line)
-    line = string(formatword(edfile.SumPrint;quotes=false), "   SumPrint    - Print summary data to \"<RootName>.sum\" (flag)")
+
+    line = string(formatword(edfile.sumprint;quotes=false), "   SumPrint    - Print summary data to \"<RootName>.sum\" (flag)")
     push!(lines, line)
-    line = string(formatword(string(edfile.OutFile);location="back",quotes=false),"   OutFile     - Switch to determine where output will be placed: {1: in module output file only; 2: in glue code output file only; 3: both} (currently unused)")
+
+    line = string(formatword(string(edfile.outfile);location="back",quotes=false),"   OutFile     - Switch to determine where output will be placed: {1: in module output file only; 2: in glue code output file only; 3: both} (currently unused)")
     push!(lines, line)
-    line = string(formatword(edfile.TabDelim;quotes=false), "  TabDelim    - Use tab delimiters in text tabular output file? (flag) (currently unused)")
+
+    line = string(formatword(edfile.tabdelim;quotes=false), "  TabDelim    - Use tab delimiters in text tabular output file? (flag) (currently unused)")
     push!(lines, line)
-    line = string(formatword(edfile.OutFmt;quotes=false), "   OutFmt      - Format used for text tabular output (except time).  Resulting field should be 10 characters. (quoted string) (currently unused)")
+
+    line = string(formatword(edfile.outfmt;quotes=true), "   OutFmt      - Format used for text tabular output (except time).  Resulting field should be 10 characters. (quoted string) (currently unused)")
     push!(lines, line)
-    line = string(formatword(string(edfile.TStart);location="back",quotes=false),"   TStart      - Time to begin tabular output (s) (currently unused)")
+
+    line = string(formatword(string(edfile.tstart);location="back",quotes=false),"   TStart      - Time to begin tabular output (s) (currently unused)")
     push!(lines, line)
-    line = string(formatword(string(edfile.DecFact);location="back",quotes=false),"   DecFact     - Decimation factor for tabular output {1: output every time step} (-) (currently unused)")
+
+    line = string(formatword(string(edfile.decfact);location="back",quotes=false),"   DecFact     - Decimation factor for tabular output {1: output every time step} (-) (currently unused)")
     push!(lines, line)
-    line = string(formatword(string(edfile.NTwGages);location="back",quotes=false),"   NTwGages    - Number of tower nodes that have strain gages for output [0 to 9] (-)")
+
+    line = string(formatword(string(edfile.ntwgages);location="back",quotes=false),"   NTwGages    - Number of tower nodes that have strain gages for output [0 to 9] (-)")
     push!(lines, line)
-    if edfile.NTwGages>0
-       line = formatvector(edfile.TwrGagNd)
+
+    if edfile.ntwgages>0
+       line = formatvector(edfile.twrgagnd)
     else
        line = " "^11
     end
     line = string(line, "   TwrGagNd    - List of tower nodes that have strain gages [1 to TwrNodes] (-) [unused if NTwGages=0]")
     push!(lines, line)
-    line = string(formatword(string(edfile.NBlGages);location="back",quotes=false),"   NBlGages    - Number of blade nodes that have strain gages for output [0 to 9] (-)")
+
+    line = string(formatword(string(edfile.nblgages);location="back",quotes=false),"   NBlGages    - Number of blade nodes that have strain gages for output [0 to 9] (-)")
     push!(lines, line)
-    if edfile.NBlGages>0
-       line = formatvector(edfile.BldGagNd)
+
+    if edfile.nblgages>0
+       line = formatvector(edfile.bldgagnd)
     else
        line = " "^11
     end
     line = string(line, "   BldGagNd    - List of blade nodes that have strain gages [1 to BldNodes] (-) [unused if NBlGages=0]")
     push!(lines, line)
+
     line = "              OutList     - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)"
     push!(lines, line)
-    for i=1:length(edfile.Outlist)
-       line = string("\"",edfile.Outlist[i],"\"")
+
+    for i=1:length(edfile.outlist)
+       line = string("\"",edfile.outlist[i],"\"")
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
     push!(lines, line)
+
     line = "---------------------- NODE OUTPUTS --------------------------------------------"
     push!(lines, line)
-    line = string(formatword(string(edfile.BldNd_BladesOut);location="back",quotes=false), "   BldNd_BladesOut  - Blades to output")
+
+    line = string(formatword(string(edfile.bldnd_bladesout);location="back",quotes=false), "   BldNd_BladesOut  - Blades to output")
     push!(lines, line)
 
-    if edfile.BldNd_BladesOut>0
-        line = formatvector(edfile.BldNd_BlOutNd)
+    if edfile.bldnd_bladesout>0
+        line = formatvector(edfile.bldnd_bloutnd)
     else
         line = " "^11
     end
@@ -672,17 +864,17 @@ function WriteEDFile(edfile, outputfile; outputpath=pwd())
      push!(lines, line)
 
      line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
-
      push!(lines, line)
-     for i=1:length(edfile.NodeOutlist)
-        line = string("\"", edfile.NodeOutlist[i], "\"")
+
+     for i=1:length(edfile.nodeoutlist)
+        line = string("\"", edfile.nodeoutlist[i], "\"")
         push!(lines,line)
      end
      line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
      push!(lines,line)
+
     #Write lines to file
-    cd(outputpath)
-    fi = open(outputfile,"w+")
+    fi = open(outputpath*"/"*outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
          write(fi,lines[i])
@@ -693,83 +885,124 @@ function WriteEDFile(edfile, outputfile; outputpath=pwd())
 end
 
 """
-WriteEDBlade(edblade, outputfile)
+    write_edblade(edblade, outputfile; outputpath=pwd())
 
 Takes an edblade structure and prints it to file.
 
+### Inputs: 
+- edblade::EDBlade - The blade object. Note this might not be defined on the range of the blade radius that AeroDyn is defined on (need to find out).
+- outputfile::String - the desired filename to be written.
+- outputpath::String - the desired write location. 
+
+### Outputs:
+- A written file. 
+
+
 """
-function WriteEDBlade(edblade, outputfile; outputpath=pwd())
+function write_edblade(edblade::EDBlade, outputfile::String; outputpath::String=pwd())
     lines = String[]
     line = string("-"^7, "  ELASTODYN V1.00.* INDIVIDUAL BLADE INPUT FILE  ", "-"^26)
     push!(lines, line)
-    line = edblade.Notes
+
+    line = edblade.notes
     push!(lines, line)
+
     line = string("-"^22, " BLADE PARAMETERS ", "-"^40)
     push!(lines, line)
-    line = string(formatword(string(edblade.NBlInpSt);location="back", quotes=false),"   NBlInpSt    - Number of blade input stations (-)")
+
+    line = string(formatword(string(edblade.numnds);location="back", quotes=false),"   NBlInpSt    - Number of blade input stations (-)")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFlDmp1);location="back", quotes=false),"   BldFlDmp(1) - Blade flap mode #1 structural damping in percent of critical (%)")
+
+    line = string(formatword(string(edblade.flapdamp[1]);location="back", quotes=false),"   BldFlDmp(1) - Blade flap mode #1 structural damping in percent of critical (%)")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFlDmp2);location="back", quotes=false),"   BldFlDmp(2) - Blade flap mode #2 structural damping in percent of critical (%)")
+
+    line = string(formatword(string(edblade.flapdamp[2]);location="back", quotes=false),"   BldFlDmp(2) - Blade flap mode #2 structural damping in percent of critical (%)")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldEdDmp1);location="back", quotes=false),"   BldEdDmp(1) - Blade edge mode #1 structural damping in percent of critical (%)")
+    
+    line = string(formatword(string(edblade.edgedamp);location="back", quotes=false),"   BldEdDmp(1) - Blade edge mode #1 structural damping in percent of critical (%)")
     push!(lines, line)
+
     line = string("-"^22, " BLADE ADJUSTMENT FACTORS ", "-"^32)
     push!(lines, line)
-    line = string(formatword(string(edblade.FlStTunr1);location="back", quotes=false),"   FlStTunr(1) - Blade flapwise modal stiffness tuner, 1st mode (-)")
+
+    line = string(formatword(string(edblade.flsttunr[1]);location="back", quotes=false),"   FlStTunr(1) - Blade flapwise modal stiffness tuner, 1st mode (-)")
     push!(lines, line)
-    line = string(formatword(string(edblade.FlStTunr2);location="back", quotes=false),"   FlStTunr(2) - Blade flapwise modal stiffness tuner, 2nd mode (-)")
+
+    line = string(formatword(string(edblade.flsttunr[2]);location="back", quotes=false),"   FlStTunr(2) - Blade flapwise modal stiffness tuner, 2nd mode (-)")
     push!(lines, line)
-    line = string(formatword(string(edblade.AdjBlMs);location="back", quotes=false),"   AdjBlMs     - Factor to adjust blade mass density (-)  !bjj: value for AD14=1.04536; value for AD15=1.057344 (it would be nice to enter the requested blade mass instead of a factor here)")
+
+    line = string(formatword(string(edblade.adjblms);location="back", quotes=false),"   AdjBlMs     - Factor to adjust blade mass density (-)  !bjj: value for AD14=1.04536; value for AD15=1.057344 (it would be nice to enter the requested blade mass instead of a factor here)")
     push!(lines, line)
-    line = string(formatword(string(edblade.AdjFlSt);location="back", quotes=false),"   AdjFlSt     - Factor to adjust blade flap stiffness (-)")
+
+    line = string(formatword(string(edblade.adjflst);location="back", quotes=false),"   AdjFlSt     - Factor to adjust blade flap stiffness (-)")
     push!(lines, line)
-    line = string(formatword(string(edblade.AdjEdSt);location="back", quotes=false),"   AdjEdSt     - Factor to adjust blade edge stiffness (-)")
+
+    line = string(formatword(string(edblade.adjedst);location="back", quotes=false),"   AdjEdSt     - Factor to adjust blade edge stiffness (-)")
     push!(lines, line)
+
     line = string("-"^22, " DISTRIBUTED BLADE PROPERTIES ", "-"^28)
     push!(lines, line)
+
     line = "    BlFract      PitchAxis      StrcTwst       BMassDen        FlpStff        EdgStff"
     push!(lines, line)
+
     line = "      (-)           (-)          (deg)          (kg/m)         (Nm^2)         (Nm^2)"
     push!(lines, line)
-    line = formatmatrix(edblade.BldProps)
+
+    BldProps = hcat(edblade.frac, edblade.pitchaxis, edblade.twist, edblade.massdensity, edblade.flapstiff, edblade.edgestiff)
+    line = formatmatrix(BldProps)
     append!(lines, line)
+
     line = string("-"^22, " BLADE MODE SHAPES ", "-"^39)
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl1Sh2);location="back", quotes=false),"   BldFl1Sh(2) - Flap mode 1, coeff of x^2")
+
+    line = string(formatword(string(edblade.flapmode1[1]);location="back", quotes=false),"   BldFl1Sh(2) - Flap mode 1, coeff of x^2")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl1Sh3);location="back", quotes=false),"   BldFl1Sh(3) -            , coeff of x^3")
+
+    line = string(formatword(string(edblade.flapmode1[2]);location="back", quotes=false),"   BldFl1Sh(3) -            , coeff of x^3")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl1Sh4);location="back", quotes=false),"   BldFl1Sh(4) -            , coeff of x^4")
+
+    line = string(formatword(string(edblade.flapmode1[3]);location="back", quotes=false),"   BldFl1Sh(4) -            , coeff of x^4")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl1Sh5);location="back", quotes=false),"   BldFl1Sh(5) -            , coeff of x^5")
+
+    line = string(formatword(string(edblade.flapmode1[4]);location="back", quotes=false),"   BldFl1Sh(5) -            , coeff of x^5")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl1Sh6);location="back", quotes=false),"   BldFl1Sh(6) -            , coeff of x^6")
+
+    line = string(formatword(string(edblade.flapmode1[5]);location="back", quotes=false),"   BldFl1Sh(6) -            , coeff of x^6")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl2Sh2);location="back", quotes=false),"   BldFl2Sh(2) - Flap mode 2, coeff of x^2")
+
+    line = string(formatword(string(edblade.flapmode2[1]);location="back", quotes=false),"   BldFl2Sh(2) - Flap mode 2, coeff of x^2")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl2Sh3);location="back", quotes=false),"   BldFl2Sh(3) -            , coeff of x^3")
+
+    line = string(formatword(string(edblade.flapmode2[2]);location="back", quotes=false),"   BldFl2Sh(3) -            , coeff of x^3")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl2Sh4);location="back", quotes=false),"   BldFl2Sh(4) -            , coeff of x^4")
+
+    line = string(formatword(string(edblade.flapmode2[3]);location="back", quotes=false),"   BldFl2Sh(4) -            , coeff of x^4")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl2Sh5);location="back", quotes=false),"   BldFl2Sh(5) -            , coeff of x^5")
+
+    line = string(formatword(string(edblade.flapmode2[4]);location="back", quotes=false),"   BldFl2Sh(5) -            , coeff of x^5")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldFl2Sh6);location="back", quotes=false),"   BldFl2Sh(6) -            , coeff of x^6")
+
+    line = string(formatword(string(edblade.flapmode2[5]);location="back", quotes=false),"   BldFl2Sh(6) -            , coeff of x^6")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldEdgSh2);location="back", quotes=false),"   BldEdgSh(2) - Edge mode 1, coeff of x^2")
+
+    line = string(formatword(string(edblade.edgemode1[1]);location="back", quotes=false),"   BldEdgSh(2) - Edge mode 1, coeff of x^2")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldEdgSh3);location="back", quotes=false),"   BldEdgSh(3) -            , coeff of x^3")
+
+    line = string(formatword(string(edblade.edgemode1[2]);location="back", quotes=false),"   BldEdgSh(3) -            , coeff of x^3")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldEdgSh4);location="back", quotes=false),"   BldEdgSh(4) -            , coeff of x^4")
+
+    line = string(formatword(string(edblade.edgemode1[3]);location="back", quotes=false),"   BldEdgSh(4) -            , coeff of x^4")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldEdgSh5);location="back", quotes=false),"   BldEdgSh(5) -            , coeff of x^5")
+
+    line = string(formatword(string(edblade.edgemode1[4]);location="back", quotes=false),"   BldEdgSh(5) -            , coeff of x^5")
     push!(lines, line)
-    line = string(formatword(string(edblade.BldEdgSh6);location="back", quotes=false),"   BldEdgSh(6) -            , coeff of x^6")
+
+    line = string(formatword(string(edblade.edgemode1[5]);location="back", quotes=false),"   BldEdgSh(6) -            , coeff of x^6")
     push!(lines, line)
 
     ### Write lines to file
-    cd(outputpath)
-    fi = open(outputfile,"w+")
+    fi = open(outputpath*"/"*outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
          write(fi,lines[i])

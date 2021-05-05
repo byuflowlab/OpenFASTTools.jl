@@ -1,287 +1,272 @@
+# using OpenFASTsr
+# using Test
+
+# of = OpenFASTsr
+
 
 @testset "ElastoDyn" begin
     @testset "Read ElastoDyn File" begin
-    file = "NREL5MWrefED.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-    edfile = of.ReadEDFile(file, path)
+        file = "NREL5MWrefED.dat"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        edfile = of.read_edfile(file, path)
 
-    @test lowercase(edfile.Echo)=="false"
-    @test edfile.Method==3
-    @test lowercase(edfile.DT)=="\"default\"" #TODO: this could be a number too!!!
-    @test isapprox(edfile.Gravity, 9.80665, atol=1e-8)
-    @test lowercase(edfile.FlapDOF1)=="true"
-    @test lowercase(edfile.FlapDOF2)=="true"
-    @test lowercase(edfile.EdgeDOF)=="true"
-    @test lowercase(edfile.TeetDOF)=="false"
-    @test lowercase(edfile.DrTrDOF)=="true"
-    @test lowercase(edfile.GenDOF)=="true"
-    @test lowercase(edfile.YawDOF)=="true"
-    @test lowercase(edfile.TwFADOF1)=="true"
-    @test lowercase(edfile.TwFADOF2)=="true"
-    @test lowercase(edfile.TwSSDOF1)=="true"
-    @test lowercase(edfile.TwSSDOF2)=="true"
-    @test lowercase(edfile.PtfmSgDOF)=="false"
-    @test lowercase(edfile.PtfmSwDOF)=="false"
-    @test lowercase(edfile.PtfmHvDOF)=="false"
-    @test lowercase(edfile.PtfmRDOF)=="false"
-    @test lowercase(edfile.PtfmPDOF)=="false"
-    @test lowercase(edfile.PtfmYDOF)=="false"
+        @test edfile.echo==false
+        @test edfile.method==3
+        @test isnan(edfile.dt)
+        @test isapprox(edfile.gravity, 9.80665, atol=1e-8)
+        @test edfile.flapdof1==true
+        @test edfile.flapdof2==true
+        @test edfile.edgedof==true
+        @test edfile.teetdof==false
+        @test edfile.drtrdof==true
+        @test edfile.gendof==true
+        @test edfile.yawdof==true
+        @test edfile.twfadof1==true
+        @test edfile.twfadof2==true
+        @test edfile.twssdof1==true
+        @test edfile.twssdof2==true
+        @test edfile.ptfmsgdof==false
+        @test edfile.ptfmswdof==false
+        @test edfile.ptfmhvdof==false
+        @test edfile.ptfmrdof==false
+        @test edfile.ptfmpdof==false
+        @test edfile.ptfmydof==false
+        
 
-    @test isapprox(edfile.OoPDefl, 0.0, atol=1e-8)
-    @test isapprox(edfile.IPDefl, 0.0, atol=1e-8)
-    @test isapprox(edfile.BlPitch1, 0.0, atol=1e-8)
-    @test isapprox(edfile.BlPitch2, 0.0, atol=1e-8)
-    @test isapprox(edfile.BlPitch3, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetDefl, 0.0, atol=1e-8)
-    @test isapprox(edfile.Azimuth, 0.0, atol=1e-8)
-    @test isapprox(edfile.RotSpeed, 12.1, atol=1e-8)
-    @test isapprox(edfile.NacYaw, 0.0, atol=1e-8)
-    @test isapprox(edfile.TTDspFA, 0.0, atol=1e-8)
-    @test isapprox(edfile.TTDspSS, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmSurge, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmSway, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmHeave, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmRoll, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmPitch, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmYaw, 0.0, atol=1e-8)
+        @test isapprox(edfile.oopdefl, 0.0, atol=1e-8)
+        @test isapprox(edfile.ipdefl, 0.0, atol=1e-8)
+        blpitchs = zeros(3)
+        @test isapprox(edfile.blpitchs, blpitchs, atol=1e-8)
+        @test isapprox(edfile.teetdefl, 0.0, atol=1e-8)
+        @test isapprox(edfile.azimuth, 0.0, atol=1e-8)
+        @test isapprox(edfile.rotspeed, 12.1, atol=1e-8)
+        @test isapprox(edfile.nacyaw, 0.0, atol=1e-8)
+        @test isapprox(edfile.ttdspfa, 0.0, atol=1e-8)
+        @test isapprox(edfile.ttdspss, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmsurge, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmsway, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmheave, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmroll, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmpitch, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmyaw, 0.0, atol=1e-8)
 
-    @test edfile.NumBl==3
-    @test isapprox(edfile.TipRad, 63, atol=1e-8)
-    @test isapprox(edfile.HubRad, 1.5, atol=1e-8)
-    @test isapprox(edfile.PreCone1, -2.5, atol=1e-8)
-    @test isapprox(edfile.PreCone2, -2.5, atol=1e-8)
-    @test isapprox(edfile.PreCone3, -2.5, atol=1e-8)
-    @test isapprox(edfile.HubCM, 0.0, atol=1e-8)
-    @test isapprox(edfile.UndSling, 0.0, atol=1e-8)
-    @test isapprox(edfile.Delta3, 0.0, atol=1e-8)
-    @test isapprox(edfile.AzimB1Up, 0.0, atol=1e-8)
-    @test isapprox(edfile.OverHang, -5.0191, atol=1e-8)
-    @test isapprox(edfile.ShftGagL, 1.912, atol=1e-8)
-    @test isapprox(edfile.ShftTilt, -5, atol=1e-8)
-    @test isapprox(edfile.NacCMxn, 1.9, atol=1e-8)
-    @test isapprox(edfile.NacCMyn, 0.0, atol=1e-8)
-    @test isapprox(edfile.NacCMzn, 1.75, atol=1e-8)
-    @test isapprox(edfile.NcIMUxn, -3.09528, atol=1e-8)
-    @test isapprox(edfile.NcIMUyn, 0.0, atol=1e-8)
-    @test isapprox(edfile.NcIMUzn, 2.23336, atol=1e-8)
-    @test isapprox(edfile.Twr2Shft, 1.96256, atol=1e-8)
-    @test isapprox(edfile.TowerHt, 87.6, atol=1e-8)
-    @test isapprox(edfile.TowerBsHt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmCMxt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmCMyt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmCMzt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmRefzt, 0.0, atol=1e-8)
+        @test edfile.numbl==3
+        @test isapprox(edfile.tiprad, 63, atol=1e-8)
+        @test isapprox(edfile.hubrad, 1.5, atol=1e-8)
+        precones = -2.5.*ones(3)
+        @test isapprox(edfile.precones, precones, atol=1e-8)
+        @test isapprox(edfile.hubcm, 0.0, atol=1e-8)
+        @test isapprox(edfile.undsling, 0.0, atol=1e-8)
+        @test isapprox(edfile.delta3, 0.0, atol=1e-8)
+        @test isapprox(edfile.azimb1up, 0.0, atol=1e-8)
+        @test isapprox(edfile.overhang, -5.0191, atol=1e-8)
+        @test isapprox(edfile.shftgagl, 1.912, atol=1e-8)
+        @test isapprox(edfile.shfttilt, -5, atol=1e-8)
+        naccmxyzn = [1.9, 0.0, 1.75]
+        @test isapprox(edfile.naccmxyzn, naccmxyzn, atol=1e-8)
+        ncimuxyzn = [-3.09528, 0.0, 2.23336]
+        @test isapprox(edfile.ncimuxyzn, ncimuxyzn, atol=1e-8)
+        @test isapprox(edfile.twr2shft, 1.96256, atol=1e-8)
+        @test isapprox(edfile.towerht, 87.6, atol=1e-8)
+        @test isapprox(edfile.towerbsht, 0.0, atol=1e-8)
+        ptfmcmxyzt = zeros(3)
+        @test isapprox(edfile.ptfmcmxyzt, ptfmcmxyzt, atol=1e-8)
+        @test isapprox(edfile.ptfmrefzt, 0.0, atol=1e-8)
+        @test isapprox(edfile.tipmasses, zeros(3), atol=1e-8)
+        @test isapprox(edfile.hubmass, 56780, atol=1)
+        @test isapprox(edfile.hubiner, 115926, atol=1)
+        @test isapprox(edfile.geniner, 534.116, atol=1e-3)
+        @test isapprox(edfile.nacmass, 240000, atol=1)
+        @test isapprox(edfile.nacyiner, 2.60789e+06, atol=1e2)
+        @test isapprox(edfile.yawbrmass, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmmass, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmriner, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmpiner, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmyiner, 0.0, atol=1e-8)
 
-    @test isapprox(edfile.TipMass1, 0.0, atol=1e-8)
-    @test isapprox(edfile.TipMass2, 0.0, atol=1e-8)
-    @test isapprox(edfile.TipMass3, 0.0, atol=1e-8)
-    @test isapprox(edfile.HubMass, 56780, atol=1)
-    @test isapprox(edfile.HubIner, 115926, atol=1)
-    @test isapprox(edfile.GenIner, 534.116, atol=1e-3)
-    @test isapprox(edfile.NacMass, 240000, atol=1)
-    @test isapprox(edfile.NacYIner, 2.60789E+06, atol=1e2)
-    @test isapprox(edfile.YawBrMass, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmMass, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmRIner, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmPIner, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmYIner, 0.0, atol=1e-8)
+        @test edfile.bldnodes==17
+        bldfiles = ["NREL5MWref_Blade.dat", "NREL5MWref_Blade.dat", "NREL5MWref_Blade.dat"]
+        @test edfile.bldfiles==bldfiles
 
-    @test edfile.BldNodes==17
-    @test edfile.BldFile1=="\"NREL5MWref_Blade.dat\""
-    @test edfile.BldFile2=="\"NREL5MWref_Blade.dat\""
-    @test edfile.BldFile3=="\"NREL5MWref_Blade.dat\""
+        @test isapprox(edfile.teetmod, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetdmpp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetdmp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetcdmp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetsstp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teethstp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetsssp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teethssp, 0.0, atol=1e-8)
 
-    @test isapprox(edfile.TeetMod, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetDmpP, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetDmp, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetCDmp, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetSStP, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetHStP, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetSSSp, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetHSSp, 0.0, atol=1e-8)
+        @test isapprox(edfile.gboxeff, 100, atol=1e-8)
+        @test isapprox(edfile.gbratio, 97, atol=1e-8)
+        @test isapprox(edfile.dttorspr, 8.67637e+08, atol=1)
+        @test isapprox(edfile.dttordmp, 6.215e+06, atol=1)
 
-    @test isapprox(edfile.GBoxEff, 100, atol=1e-8)
-    @test isapprox(edfile.GBRatio, 97, atol=1e-8)
-    @test isapprox(edfile.DTTorSpr, 8.67637E+08, atol=1)
-    @test isapprox(edfile.DTTorDmp, 6.215E+06, atol=1)
+        @test edfile.furling==false
+        @test edfile.twrfile=="NREL5MWrefED_Tower.dat"
 
-    @test lowercase(edfile.Furling)=="false"
-    @test edfile.TwrFile=="\"NREL5MWrefED_Tower.dat\""
+        @test edfile.sumprint==true
+        @test edfile.outfile==1
+        @test edfile.tabdelim==true
+        @test edfile.outfmt=="ES10.3E2"
+        @test isapprox(edfile.tstart, 0, atol=1e-5)
+        @test isapprox(edfile.decfact, 1, atol=1e-5)
+        @test edfile.ntwgages==3
+        twrgagnd = [5, 10, 15]
+        @test edfile.twrgagnd==twrgagnd
+        @test edfile.nblgages==6
+        bldgagnd = [1, 4, 7, 10, 13, 16]
+        @test edfile.bldgagnd==bldgagnd
+        outlist = [ "RootMxb1", "RootMyb1", "RootMzb1"]
+        @test edfile.outlist==outlist
 
-    @test lowercase(edfile.SumPrint)=="true"
-    @test edfile.OutFile==1
-    @test lowercase(edfile.TabDelim)=="true"
-    @test edfile.OutFmt=="\"ES10.3E2\""
-    @test isapprox(edfile.TStart, 0, atol=1e-5)
-    @test isapprox(edfile.DecFact, 1, atol=1e-5)
-    @test edfile.NTwGages==3
-    twrgagnd = [5, 10, 15]
-    @test edfile.TwrGagNd==twrgagnd
-    @test edfile.NBlGages==6
-    bldgagnd = [1, 4, 7, 10, 13, 16]
-    @test edfile.BldGagNd==bldgagnd
-    outlist = [ "RootMxb1", "RootMyb1", "RootMzb1"]
-    @test edfile.Outlist==outlist
-
-    @test edfile.BldNd_BladesOut==3
-    outnd = [99]
-    @test edfile.BldNd_BlOutNd==outnd 
-    outlist = [ "ALx", "ALy", "ALz"]
-    @test edfile.NodeOutlist==outlist
-
+        @test edfile.bldnd_bladesout==3
+        outnd = [99]
+        @test edfile.bldnd_bloutnd==outnd 
+        outlist = [ "ALx", "ALy", "ALz"]
+        @test edfile.nodeoutlist==outlist
     end #End testing Read ED file
 
     @testset "Write ElastoDyn File" begin
-    file = "NREL5MWrefED.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-    edfiletemp = of.ReadEDFile(file, path)
-    of.WriteEDFile(edfiletemp, "testingEDFile.dat")
-    edfile = of.ReadEDFile("testingEDfile.dat", path)
+        file = "NREL5MWrefED.dat"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        edfiletemp = of.read_edfile(file, path)
+        of.write_edfile(edfiletemp, "testingEDFile.dat"; outputpath=path)
+        edfile = of.read_edfile("testingEDfile.dat", path)
 
-    @test lowercase(edfile.Echo)=="false"
-    @test edfile.Method==3
-    @test lowercase(edfile.DT)=="\"default\"" #TODO: this could be a number too!!!
-    @test isapprox(edfile.Gravity, 9.80665, atol=1e-8)
-    @test lowercase(edfile.FlapDOF1)=="true"
-    @test lowercase(edfile.FlapDOF2)=="true"
-    @test lowercase(edfile.EdgeDOF)=="true"
-    @test lowercase(edfile.TeetDOF)=="false"
-    @test lowercase(edfile.DrTrDOF)=="true"
-    @test lowercase(edfile.GenDOF)=="true"
-    @test lowercase(edfile.YawDOF)=="true"
-    @test lowercase(edfile.TwFADOF1)=="true"
-    @test lowercase(edfile.TwFADOF2)=="true"
-    @test lowercase(edfile.TwSSDOF1)=="true"
-    @test lowercase(edfile.TwSSDOF2)=="true"
-    @test lowercase(edfile.PtfmSgDOF)=="false"
-    @test lowercase(edfile.PtfmSwDOF)=="false"
-    @test lowercase(edfile.PtfmHvDOF)=="false"
-    @test lowercase(edfile.PtfmRDOF)=="false"
-    @test lowercase(edfile.PtfmPDOF)=="false"
-    @test lowercase(edfile.PtfmYDOF)=="false"
+        @test edfile.echo==false
+        @test edfile.method==3
+        @test isnan(edfile.dt)
+        @test isapprox(edfile.gravity, 9.80665, atol=1e-8)
+        @test edfile.flapdof1==true
+        @test edfile.flapdof2==true
+        @test edfile.edgedof==true
+        @test edfile.teetdof==false
+        @test edfile.drtrdof==true
+        @test edfile.gendof==true
+        @test edfile.yawdof==true
+        @test edfile.twfadof1==true
+        @test edfile.twfadof2==true
+        @test edfile.twssdof1==true
+        @test edfile.twssdof2==true
+        @test edfile.ptfmsgdof==false
+        @test edfile.ptfmswdof==false
+        @test edfile.ptfmhvdof==false
+        @test edfile.ptfmrdof==false
+        @test edfile.ptfmpdof==false
+        @test edfile.ptfmydof==false
 
-    @test isapprox(edfile.OoPDefl, 0.0, atol=1e-8)
-    @test isapprox(edfile.IPDefl, 0.0, atol=1e-8)
-    @test isapprox(edfile.BlPitch1, 0.0, atol=1e-8)
-    @test isapprox(edfile.BlPitch2, 0.0, atol=1e-8)
-    @test isapprox(edfile.BlPitch3, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetDefl, 0.0, atol=1e-8)
-    @test isapprox(edfile.Azimuth, 0.0, atol=1e-8)
-    @test isapprox(edfile.RotSpeed, 12.1, atol=1e-8)
-    @test isapprox(edfile.NacYaw, 0.0, atol=1e-8)
-    @test isapprox(edfile.TTDspFA, 0.0, atol=1e-8)
-    @test isapprox(edfile.TTDspSS, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmSurge, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmSway, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmHeave, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmRoll, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmPitch, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmYaw, 0.0, atol=1e-8)
+        @test isapprox(edfile.oopdefl, 0.0, atol=1e-8)
+        @test isapprox(edfile.ipdefl, 0.0, atol=1e-8)
+        blpitchs = zeros(3)
+        @test isapprox(edfile.blpitchs, blpitchs, atol=1e-8)
+        @test isapprox(edfile.teetdefl, 0.0, atol=1e-8)
+        @test isapprox(edfile.azimuth, 0.0, atol=1e-8)
+        @test isapprox(edfile.rotspeed, 12.1, atol=1e-8)
+        @test isapprox(edfile.nacyaw, 0.0, atol=1e-8)
+        @test isapprox(edfile.ttdspfa, 0.0, atol=1e-8)
+        @test isapprox(edfile.ttdspss, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmsurge, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmsway, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmheave, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmroll, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmpitch, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmyaw, 0.0, atol=1e-8)
 
-    @test edfile.NumBl==3
-    @test isapprox(edfile.TipRad, 63, atol=1e-8)
-    @test isapprox(edfile.HubRad, 1.5, atol=1e-8)
-    @test isapprox(edfile.PreCone1, -2.5, atol=1e-8)
-    @test isapprox(edfile.PreCone2, -2.5, atol=1e-8)
-    @test isapprox(edfile.PreCone3, -2.5, atol=1e-8)
-    @test isapprox(edfile.HubCM, 0.0, atol=1e-8)
-    @test isapprox(edfile.UndSling, 0.0, atol=1e-8)
-    @test isapprox(edfile.Delta3, 0.0, atol=1e-8)
-    @test isapprox(edfile.AzimB1Up, 0.0, atol=1e-8)
-    @test isapprox(edfile.OverHang, -5.0191, atol=1e-8)
-    @test isapprox(edfile.ShftGagL, 1.912, atol=1e-8)
-    @test isapprox(edfile.ShftTilt, -5, atol=1e-8)
-    @test isapprox(edfile.NacCMxn, 1.9, atol=1e-8)
-    @test isapprox(edfile.NacCMyn, 0.0, atol=1e-8)
-    @test isapprox(edfile.NacCMzn, 1.75, atol=1e-8)
-    @test isapprox(edfile.NcIMUxn, -3.09528, atol=1e-8)
-    @test isapprox(edfile.NcIMUyn, 0.0, atol=1e-8)
-    @test isapprox(edfile.NcIMUzn, 2.23336, atol=1e-8)
-    @test isapprox(edfile.Twr2Shft, 1.96256, atol=1e-8)
-    @test isapprox(edfile.TowerHt, 87.6, atol=1e-8)
-    @test isapprox(edfile.TowerBsHt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmCMxt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmCMyt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmCMzt, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmRefzt, 0.0, atol=1e-8)
+        @test edfile.numbl==3
+        @test isapprox(edfile.tiprad, 63, atol=1e-8)
+        @test isapprox(edfile.hubrad, 1.5, atol=1e-8)
+        precones = -2.5.*ones(3)
+        @test isapprox(edfile.precones, precones, atol=1e-8)
+        @test isapprox(edfile.hubcm, 0.0, atol=1e-8)
+        @test isapprox(edfile.undsling, 0.0, atol=1e-8)
+        @test isapprox(edfile.delta3, 0.0, atol=1e-8)
+        @test isapprox(edfile.azimb1up, 0.0, atol=1e-8)
+        @test isapprox(edfile.overhang, -5.0191, atol=1e-8)
+        @test isapprox(edfile.shftgagl, 1.912, atol=1e-8)
+        @test isapprox(edfile.shfttilt, -5, atol=1e-8)
+        naccmxyzn = [1.9, 0.0, 1.75]
+        @test isapprox(edfile.naccmxyzn, naccmxyzn, atol=1e-8)
+        ncimuxyzn = [-3.09528, 0.0, 2.23336]
+        @test isapprox(edfile.ncimuxyzn, ncimuxyzn, atol=1e-8)
+        @test isapprox(edfile.twr2shft, 1.96256, atol=1e-8)
+        @test isapprox(edfile.towerht, 87.6, atol=1e-8)
+        @test isapprox(edfile.towerbsht, 0.0, atol=1e-8)
+        ptfmcmxyzt = zeros(3)
+        @test isapprox(edfile.ptfmcmxyzt, ptfmcmxyzt, atol=1e-8)
+        @test isapprox(edfile.ptfmrefzt, 0.0, atol=1e-8)
+        @test isapprox(edfile.tipmasses, zeros(3), atol=1e-8)
+        @test isapprox(edfile.hubmass, 56780, atol=1)
+        @test isapprox(edfile.hubiner, 115926, atol=1)
+        @test isapprox(edfile.geniner, 534.116, atol=1e-3)
+        @test isapprox(edfile.nacmass, 240000, atol=1)
+        @test isapprox(edfile.nacyiner, 2.60789e+06, atol=1e2)
+        @test isapprox(edfile.yawbrmass, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmmass, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmriner, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmpiner, 0.0, atol=1e-8)
+        @test isapprox(edfile.ptfmyiner, 0.0, atol=1e-8)
 
-    @test isapprox(edfile.TipMass1, 0.0, atol=1e-8)
-    @test isapprox(edfile.TipMass2, 0.0, atol=1e-8)
-    @test isapprox(edfile.TipMass3, 0.0, atol=1e-8)
-    @test isapprox(edfile.HubMass, 56780, atol=1)
-    @test isapprox(edfile.HubIner, 115926, atol=1)
-    @test isapprox(edfile.GenIner, 534.116, atol=1e-3)
-    @test isapprox(edfile.NacMass, 240000, atol=1)
-    @test isapprox(edfile.NacYIner, 2.60789E+06, atol=1e2)
-    @test isapprox(edfile.YawBrMass, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmMass, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmRIner, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmPIner, 0.0, atol=1e-8)
-    @test isapprox(edfile.PtfmYIner, 0.0, atol=1e-8)
+        @test edfile.bldnodes==17
+        bldfiles = ["NREL5MWref_Blade.dat", "NREL5MWref_Blade.dat", "NREL5MWref_Blade.dat"]
+        @test edfile.bldfiles==bldfiles
 
-    @test edfile.BldNodes==17
-    @test edfile.BldFile1=="\"NREL5MWref_Blade.dat\""
-    @test edfile.BldFile2=="\"NREL5MWref_Blade.dat\""
-    @test edfile.BldFile3=="\"NREL5MWref_Blade.dat\""
+        @test isapprox(edfile.teetmod, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetdmpp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetdmp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetcdmp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetsstp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teethstp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teetsssp, 0.0, atol=1e-8)
+        @test isapprox(edfile.teethssp, 0.0, atol=1e-8)
 
-    @test isapprox(edfile.TeetMod, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetDmpP, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetDmp, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetCDmp, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetSStP, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetHStP, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetSSSp, 0.0, atol=1e-8)
-    @test isapprox(edfile.TeetHSSp, 0.0, atol=1e-8)
+        @test isapprox(edfile.gboxeff, 100, atol=1e-8)
+        @test isapprox(edfile.gbratio, 97, atol=1e-8)
+        @test isapprox(edfile.dttorspr, 8.67637e+08, atol=1)
+        @test isapprox(edfile.dttordmp, 6.215e+06, atol=1)
 
-    @test isapprox(edfile.GBoxEff, 100, atol=1e-8)
-    @test isapprox(edfile.GBRatio, 97, atol=1e-8)
-    @test isapprox(edfile.DTTorSpr, 8.67637E+08, atol=1)
-    @test isapprox(edfile.DTTorDmp, 6.215E+06, atol=1)
+        @test edfile.furling==false
+        @test edfile.twrfile=="NREL5MWrefED_Tower.dat"
 
-    @test lowercase(edfile.Furling)=="false"
-    @test edfile.TwrFile=="\"NREL5MWrefED_Tower.dat\""
+        @test edfile.sumprint==true
+        @test edfile.outfile==1
+        @test edfile.tabdelim==true
+        @test edfile.outfmt=="ES10.3E2"
+        @test isapprox(edfile.tstart, 0, atol=1e-5)
+        @test isapprox(edfile.decfact, 1, atol=1e-5)
+        @test edfile.ntwgages==3
+        twrgagnd = [5, 10, 15]
+        @test edfile.twrgagnd==twrgagnd
+        @test edfile.nblgages==6
+        bldgagnd = [1, 4, 7, 10, 13, 16]
+        @test edfile.bldgagnd==bldgagnd
+        outlist = [ "RootMxb1", "RootMyb1", "RootMzb1"]
+        @test edfile.outlist==outlist
 
-    @test lowercase(edfile.SumPrint)=="true"
-    @test edfile.OutFile==1
-    @test lowercase(edfile.TabDelim)=="true"
-    @test edfile.OutFmt=="\"ES10.3E2\""
-    @test isapprox(edfile.TStart, 0, atol=1e-5)
-    @test isapprox(edfile.DecFact, 1, atol=1e-5)
-    @test edfile.NTwGages==3
-    twrgagnd = [5, 10, 15]
-    @test edfile.TwrGagNd==twrgagnd
-    @test edfile.NBlGages==6
-    bldgagnd = [1, 4, 7, 10, 13, 16]
-    @test edfile.BldGagNd==bldgagnd
-    outlist = [ "RootMxb1", "RootMyb1", "RootMzb1"]
-    @test edfile.Outlist==outlist
-
-    @test edfile.BldNd_BladesOut==3
-    outnd = [99]
-    @test edfile.BldNd_BlOutNd==outnd 
-    outlist = [ "ALx", "ALy", "ALz"]
-    @test edfile.NodeOutlist==outlist
+        @test edfile.bldnd_bladesout==3
+        outnd = [99]
+        @test edfile.bldnd_bloutnd==outnd 
+        outlist = [ "ALx", "ALy", "ALz"]
+        @test edfile.nodeoutlist==outlist
 
     end #End testing write ED file
 
     @testset "read ED Blade" begin
-    file = "NREL5MWref_Blade.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-    edblade = of.ReadEDBlade(file, path)
+        file = "NREL5MWref_Blade.dat"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        edblade = of.read_edblade(file, path)
 
-    @test edblade.NBlInpSt==49
-    @test isapprox(edblade.BldFlDmp1, 0.477465, atol=1e-8)
-    @test isapprox(edblade.BldFlDmp2, 0.477465, atol=1e-8)
-    @test isapprox(edblade.BldEdDmp1, 0.477465, atol=1e-8)
+        @test edblade.numnds==49
+        flapdamp = 0.477465.*ones(2)
+        @test isapprox(edblade.flapdamp, flapdamp, atol=1e-8)
+        @test isapprox(edblade.edgedamp, 0.477465, atol=1e-8)
 
-    @test isapprox(edblade.FlStTunr1, 1, atol=1e-8)
-    @test isapprox(edblade.FlStTunr2, 1, atol=1e-8)
-    @test isapprox(edblade.AdjBlMs, 1.057344, atol=1e-8)
-    @test isapprox(edblade.AdjFlSt, 1, atol=1e-8)
-    @test isapprox(edblade.AdjEdSt, 1, atol=1e-8)
+        @test isapprox(edblade.flsttunr, ones(2), atol=1e-8)
+        @test isapprox(edblade.adjblms, 1.057344, atol=1e-8)
+        @test isapprox(edblade.adjflst, 1, atol=1e-8)
+        @test isapprox(edblade.adjedst, 1, atol=1e-8)
 
-    bldprops = [
-        0.0000000E+00  2.5000000E-01  1.3308000E+01  6.7893500E+02  1.8110000E+10  1.8113600E+10
+        bldprops = [0.0000000E+00  2.5000000E-01  1.3308000E+01  6.7893500E+02  1.8110000E+10  1.8113600E+10
 3.2500000E-03  2.5000000E-01  1.3308000E+01  6.7893500E+02  1.8110000E+10  1.8113600E+10
 1.9510000E-02  2.5049000E-01  1.3308000E+01  7.7336300E+02  1.9424900E+10  1.9558600E+10
 3.5770000E-02  2.5490000E-01  1.3308000E+01  7.4055000E+02  1.7455900E+10  1.9497800E+10
@@ -329,48 +314,41 @@
 9.7886000E-01  3.7500000E-01  1.0100000E-01  4.5818000E+01  7.5500000E+06  8.5070000E+07
 9.8699000E-01  3.7500000E-01  6.2000000E-02  4.1669000E+01  4.6000000E+06  6.4260000E+07
 9.9512000E-01  3.7500000E-01  2.3000000E-02  1.1453000E+01  2.5000000E+05  6.6100000E+06
-1.0000000E+00  3.7500000E-01  0.0000000E+00  1.0319000E+01  1.7000000E+05  5.0100000E+06
-    ]
-    @test isapprox(edblade.BldProps, bldprops, atol=1e-8)
+1.0000000E+00  3.7500000E-01  0.0000000E+00  1.0319000E+01  1.7000000E+05  5.0100000E+06]
+        @test isapprox(edblade.frac, bldprops[:,1], atol=1e-8)
+        @test isapprox(edblade.pitchaxis, bldprops[:,2], atol=1e-8)
+        @test isapprox(edblade.twist, bldprops[:,3], atol=1e-8)
+        @test isapprox(edblade.massdensity, bldprops[:,4], atol=1e-8)
+        @test isapprox(edblade.flapstiff, bldprops[:,5], atol=1e-8)
+        @test isapprox(edblade.edgestiff, bldprops[:,6], atol=1e-8)
 
-    @test isapprox(edblade.BldFl1Sh2, 0.0622, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh3, 1.7254, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh4, -3.2452, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh5, 4.7131, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh6, -2.2555, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh2, -0.5809, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh3, 1.2067, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh4, -15.5349, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh5, 29.7347, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh6, -13.8255, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh2, 0.3627, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh3, 2.5337, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh4, -3.5772, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh5, 2.376, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh6, -0.6952, atol=1e-8)
+        flapmode1 = [0.0622, 1.7254, -3.2452, 4.7131, -2.2555]
+        @test isapprox(edblade.flapmode1, flapmode1, atol=1e-8)     
+        flapmode2 = [-0.5809,  1.2067,  -15.5349,  29.7347, -13.8255]
+        @test isapprox(edblade.flapmode2, flapmode2, atol=1e-8)     
+        edgemode1 = [0.3627, 2.5337, -3.5772, 2.376, -0.6952]
+        @test isapprox(edblade.edgemode1, edgemode1, atol=1e-8)
 
     end #end testing read ed blade
 
     @testset "Write EDBlade" begin
-    file = "NREL5MWref_Blade.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
-    edbladetemp = of.ReadEDBlade(file, path)
-    of.WriteEDBlade(edbladetemp, "testingedblade.dat")
-    edblade = of.ReadEDBlade("testingedblade.dat", path)
+        file = "NREL5MWref_Blade.dat"
+        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        edbladetemp = of.read_edblade(file, path)
+        of.write_edblade(edbladetemp, "testingedblade.dat")
+        edblade = of.read_edblade("testingedblade.dat", path)
 
-    @test edblade.NBlInpSt==49
-    @test isapprox(edblade.BldFlDmp1, 0.477465, atol=1e-8)
-    @test isapprox(edblade.BldFlDmp2, 0.477465, atol=1e-8)
-    @test isapprox(edblade.BldEdDmp1, 0.477465, atol=1e-8)
+        @test edblade.numnds==49
+        flapdamp = 0.477465.*ones(2)
+        @test isapprox(edblade.flapdamp, flapdamp, atol=1e-8)
+        @test isapprox(edblade.edgedamp, 0.477465, atol=1e-8)
 
-    @test isapprox(edblade.FlStTunr1, 1, atol=1e-8)
-    @test isapprox(edblade.FlStTunr2, 1, atol=1e-8)
-    @test isapprox(edblade.AdjBlMs, 1.057344, atol=1e-8)
-    @test isapprox(edblade.AdjFlSt, 1, atol=1e-8)
-    @test isapprox(edblade.AdjEdSt, 1, atol=1e-8)
+        @test isapprox(edblade.flsttunr, ones(2), atol=1e-8)
+        @test isapprox(edblade.adjblms, 1.057344, atol=1e-8)
+        @test isapprox(edblade.adjflst, 1, atol=1e-8)
+        @test isapprox(edblade.adjedst, 1, atol=1e-8)
 
-    bldprops = [
-        0.0000000E+00  2.5000000E-01  1.3308000E+01  6.7893500E+02  1.8110000E+10  1.8113600E+10
+        bldprops = [0.0000000E+00  2.5000000E-01  1.3308000E+01  6.7893500E+02  1.8110000E+10  1.8113600E+10
 3.2500000E-03  2.5000000E-01  1.3308000E+01  6.7893500E+02  1.8110000E+10  1.8113600E+10
 1.9510000E-02  2.5049000E-01  1.3308000E+01  7.7336300E+02  1.9424900E+10  1.9558600E+10
 3.5770000E-02  2.5490000E-01  1.3308000E+01  7.4055000E+02  1.7455900E+10  1.9497800E+10
@@ -418,25 +396,20 @@
 9.7886000E-01  3.7500000E-01  1.0100000E-01  4.5818000E+01  7.5500000E+06  8.5070000E+07
 9.8699000E-01  3.7500000E-01  6.2000000E-02  4.1669000E+01  4.6000000E+06  6.4260000E+07
 9.9512000E-01  3.7500000E-01  2.3000000E-02  1.1453000E+01  2.5000000E+05  6.6100000E+06
-1.0000000E+00  3.7500000E-01  0.0000000E+00  1.0319000E+01  1.7000000E+05  5.0100000E+06
-    ]
-    @test isapprox(edblade.BldProps, bldprops, atol=1e-8)
+1.0000000E+00  3.7500000E-01  0.0000000E+00  1.0319000E+01  1.7000000E+05  5.0100000E+06]
+        @test isapprox(edblade.frac, bldprops[:,1], atol=1e-8)
+        @test isapprox(edblade.pitchaxis, bldprops[:,2], atol=1e-8)
+        @test isapprox(edblade.twist, bldprops[:,3], atol=1e-8)
+        @test isapprox(edblade.massdensity, bldprops[:,4], atol=1e-8)
+        @test isapprox(edblade.flapstiff, bldprops[:,5], atol=1e-8)
+        @test isapprox(edblade.edgestiff, bldprops[:,6], atol=1e-8)
 
-    @test isapprox(edblade.BldFl1Sh2, 0.0622, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh3, 1.7254, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh4, -3.2452, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh5, 4.7131, atol=1e-8)
-    @test isapprox(edblade.BldFl1Sh6, -2.2555, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh2, -0.5809, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh3, 1.2067, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh4, -15.5349, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh5, 29.7347, atol=1e-8)
-    @test isapprox(edblade.BldFl2Sh6, -13.8255, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh2, 0.3627, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh3, 2.5337, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh4, -3.5772, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh5, 2.376, atol=1e-8)
-    @test isapprox(edblade.BldEdgSh6, -0.6952, atol=1e-8)
+        flapmode1 = [0.0622, 1.7254, -3.2452, 4.7131, -2.2555]
+        @test isapprox(edblade.flapmode1, flapmode1, atol=1e-8)     
+        flapmode2 = [-0.5809,  1.2067,  -15.5349,  29.7347, -13.8255]
+        @test isapprox(edblade.flapmode2, flapmode2, atol=1e-8)     
+        edgemode1 = [0.3627, 2.5337, -3.5772, 2.376, -0.6952]
+        @test isapprox(edblade.edgemode1, edgemode1, atol=1e-8)
 
     end
 

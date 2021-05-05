@@ -325,3 +325,7 @@ function roottolocal(N, T, ϕ)
     Nstar = (T*tand(ϕ) + N)/(cosd(ϕ) + sind(ϕ)*tand(ϕ))
     Tstar = (T/cosd(ϕ)) - (tand(ϕ)*Nstar)
 end
+
+function remove!(a, item)
+    deleteat!(a, findall(x->x==item, a))
+  end

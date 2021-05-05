@@ -12,7 +12,7 @@
         adfile = of.read_adfile(file, path)
 
         @test adfile.echo==false
-        @test lowercase(adfile.dtaero)=="default" #Note that this guy is different than the others, maybe should change. 
+        @test isnan(adfile.dtaero) #Note that this guy is different than the others, maybe should change. 
         @test adfile.wakemod==1
         @test adfile.afaeromod==2
         @test adfile.twrpotent==1
@@ -29,13 +29,13 @@
         @test isapprox(adfile.pvap, 1700, atol=1e-5)
         @test isapprox(adfile.fluiddepth, 0.5, atol=1e-5)
         @test adfile.skewmod==2
-        @test lowercase(adfile.skewmodfactor)=="default"
+        @test isnan(adfile.skewmodfactor)
         @test adfile.tiploss==true
         @test adfile.hubloss==true
         @test adfile.tanind==true
         @test adfile.ai_drag==false
         @test adfile.ti_drag==false
-        @test lowercase(adfile.ind_toler)=="default"
+        @test isnan(adfile.ind_toler)
         @test adfile.maxiter==100
         @test adfile.dbemt_mod==2
         @test isapprox(adfile.tau1_const, 4, atol=1e-5)
@@ -108,7 +108,7 @@
         adfile = of.read_adfile(file, path)
 
         @test adfile.echo==false
-        @test lowercase(adfile.dtaero)=="default" #Note that this guy is different than the others, maybe should change. 
+        @test isnan(adfile.dtaero) #Note that this guy is different than the others, maybe should change. 
         @test adfile.wakemod==1
         @test adfile.afaeromod==2
         @test adfile.twrpotent==1
@@ -125,13 +125,13 @@
         @test isapprox(adfile.pvap, 1700, atol=1e-5)
         @test isapprox(adfile.fluiddepth, 0.5, atol=1e-5)
         @test adfile.skewmod==2
-        @test lowercase(adfile.skewmodfactor)=="default"
+        @test isnan(adfile.skewmodfactor)
         @test adfile.tiploss==true
         @test adfile.hubloss==true
         @test adfile.tanind==true
         @test adfile.ai_drag==false
         @test adfile.ti_drag==false
-        @test lowercase(adfile.ind_toler)=="default"
+        @test isnan(adfile.ind_toler)
         @test adfile.maxiter==100
         @test adfile.dbemt_mod==2
         @test isapprox(adfile.tau1_const, 4, atol=1e-5)
@@ -224,7 +224,7 @@
 6.1499900E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
         ]
         
-        @test isapprox(adblade.radii,bldprops[:,1],atol=1e-6)
+        @test isapprox(adblade.span,bldprops[:,1],atol=1e-6)
         @test isapprox(adblade.curve,bldprops[:,2],atol=1e-6)
         @test isapprox(adblade.sweep,bldprops[:,3],atol=1e-6)
         @test isapprox(adblade.curveangle,bldprops[:,4],atol=1e-6)
@@ -264,7 +264,7 @@
 6.1499900E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
         ]
         
-        @test isapprox(adblade.radii,bldprops[:,1],atol=1e-6)
+        @test isapprox(adblade.span,bldprops[:,1],atol=1e-6)
         @test isapprox(adblade.curve,bldprops[:,2],atol=1e-6)
         @test isapprox(adblade.sweep,bldprops[:,3],atol=1e-6)
         @test isapprox(adblade.curveangle,bldprops[:,4],atol=1e-6)
@@ -617,7 +617,7 @@
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/uae20kw"
         input = of.read_airfoilinput(file, path)
 
-        @test lowercase(input.interpord)=="default"
+        @test input.interpord==0
         @test input.nondimarea==1
         @test input.numcoords=="@\"s809_coords.txt\""
         @test input.numtabs==1
@@ -866,7 +866,7 @@
         path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
         input = of.read_airfoilinput(file, path)
 
-        @test lowercase(input.interpord)=="default"
+        @test input.interpord==0
         @test input.nondimarea==1
         @test input.numcoords=="@\"DU25_A17_coords.txt\""
         @test input.numtabs==1
@@ -903,8 +903,8 @@
         @test isapprox(input.k3,0, atol=1e-5)
         @test isapprox(input.k1_hat,0, atol=1e-5)
         @test isapprox(input.x_cp_bar,0.2, atol=1e-5)
-        @test lowercase(input.uacutout)=="default"
-        @test lowercase(input.filtcutoff)=="default"
+        @test isnan(input.uacutout)
+        @test isnan(input.filtcutoff)
         @test input.numalf==140
 
         polar = [
@@ -1062,7 +1062,7 @@
         of.write_airfoilinput(inputtemp, "testingwriteairfoilinput.dat"; outputpath=path)
         input = of.read_airfoilinput("testingwriteairfoilinput.dat", path)
 
-        @test lowercase(input.interpord)=="default"
+        @test input.interpord==0
         @test input.nondimarea==1
         @test input.numcoords=="@\"s809_coords.txt\""
         @test input.numtabs==1
@@ -1315,7 +1315,7 @@
     of.write_airfoilinput(inputtemp, "testingwriteairfoilinput.dat")
     input = of.read_airfoilinput("testingwriteairfoilinput.dat", path)
 
-    @test lowercase(input.interpord)=="default"
+        @test input.interpord==0
         @test input.nondimarea==1
         @test input.numcoords=="@\"DU25_A17_coords.txt\""
         @test input.numtabs==1
@@ -1352,8 +1352,8 @@
         @test isapprox(input.k3,0, atol=1e-5)
         @test isapprox(input.k1_hat,0, atol=1e-5)
         @test isapprox(input.x_cp_bar,0.2, atol=1e-5)
-        @test lowercase(input.uacutout)=="default"
-        @test lowercase(input.filtcutoff)=="default"
+        @test isnan(input.uacutout)
+        @test isnan(input.filtcutoff)
         @test input.numalf==140
 
         polar = [

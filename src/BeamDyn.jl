@@ -2,68 +2,88 @@
 ##################     STRUCTURES     ########################
 ##############################################################
 
-mutable struct BDFile
-    Directory::Array{String}
-    Notes::String
-    Echo::String
-    QuasiStaticInit::String
-    rhoinf::Float64
-    quadrature::Int
-    refine
-    n_fract
-    DTBeam
-    load_retries
-    NRMax
-    stop_tol
-    tngt_stf_fd
-    tngt_stf_comp
-    tngt_stf_pert
-    tngt_stf_difftol
-    RotStates::String
-    member_total::Int
-    kp_total::Int
-    membernumber::Array{}
-    geoparams::Array{Float64,2}
-    order_elem::Int
-    BldFile::String
-    UsePitchAct::String
-    PitchJ::Float64
-    PitchK::Float64
-    PitchC::Float64
-    SumPrint::String
-    OutFmt::String
-    NNodeOuts::Int
-    OutNd::Array{Int}
-    Outlist::Array{String}
-    NodeOutlist::Array{String}
+mutable struct BDFile{TS, TB, TF, TI}
+    notes::TS
+    echo::TB
+    quasistaticinit::TB
+    rhoinf::TF
+    quadrature::TI
+    refine::TI #has default
+    n_fract::TI #has default
+    dtbeam::TF #has default
+    load_retries::TI #has default
+    nrmax::TI #has default
+    stop_tol::TF #has default
+    tngt_stf_fd::Flag #has default  
+    tngt_stf_comp::Flag #has default 
+    tngt_stf_pert::TF #has default
+    tngt_stf_difftol::TF #has default
+    rotstates::TB
+    member_total::TI
+    kp_total::TI
+    membernumber::Array{Tuple{TI, TI}, 1}
+    kp_xr::Array{TF, 1}
+    kp_yr::Array{TF, 1}
+    kp_zr::Array{TF, 1}
+    initial_twist::Array{TF, 1}
+    order_elem::TI
+    bldfile::TS
+    usepitchact::TB
+    pitchj::TF
+    pitchk::TF
+    pitchc::TF
+    sumprint::TB
+    outfmt::TS
+    nnodeouts::TI
+    outnd::Array{TI, 1}
+    outlist::Array{TS, 1}
+    nodeoutlist::Array{TS, 1}
+
+    function BDFile(Notes::TS, Echo::TB, QuasiStaticInit::TB, rhoinf::TF, quadrature::TI, refine::TI, n_fract::TI, DTBeam::TF, load_retries::TI, NRMax::TI, stop_tol::TF, tngt_stf_fd::Flag  , tngt_stf_comp::Flag , tngt_stf_pert::TF, tngt_stf_difftol::TF, RotStates::TB, member_total::TI, kp_total::TI, membernumber::Array{Tuple{TI, TI}, 1}, kp_xr::Array{TF, 1}, kp_yr::Array{TF, 1}, kp_zr::Array{TF, 1}, initial_twist::Array{TF, 1}, order_elem::TI, BldFile::TS, UsePitchAct::TB, PitchJ::TF, PitchK::TF, PitchC::TF, SumPrint::TB, OutFmt::TS, NNodeOuts::TI, OutNd::Array{TI, 1}, Outlist::Array{TS, 1}, NodeOutlist::Array{TS, 1}) where {TS, TB, TF, TI}
+
+        if length(kp_xr) != length(kp_yr) != length(kp_zr) != length(initial_twist)
+            error("Geometry Parameters not all the same length. - BeamDyn File")
+        end
+
+        if kp_total != length(kp_xr)
+            warning("Number of Key Points not correctly declared. - BeamDyn File")
+            kp_total = length(kp_xr)
+        end
+
+        return new{TS, TB, TF, TI}(Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fract, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, kp_xr, kp_yr, kp_zr, initial_twist, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, Outlist, NodeOutlist)
+    end
 end
-mutable struct BDBladeNode
-    frac::Float64
-    stiffmatrix::Array{Float64, 2}
-    massmatrix::Array{Float64, 2}
+
+
+mutable struct BDBladeNode{TF}
+    frac::TF
+    stiffmatrix::Array{TF, 2}
+    massmatrix::Array{TF, 2}
 
     #Stiffness Matrix values
-    shredg::Float64
-    shrflp::Float64
-    EA::Float64
-    EIedg::Float64
-    EIflp::Float64
-    GJ::Float64
-    E::Float64
-    Iedg::Float64
-    Iflp::Float64
-    G::Float64
-    J::Float64
+    shredg::TF
+    shrflp::TF
+    ea::TF
+    eiedg::TF
+    eiflp::TF
+    gj::TF
+    e::TF
+    g::TF
+    j::TF
 
     #Mass Matrix values
-    mass::Float64
-    Ycm::Float64
-    Xcm::Float64
-    iedg::Float64
-    icp::Float64
-    iflp::Float64
-    iplr::Float64
+    mass::TF
+    ycm::TF
+    xcm::TF
+    iedg::TF
+    icp::TF
+    iflp::TF
+    iplr::TF
 
+    function BDBlade(frac::TF, stiffmatrix::Array{TF, 2}, massmatrix::Array{TF, 2}, shredg::TF, shrflp::TF, ea::TF, eiedg::TF, eiflp::TF, gj::TF, e::TF, g::TF, j::TF, mass::TF, ycm::TF, xcm::TF, iedg::TF, icp::TF, iflp::TF, iplr::TF) where {TF}
+
+        return new{TF}(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
+    end
 end
 
 """
@@ -80,17 +100,6 @@ Take the makings of a BeamDyn blade node and make it into a node.
 - BDBladeNode - An object containing the extractable data from the matrices. 
 """
 function makenode(frac, stiffmat, massmat)
-    shrflp = stiffmat[1,1]
-    shredg = stiffmat[2,2]
-    EA = stiffmat[3,3]
-    EIedg = stiffmat[4,4]
-    EIflp = stiffmat[5,5]
-    GJ = stiffmat[6,6]
-    E = 1
-    Iedg = 1
-    Iflp = 1
-    G = 1
-    J = 1
     mass = massmat[1,1]
     Ycm = massmat[3,4]/mass
     Xcm = massmat[2,6]/mass
@@ -99,14 +108,25 @@ function makenode(frac, stiffmat, massmat)
     icp = -massmat[4,5]
     iplr = massmat[6,6]
 
-    return BDBladeNode(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, Iedg, Iflp, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
+    shrflp = stiffmat[1,1]
+    shredg = stiffmat[2,2]
+    EA = stiffmat[3,3]
+    EIedg = stiffmat[4,4]
+    EIflp = stiffmat[5,5]
+    GJ = stiffmat[6,6]
+    E = EIedg/iedg
+    G = 1.0
+    J = 1.0 #Isn't the iplr? 
+    
+
+    return BDBladeNode(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
 end
 
-mutable struct BDBlade
-    Notes::String
-    station_total::Int
-    damp_type::Int
-    dampcoef::Array{Float64,1}
+mutable struct BDBlade{TS, TF, TI}
+    Notes::TS
+    station_total::TI
+    damp_type::TI
+    dampcoef::Array{TF,1}
     nodes::Array{BDBladeNode,1}
 end
 
@@ -115,7 +135,7 @@ end
 ##############################################################
 
 """
-    ReadBDFile(filename, filepath)
+    read_bdfile(filename, filepath)
 
 Reads a BeamDyn file and creates an object to be used. 
 
@@ -126,37 +146,34 @@ Reads a BeamDyn file and creates an object to be used.
 ### Outputs
 - bdfile::BDFile - the BeamDyn object
 """
-function ReadBDFile(filename, filepath)
-    cd(filepath)
-    fi = open(filename, "r")
+function read_bdfile(filename::String, filepath::String)
+    fi = open(filepath*"/"*filename, "r")
     lines = readlines(fi)
     close(fi)
 
-    Directory = ["title"]
-
     # Line 1 is the title
-    Notes = lines[2]
+    notes = lines[2]
     # Line 3 is the simulation control title
-    Echo = fetchword15(lines[4])
-    QuasiStaticInit = fetchword15(lines[5])
+    echo = fetchword(lines[4]; adapt=true)
+    quasistaticinit = fetchword(lines[5]; adapt=true)
     rhoinf = parse(Float64, lines[6][1:14])
-    quadrature = parse(Int, lines[7][1:14])
-    refine = fetchword15(lines[8])
-    n_fact = fetchword15(lines[9])
-    DTBeam = fetchword15(lines[10])
-    load_retries = fetchword15(lines[11])
-    NRMax = fetchword15(lines[12])
-    stop_tol = fetchword15(lines[13])
-    tngt_stf_fd = fetchword15(lines[14])
-    tngt_stf_comp = fetchword15(lines[15])
-    tngt_stf_pert = fetchword15(lines[16])
-    tngt_stf_difftol = fetchword15(lines[17])
-    RotStates = fetchword15(lines[18])
+    quadrature = parse(Int64, lines[7][1:14])
+    refine = readinteger(lines[8])
+    n_fract = readinteger(lines[9])
+    dtbeam = readnumber(lines[10])
+    load_retries = readinteger(lines[11])
+    nrmax = readinteger(lines[12])
+    stop_tol = readnumber(lines[13])
+    tngt_stf_fd = readflag(lines[14][1:14])
+    tngt_stf_comp = readflag(lines[15][1:14])
+    tngt_stf_pert = readnumber(lines[16])
+    tngt_stf_difftol = readnumber(lines[17])
+    rotstates = fetchword(lines[18]; adapt=true)
     # Line 19 is the Geometry Parameter title
-    member_total = parse(Int, lines[20][1:14])
-    kp_total = parse(Int, lines[21][1:14])
+    member_total = parse(Int64, lines[20][1:14])
+    kp_total = parse(Int64, lines[21][1:14])
 
-    membernumber = []
+    membernumber = Tuple{Int64, Int64}[] 
     for i=1:member_total
         temp = readpair(lines[21+i])
         push!(membernumber, temp)
@@ -165,21 +182,26 @@ function ReadBDFile(filename, filepath)
     idx = kp_total+member_total+24
     geoparams = cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
 
+    kp_xr = geoparams[:,1]
+    kp_yr = geoparams[:,2]
+    kp_zr = geoparams[:,3]
+    initial_twist = geoparams[:,4]
+
     # Line idx is the Mesh Parameter title
-    order_elem = parse(Int, lines[idx+1][1:14])
+    order_elem = parse(Int64, lines[idx+1][1:14])
     # Line idx+2 is the Material Paramer title
-    BldFile = fetchword(lines[idx+3];lengthofword=length(lines[idx+3]))
+    bldfile = fetchword(lines[idx+3];lengthofword=length(lines[idx+3]))
     # Line idx+4 is the Pitch actuator parameters title
-    UsePitchAct = fetchword15(lines[idx+5])
-    PitchJ = parse(Float64, lines[idx+6][1:14])
-    PitchK = parse(Float64, lines[idx+7][1:14])
-    PitchC = parse(Float64, lines[idx+8][1:14])
+    usepitchact = fetchword(lines[idx+5]; adapt=true)
+    pitchj = parse(Float64, lines[idx+6][1:14])
+    pitchk = parse(Float64, lines[idx+7][1:14])
+    pitchc = parse(Float64, lines[idx+8][1:14])
     # Line idx+9 is the Outputs title
-    SumPrint = fetchword15(lines[idx+10])
-    OutFmt = fetchword15(lines[idx+11])
-    NNodeOuts = parse(Int, lines[idx+12][1:14])
-    OutNd = readvector(lines[idx+13])
-    OutList = readoutlist(lines[idx+14:end])
+    sumprint = fetchword(lines[idx+10]; adapt=true)
+    outfmt = fetchword(lines[idx+11])
+    nnodeouts = parse(Int64, lines[idx+12][1:14])
+    outnd = Int64.(readvector(lines[idx+13])) 
+    outlist = readoutlist(lines[idx+14:end])
     nodeoutputstitleidx = 0 
     for i = 1:length(lines)
         if lowercase(lines[i][1:3]) == "end"
@@ -187,23 +209,16 @@ function ReadBDFile(filename, filepath)
             break
         end
     end
-    # BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
-    # BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2], BldNd_BladesOut) #   This is how they did it previously, so I wonder if they did the same thing with   BeamDyn
+
     # nodeoutputstitleidx+3 is a general title
-    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+3:end])
-    # println("")
-    # println("rhoinf: ", rhoinf, "   type: ", typeof(rhoinf))
-    # println("PitchJ: ", PitchJ, "   type: ", typeof(PitchJ))
-    # println("PitchK: ", PitchK, "   type: ", typeof(PitchK))
-    # println("PitchC: ", PitchC, "   type: ", typeof(PitchC))
-    # println("geoparams: ", geoparams, "   type: ", typeof(geoparams))
+    nodeoutlist = readoutlist(lines[nodeoutputstitleidx+3:end])
 
 
-    return BDFile(Directory, Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fact, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, geoparams, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, OutList, NodeOutlist)
+    return BDFile(notes, echo, quasistaticinit, rhoinf, quadrature, refine, n_fract, dtbeam, load_retries, nrmax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, rotstates, member_total, kp_total, membernumber, kp_xr, kp_yr, kp_zr, initial_twist, order_elem, bldfile, usepitchact, pitchj, pitchk, pitchc, sumprint, outfmt, nnodeouts, outnd, outlist, nodeoutlist)
 end
 
 """
-    ReadBDBlade(filename, filepath)
+    read_bdblade(filename, filepath)
 
 Reads a BeamDyn blade file and creates an object containing the data. 
 
@@ -214,13 +229,10 @@ Reads a BeamDyn blade file and creates an object containing the data.
 ### Outputs
 - BDBlade - a BeamDyn Blade object. 
 """
-function ReadBDBlade(filename, filepath)
-    cd(filepath)
-    fi = open(filename, "r")
+function read_bdblade(filename::String, filepath::String)
+    fi = open(filepath*"/"*filename, "r")
     lines = readlines(fi)
     close(fi)
-
-    Directory = ["title"]
 
     # Line 1 is the title
     Notes = lines[2]
@@ -259,7 +271,7 @@ end
 ##############################################################
 
 """
-    WriteBDFile(bdfile, outputfile; outputpath=pwd())
+    write_bdfile(bdfile, outputfile; outputpath=pwd())
 
 Writes a BeamDyn struct to file. 
 
@@ -269,49 +281,71 @@ Writes a BeamDyn struct to file.
 - outputpath::String : Path to the desired write location, otherwise, will write at current location. 
 
 """
-function WriteBDFile(bdfile, outputfile; outputpath=pwd())
+function write_bdfile(bdfile::BDFile, outputfile::String; outputpath::String=pwd())
     lines = String[]
     line = string("-"^9, " BEAMDYN with OpenFAST INPUT FILE ", "-"^43)
     push!(lines,line)
-    push!(lines, bdfile.Notes)
+
+    push!(lines, bdfile.notes)
+
     line = string("-"^22, " SIMULATION CONTROL ", "-"^43)
     push!(lines,line)
-    line = string(formatword(bdfile.Echo;quotes=false),"   Echo             - Echo  input data to \"<RootName>.ech\"? (flag)")
+
+    line = string(formatword(bdfile.echo;quotes=false),"   Echo             - Echo  input data to \"<RootName>.ech\"? (flag)")
     push!(lines,line)
-    line = string(formatword(string(bdfile.QuasiStaticInit);quotes=false),"   QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
+
+    line = string(formatword(string(bdfile.quasistaticinit);quotes=false),"   QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
     push!(lines,line)
+
     line = string(formatword(string(bdfile.rhoinf);location="back",quotes=false),"   rhoinf           - Numerical damping parameter for generalized-alpha integrator")
     push!(lines,line)
+
     line = string(formatword(string(bdfile.quadrature);location="back", quotes=false),  "   quadrature       - Quadrature method: 1=Gaussian; 2=Trapezoidal (switch)")
     push!(lines,line)
+
     line = string(formatword(bdfile.refine;quotes=false),"   refine           - Refinement factor for trapezoidal quadrature (-) [DEFAULT = 1; used only when   quadrature=2]")
     push!(lines,line)
+
     line = string(formatword(bdfile.n_fract;quotes=false),"   n_fact           -   Factorization frequency for the Jacobian in N-R iteration(-) [DEFAULT = 5]")
     push!(lines,line)
-    line = string(formatword(bdfile.DTBeam;quotes=false),"   DTBeam           - Time step size (s)")
+
+    line = string(formatword(bdfile.dtbeam;quotes=false),"   DTBeam           - Time step size (s)")
     push!(lines,line)
+
     line = string(formatword(bdfile.load_retries;quotes=false),"   load_retries  -   Number of factored load retries before quitting the aimulation [DEFAULT = 20]")
     push!(lines,line)
-    line = string(formatword(bdfile.NRMax;quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
+
+    line = string(formatword(bdfile.nrmax;quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
     push!(lines,line)
+
     line = string(formatword(bdfile.stop_tol;quotes=false),"   stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]")
     push!(lines,line)
-    line = string(formatword(bdfile.tngt_stf_fd;quotes=false),"   tngt_stf_fd      -    Use finite differenced tangent stiffness matrix? (flag)")
+
+    temp = typeof(bdfile.tngt_stf_fd)
+    line = string(formatword("$temp";quotes=false),"   tngt_stf_fd      -    Use finite differenced tangent stiffness matrix? (flag)")
     push!(lines,line)
-    line = string(formatword(bdfile.tngt_stf_comp;quotes=false),"   tngt_stf_comp       - Compare analytical finite differenced tangent stiffness matrix? (flag)")
+
+    temp = typeof(bdfile.tngt_stf_comp)
+    line = string(formatword("$temp";quotes=false),"   tngt_stf_comp       - Compare analytical finite differenced tangent stiffness matrix? (flag)")
     push!(lines,line)
+
     line = string(formatword(bdfile.tngt_stf_pert;quotes=false),"   tngt_stf_pert       - Perturbation size for finite differencing (-) [DEFAULT = 1E-6]")
     push!(lines,line)
+
     line = string(formatword(bdfile.tngt_stf_difftol;quotes=false),"   tngt_stf_difftol - Maximum allowable relative difference between analytical and  fd tangent stiffness (-); [DEFAULT = 0.1]")
     push!(lines,line)
-    line = string(formatword(bdfile.RotStates;quotes=false),"   RotStates        -  Orient states in the rotating frame during linearization? (flag) [used only when     linearizing]")
+
+    line = string(formatword(bdfile.rotstates;quotes=false),"   RotStates        -  Orient states in the rotating frame during linearization? (flag) [used only when     linearizing]")
     push!(lines,line)
+
     line = string("-"^22, " GEOMETRY PARAMETER ", "-"^42)
     push!(lines, line)
     line = string(formatword(string(bdfile.member_total);location="back",   quotes=false),"   member_total    - Total number of members (-)")
     push!(lines,line)
+
     line = string(formatword(string(bdfile.kp_total);location="back", quotes=false),    "   kp_total        - Total number of key points (-) [must be at least 3]")
     push!(lines,line)
+
     if bdfile.member_total==1
         local line = string(formatpair(bdfile.membernumber[1]), "       - Member    number; Number of key points in this member ")
         push!(lines, line)
@@ -321,78 +355,89 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
         for i = 2:bdfile.member_total
             line = formatpair(bdfile.membernumber[i])
             push!(lines,line)
+
         end
     end
 
     line = "   kp_xr         kp_yr         kp_zr        initial_twist"
     push!(lines,line)
+
     line = "   (m)            (m)          (m)            (deg)"
     push!(lines,line)
-    mat = formatmatrix(bdfile.geoparams)
+
+    mat = formatmatrix(hcat(bdfile.kp_xr, bdfile.kp_yr, bdfile.kp_zr, bdfile.initial_twist))
     append!(lines, mat)
 
     line = string("-"^22, " MESH PARAMETER ", "-"^42)
     push!(lines, line)
+
     line = string(formatword(string(bdfile.order_elem);location="back", quotes=false),  "   order_elem     - Order of interpolation (basis) function (-)")
     push!(lines, line)
+
     line = string("-"^22, " MATERIAL PARAMETER ", "-"^39)
     push!(lines, line)
-    line = string(formatword(bdfile.BldFile;quotes=true, desiredlength=length(bdfile.BldFile)+2),"   BldFile - Name of file containing properties for blade (quoted    string)")
+
+    line = string(formatword(bdfile.bldfile;quotes=true, desiredlength=length(bdfile.bldfile)+2),"   BldFile - Name of file containing properties for blade (quoted    string)")
     push!(lines, line)
+
     line = string("-"^22, "PITCH ACTUATOR PARAMETERS", "-"^33)
     push!(lines, line)
-    line = string(formatword(bdfile.UsePitchAct;quotes=false),"   UsePitchAct -     Whether a pitch actuator should be used (flag)")
+
+    line = string(formatword(bdfile.usepitchact;quotes=false),"   UsePitchAct -     Whether a pitch actuator should be used (flag)")
     push!(lines, line)
-    line = string(formatword(string(bdfile.PitchJ);location="back", quotes=false),"     PitchJ      - Pitch actuator inertia (kg-m^2) [used only when UsePitchAct is true]    ")
+
+    line = string(formatword(string(bdfile.pitchj);location="back", quotes=false),"     PitchJ      - Pitch actuator inertia (kg-m^2) [used only when UsePitchAct is true]    ")
     push!(lines, line)
-    line = string(formatword(string(bdfile.PitchK);location="back", quotes=false),"     PitchK      - Pitch actuator stiffness (kg-m^2/s^2) [used only when UsePitchAct   is true]")
+
+    line = string(formatword(string(bdfile.pitchk);location="back", quotes=false),"     PitchK      - Pitch actuator stiffness (kg-m^2/s^2) [used only when UsePitchAct   is true]")
     push!(lines, line)
-    line = string(formatword(string(bdfile.PitchC);location="back", quotes=false),"     PitchC      - Pitch actuator damping (kg-m^2/s) [used only when UsePitchAct is    true]")
+
+    line = string(formatword(string(bdfile.pitchc);location="back", quotes=false),"     PitchC      - Pitch actuator damping (kg-m^2/s) [used only when UsePitchAct is    true]")
     push!(lines, line)
+
     line = string("-"^22, " OUTPUTS ", "-"^50)
     push!(lines, line)
-    line = string(formatword(bdfile.SumPrint;quotes=false),"   SumPrint       - Print   summary data to \"<RootName>.sum\" (flag)")
+
+    line = string(formatword(bdfile.sumprint;quotes=false),"   SumPrint       - Print   summary data to \"<RootName>.sum\" (flag)")
     push!(lines, line)
-    line = string(formatword(bdfile.OutFmt;quotes=false),"   OutFmt          - Format   used for text tabular output, excluding the time channel.")
+
+    line = string(formatword(bdfile.outfmt;quotes=false),"   OutFmt          - Format   used for text tabular output, excluding the time channel.")
     push!(lines, line)
-    line = string(formatword(string(bdfile.NNodeOuts);quotes=false),"       NNodeOuts      - Number of nodes to output to file [0 - 9] (-)")
+
+    line = string(formatword(string(bdfile.nnodeouts);quotes=false),"       NNodeOuts      - Number of nodes to output to file [0 - 9] (-)")
     push!(lines, line)
-    line = string(formatvector(bdfile.OutNd), "   OutNd          - Nodes whose values   will be output  (-)")
+
+    line = string(formatvector(bdfile.outnd), "   OutNd          - Nodes whose values   will be output  (-)")
     push!(lines, line)
+
     line = "          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
     push!(lines, line)
-    for i=1:length(bdfile.Outlist)
-       local line = string("\"", bdfile.Outlist[i], "\"")
+
+    for i=1:length(bdfile.outlist)
+       local line = string("\"", bdfile.outlist[i], "\"")
        push!(lines,line)
+
     end
     line = "END of input file (the word \"END\" must appear in the first 3columns of    this last OutList line)"
     push!(lines,line)
+
     line = "---------------------- NODE OUTPUTS --------------------------------------------"
     push!(lines,line)
-    # push!(lines, line)
-    # line = string(formatword(string(bdfile.BldNd_BladesOut);  location="back"quotes=false), "   BldNd_BladesOut  - Blades to output")
-    # push!(lines, line)
 
-    # if bdfile.BldNd_BladesOut>0
-    #     line = formatvector(bdfile.BldNd_BlOutNd)
-    # else
-    #     line = " "^11
-    # end
-    # line = string(line, "   - Blade nodes on each blade (currently unused)")
     line = "         99   BldNd_BlOutNd   - Blade nodes on each blade (currently    unused)" # Not sure if this section will get used because the other sections are   all the same, but for some odd reason, this nodal output section is different. 
     push!(lines, line)
     line = "                   OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)"
     push!(lines, line)
-    for i=1:length(bdfile.NodeOutlist)
-       local line = string("\"", bdfile.NodeOutlist[i], "\"")
+
+    for i=1:length(bdfile.nodeoutlist)
+       local line = string("\"", bdfile.nodeoutlist[i], "\"")
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first  columns of    this last OutList line)"
     push!(lines,line)
 
-    cd(outputpath)
     ## Write lines to file
-    fi = open(outputfile,"w+")
+    fi = open(outputpath*"/"*outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
          write(fi,lines[i])
@@ -402,7 +447,20 @@ function WriteBDFile(bdfile, outputfile; outputpath=pwd())
     close(fi)
 end
 
-function WriteBDBlade(bdblade, outputfile; outputpath=pwd())
+"""
+    write_bdblade(bdblade, outputfile; outputpath=pwd())
+
+Writes a bdblade object to file. 
+
+### Inputs:
+- bdblade::BDBlade - A BeamDyn blade object
+- outputfile::String - The desired name of the written file. 
+- outputpath::String - The desired location of the written file. 
+
+### Outputs:
+-  N/A - A file will be written. 
+"""
+function write_bdblade(bdblade::BDBlade, outputfile::String; outputpath::String=pwd())
     lines = String[]
     line = string("-"^9, " BEAMDYN V1.00.* INDIVIDUAL BLADE INPUT FILE ", "-"^43)
     push!(lines,line)
@@ -446,9 +504,8 @@ function WriteBDBlade(bdblade, outputfile; outputpath=pwd())
         push!(lines, "")
     end
 
-    cd(outputpath)
     ## Write lines to file
-    fi = open(outputfile,"w+")
+    fi = open(outputpath*"/"*outputfile,"w+")
     i = 1
     for i = 1:length(lines)-1
          write(fi,lines[i])

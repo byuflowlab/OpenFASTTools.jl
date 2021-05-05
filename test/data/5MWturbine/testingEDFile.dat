@@ -1,29 +1,29 @@
 ------- ELASTODYN v1.03.* INPUT FILE -------------------------------------------
 NREL 5.0 MW Baseline Wind Turbine for Use in Offshore Analysis. Properties from Dutch Offshore Wind Energy Converter (DOWEC) 6MW Pre-Design (10046_009.pdf) and REpower 5M 5MW (5m_uk.pdf)
 ---------------------- SIMULATION CONTROL --------------------------------------
-False         Echo        - Echo input data to "<RootName>.ech" (flag)
+false         Echo        - Echo input data to "<RootName>.ech" (flag)
           3   Method      - Integration method: {1: RK4, 2: AB4, or 3: ABM4} (-)
-"DEFAULT"     DT          - Integration time step (s)
+"Default"     DT          - Integration time step (s)
 ---------------------- ENVIRONMENTAL CONDITION ---------------------------------
     9.80665   Gravity     - Gravitational acceleration (m/s^2)
 ---------------------- DEGREES OF FREEDOM --------------------------------------
-True          FlapDOF1    - First flapwise blade mode DOF (flag)
-True          FlapDOF2    - Second flapwise blade mode DOF (flag)
-True          EdgeDOF     - First edgewise blade mode DOF (flag)
-False         TeetDOF     - Rotor-teeter DOF (flag) [unused for 3 blades]
-True          DrTrDOF     - Drivetrain rotational-flexibility DOF (flag)
-True          GenDOF      - Generator DOF (flag)
-True          YawDOF      - Yaw DOF (flag)
-True          TwFADOF1    - First fore-aft tower bending-mode DOF (flag)
-True          TwFADOF2    - Second fore-aft tower bending-mode DOF (flag)
-True          TwSSDOF1    - First side-to-side tower bending-mode DOF (flag)
-True          TwSSDOF2    - Second side-to-side tower bending-mode DOF (flag)
-False         PtfmSgDOF   - Platform horizontal surge translation DOF (flag)
-False         PtfmSwDOF   - Platform horizontal sway translation DOF (flag)
-False         PtfmHvDOF   - Platform vertical heave translation DOF (flag)
-False         PtfmRDOF    - Platform roll tilt rotation DOF (flag)
-False         PtfmPDOF    - Platform pitch tilt rotation DOF (flag)
-False         PtfmYDOF    - Platform yaw rotation DOF (flag)
+true          FlapDOF1    - First flapwise blade mode DOF (flag)
+true          FlapDOF2    - Second flapwise blade mode DOF (flag)
+true          EdgeDOF     - First edgewise blade mode DOF (flag)
+false         TeetDOF     - Rotor-teeter DOF (flag) [unused for 3 blades]
+true          DrTrDOF     - Drivetrain rotational-flexibility DOF (flag)
+true          GenDOF      - Generator DOF (flag)
+true          YawDOF      - Yaw DOF (flag)
+true          TwFADOF1    - First fore-aft tower bending-mode DOF (flag)
+true          TwFADOF2    - Second fore-aft tower bending-mode DOF (flag)
+true          TwSSDOF1    - First side-to-side tower bending-mode DOF (flag)
+true          TwSSDOF2    - Second side-to-side tower bending-mode DOF (flag)
+false         PtfmSgDOF   - Platform horizontal surge translation DOF (flag)
+false         PtfmSwDOF   - Platform horizontal sway translation DOF (flag)
+false         PtfmHvDOF   - Platform vertical heave translation DOF (flag)
+false         PtfmRDOF    - Platform roll tilt rotation DOF (flag)
+false         PtfmPDOF    - Platform pitch tilt rotation DOF (flag)
+false         PtfmYDOF    - Platform yaw rotation DOF (flag)
 ---------------------- INITIAL CONDITIONS --------------------------------------
         0.0   OoPDefl     - Initial out-of-plane blade-tip displacement (meters)
         0.0   IPDefl      - Initial in-plane blade-tip deflection (meters)
@@ -103,15 +103,15 @@ ______________________ ROTOR-TEETER --------------------------------------------
   8.67637e8   DTTorSpr    - Drivetrain torsional spring (N-m/rad)
     6.215e6   DTTorDmp    - Drivetrain torsional damper (N-m/(rad/s))
 ---------------------- FURLING -------------------------------------------------
-False         Furling     - Read in additional model properties for furling turbine (flag) [must currently be FALSE)
-"unused"                              FurlFile    - Name of file containing furling properties (quoted string) [unused when Furling=False]
+false         Furling     - Read in additional model properties for furling turbine (flag) [must currently be FALSE)
+unused                                FurlFile    - Name of file containing furling properties (quoted string) [unused when Furling=False]
 ---------------------- TOWER ---------------------------------------------------
          20   TwrNodes    - Number of tower nodes used for analysis (-)
-"NREL5MWrefED_Tower.dat"              TwrFile     - Name of file containing tower properties (quoted string)
+NREL5MWrefED_Tower.dat                TwrFile     - Name of file containing tower properties (quoted string)
 ---------------------- OUTPUT --------------------------------------------------
-True          SumPrint    - Print summary data to "<RootName>.sum" (flag)
+true          SumPrint    - Print summary data to "<RootName>.sum" (flag)
           1   OutFile     - Switch to determine where output will be placed: {1: in module output file only; 2: in glue code output file only; 3: both} (currently unused)
-True         TabDelim    - Use tab delimiters in text tabular output file? (flag) (currently unused)
+true         TabDelim    - Use tab delimiters in text tabular output file? (flag) (currently unused)
 "ES10.3E2"    OutFmt      - Format used for text tabular output (except time).  Resulting field should be 10 characters. (quoted string) (currently unused)
         0.0   TStart      - Time to begin tabular output (s) (currently unused)
           1   DecFact     - Decimation factor for tabular output {1: output every time step} (-) (currently unused)
