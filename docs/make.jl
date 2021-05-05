@@ -6,6 +6,7 @@ makedocs(
             "Introduction" => "index.md", 
             "Quick Start" => "index.md"
         ],
+        repo="https://github.com/byuflowlab/OpenFASTsr.jl/blob/{commit}{path}#L{line}",
         sitename="OpenFASTsr",
         authors = "Adam Cardoza <adam.cardoza.online@gmail.com>",
         )
