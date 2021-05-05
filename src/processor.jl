@@ -194,7 +194,7 @@ function interpolate2dcurve(coords1, coords2, d)
 end
 
 """
-#### intergerfit(x, y, xnew)
+#### integerfit(x, y, xnew)
 Fit Integer values of Y.
 ### Inputs
 - x = x values 
@@ -209,13 +209,16 @@ The function requires x and xnew to be increasing order. Xnew need not be within
     the range of of x, however, values outside of the range will interpolated to
     the first value if below the range and the last value if after the range. 
 """
-function intergerfit(x, y, xnew)
+function integerfit(x, y, xnew)
     ynew = zeros(Int, length(xnew))
     for i=1:length(xnew)
         for j=1:length(x)
             if xnew[i]<= x[j]
                 ynew[i] = y[j]
                 break
+            end
+            if j==length(x)
+                ynew[i] = y[end]
             end
         end
     end
@@ -236,6 +239,7 @@ numbers - a 1D array of integers that represent the names you converted
 Note that this function is not case sensitive. Thus Afoil and afoil will receive the same number assignment. 
 """
 function nametonumber(list)
+    #TODO: This needs to be able to handle when we want the repeated names
     n = length(list)
     numbers = zeros(Int, n)
     uniquelist = unique(lowercase.(list))
@@ -248,6 +252,36 @@ function nametonumber(list)
         end
     end
     return numbers
+end
+
+function namefit(x, list, xnew)
+    n = length(list)
+    numbers = zeros(Int, n)
+    uniquelist = unique(lowercase.(list))
+    m = length(uniquelist)
+    for i = 1:n
+        for j = 1:m
+            if lowercase(list[i]) == uniquelist[j]
+                numbers[i] = j
+            end
+        end
+    end
+    newnums = integerfit(x, numbers, xnew)
+    # println("NAMEFIT")
+    # println("x: ",x)
+    # println("xnew: ", xnew)
+    # println("numbers: ", numbers)
+    # println("length newnums: ", length(newnums))
+    # println("newnums: ", newnums)
+    newnames = String[]
+    for i=1:length(newnums)
+        for j=1:length(uniquelist)
+            if newnums[i]==j
+                push!(newnames, uniquelist[j])
+            end
+        end
+    end
+    return newnames
 end
 
 """
@@ -291,3 +325,7 @@ function roottolocal(N, T, ϕ)
     Nstar = (T*tand(ϕ) + N)/(cosd(ϕ) + sind(ϕ)*tand(ϕ))
     Tstar = (T/cosd(ϕ)) - (tand(ϕ)*Nstar)
 end
+
+function remove!(a, item)
+    deleteat!(a, findall(x->x==item, a))
+  end

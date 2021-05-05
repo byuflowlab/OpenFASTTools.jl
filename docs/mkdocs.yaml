@@ -1,0 +1,26 @@
+site_name:        OpenFASTsr.jl
+repo_url:         http://github.com/byuflowlab/OpenFASTsr.jl
+site_description: A simple text wrapper for OpenFAST in julia
+site_author:      cardoza2
+
+theme:
+  name: cinder
+
+extra_css:
+  - assets/documenter.css
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML
+  - assets/mathjaxhelper.js
+  - documenter.js
+  - search.js
+
+markdown_extensions:
+  - extra
+  - tables
+  - fenced_code
+  - mdx_math
+  - admonition
+  - attr_list
+
+docs_dir: 'build'

@@ -8,14 +8,14 @@ using Printf
 using FLOWMath
 using DelimitedFiles
 
-include("structures.jl")
-include("internalfunctions.jl")
-include("reader.jl")
-include("writer.jl")
-include("creator.jl")
+include("GlueCode.jl")
+include("reading.jl")
+include("writing.jl")
 include("processor.jl")
 include("caller.jl")
-
-
+include("AeroDyn.jl")
+include("BeamDyn.jl")
+include("ElastoDyn.jl")
+include("InflowWind.jl")
 
 end # module
