@@ -6,7 +6,7 @@ Once you've successfully installed OpenFAST, a quick run through these examples 
 
 Let's start off with just running AeroDyn by itself. There are three files required to run AeroDyn, a driver file, an input file, and a blade file. We'll use the Unsteady Aerodynamics Experiment (UAE) 20 kW wind turbine as an example. 
 
-### AD Driver
+### ADDriver
 First, the driver file. The driver file provides the basic turbine description, operating conditions, and points the driver at the input file. So naturally we need to declare those things. 
 
 ```julia
@@ -31,16 +31,18 @@ ShearExp = 0.0 # dimensionless - Usually a shear exponent is included, but for s
 Tmax = 5.0 # seconds - simulation time
 dT = 0.1 # seconds - time step length
 NumCases = length(windspeed)
+```
 
+```julia
 ### AeroDyn Inputs
 Notes = "UAE 20kW Turbine 5/10/21 Adam Cardoza" # These notes will appear under the header of the driver file. Typically a short description is provided as well as the author and date.
 AD_InputFile = "20kWAD15.dat" # The exact name of the AeroDyn input file must be given.
 OutFileRoot = "20kWturbine" # The name of the output file is given. 
 OutFmt = "ES20.3E2" # I honestly don't know how this changes things, I don't know what the valid inputs are, but everything I've done uses this OutFmt (I don't know if changing this value will break by output reading functions). 
 
-Echo = false
-TabDel = true
-Beep = false
+Echo = false #Whether or not OpenFAST will generate a file that returns the inputs you used for a given run. 
+TabDel = true #Wheter the output file will be delimited with a tab or not. 
+Beep = false #Wheter OpenFAST will beep upon completion. 
 ```
 
 Then we can simply stick them into the ADDriver object for later use. 
@@ -50,9 +52,9 @@ Then we can simply stick them into the ADDriver object for later use.
 addriver = OpenFASTsr.ADDriver(Notes, Echo, AD_InputFile, NumBlades, HubRad, HubHt, Overhang, ShftTilt, Precone , OutFileRoot, TabDel, OutFmt, Beep, NumCases, windspeed, ShearExp, RPM, Pitch, Yaw, dT, Tmax)
 ```
 
-### AD File
+### ADFile
 
-### AD Blade
+### ADBlade
 
 ```julia
 geoprops = readdlm("./data/20kw corrected blade properties.txt")
@@ -80,3 +82,22 @@ radsafid = OpenFASTsr.namefit(afiddistro[:,1], afiddistro[:,2], rads)
 adblade, irads = OpenFASTsr.CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=50, notes = "20kW UAE Turbine", verbose=false)
 
 ```
+
+### Writing to File
+At this point, we can do what we want with the files now. Likely you'll want to use them in a simulation, so first we'll write the objects to file. 
+
+
+### Running AeroDyn
+
+
+### Reading the Output File(s)
+
+
+### Reading AeroDyn Files
+
+
+## Running OpenFAST
+Because you have to use a minimum of three modules (InflowWind, AeroDyn, and ElastoDyn), this is a little more involved. Luckily, it follows about the same procedure from before. 
+
+!!! tip
+    While reading and writing your files using OpenFASTsr can be useful, sometimes I just take an old input file and change it manually (especially if I don't plan on making lots of changes). 
