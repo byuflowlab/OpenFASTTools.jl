@@ -6,7 +6,7 @@ makedocs(
         pages = [
             "Introduction" => "index.md", 
             "Quick Start" => "quickstart.md",
-            "Guided Examples" => "guidedexamples.md"
+            "Guided Examples" => "guidedexamples.md",
             "API Reference" => "reference.md"
         ],
         repo="https://github.com/byuflowlab/OpenFASTsr.jl/blob/{commit}{path}#L{line}",
