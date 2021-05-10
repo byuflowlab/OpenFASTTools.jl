@@ -34,7 +34,7 @@ mutable struct ADfile{TS, TB, TF, TI}
     ind_toler::TF
     maxiter::TI
     dbemt_mod::TI
-    tau1_const::TI
+    tau1_const::TF
     olaf_inputfilename::TS
     uamod::TI
     flookup::TB
@@ -244,7 +244,7 @@ end
 ################## READING FUNCTIONS #########################
 ##############################################################
 """
-    read_adfile(filename, filepath; version=15)
+    read_adfile(filename, filepath)
 
 Reads in AeroDyn input file and stores the options as a mutable struct.
 
@@ -1615,10 +1615,8 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     twist = twist.+(-twist[end]+pitch) #Correct twist to OpenFAST input style,  including blade pitch
     chords = chordfit.(locs)
     afid = integerfit(rads, radsafid, locs)
-    adprops = hcat(blrads, precone, sweep, preconeangle, twist, chords, afid)
-    directory = ["BlSpn" "BlCrvAC" "BlSwpAC" "BlCrvAng" "BlTwist" "BlChord" "BlAFID"]
 
-    adblade = ADBlade(directory, notes, n, blrads, precone, sweep,  preconeangle, twist, chords, afid)  
+    adblade = ADBlade(notes, n, blrads, precone, sweep,  preconeangle, twist, chords, afid)  
 
     # Find the nodes of the important idxs
     nodeidxs = []

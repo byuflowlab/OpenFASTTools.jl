@@ -1,0 +1,82 @@
+# Quick Start
+Once you've successfully installed OpenFAST, a quick run through these examples may be beneficial in learning how to use OpenFASTsr and OpenFAST. 
+
+
+## AeroDyn Only
+
+Let's start off with just running AeroDyn by itself. There are three files required to run AeroDyn, a driver file, an input file, and a blade file. We'll use the Unsteady Aerodynamics Experiment (UAE) 20 kW wind turbine as an example. 
+
+### AD Driver
+First, the driver file. The driver file provides the basic turbine description, operating conditions, and points the driver at the input file. So naturally we need to declare those things. 
+
+```julia
+### Turbine Description
+NumBlades = 2
+HubRad = 0.508 # meters
+HubHt = 12.192 # meters
+Overhang = -1.401 # meters
+Precone = 0.0 # degrees
+ShftTilt = 0.0 # degrees turbine tilt
+```
+
+I have provided several different constructors to allow for quick creation of driver files that have one operating condition (as shown here), or for conditions where everything but the wind speed changes, or for any combination of wind speed, rpm, pitch, yaw, shear exponent, simulation time, and time step. 
+
+```julia
+### Operating Conditions
+windspeed = 5.0 # m/s - average windspeed at hub height
+RPM = 72.1 # rotations/minute 
+Pitch = 2.98 # degrees
+Yaw = 0.0 # degrees
+ShearExp = 0.0 # dimensionless - Usually a shear exponent is included, but for such a small wind turbine, it shouldn't make much of a difference. 
+Tmax = 5.0 # seconds - simulation time
+dT = 0.1 # seconds - time step length
+NumCases = length(windspeed)
+
+### AeroDyn Inputs
+Notes = "UAE 20kW Turbine 5/10/21 Adam Cardoza" # These notes will appear under the header of the driver file. Typically a short description is provided as well as the author and date.
+AD_InputFile = "20kWAD15.dat" # The exact name of the AeroDyn input file must be given.
+OutFileRoot = "20kWturbine" # The name of the output file is given. 
+OutFmt = "ES20.3E2" # I honestly don't know how this changes things, I don't know what the valid inputs are, but everything I've done uses this OutFmt (I don't know if changing this value will break by output reading functions). 
+
+Echo = false
+TabDel = true
+Beep = false
+```
+
+Then we can simply stick them into the ADDriver object for later use. 
+
+
+```julia
+addriver = OpenFASTsr.ADDriver(Notes, Echo, AD_InputFile, NumBlades, HubRad, HubHt, Overhang, ShftTilt, Precone , OutFileRoot, TabDel, OutFmt, Beep, NumCases, windspeed, ShearExp, RPM, Pitch, Yaw, dT, Tmax)
+```
+
+### AD File
+
+### AD Blade
+
+```julia
+geoprops = readdlm("./data/20kw corrected blade properties.txt")
+rads = Float64.(geoprops[:,1])
+radschords = Float64.(geoprops[:,4])
+radstwists = Float64.(geoprops[:,5])
+radscones = zeros(length(rads))
+radsconeangs = zeros(length(rads))
+radssweeps = zeros(length(rads))
+afiddistro = hcat(geoprops[:,1], geoprops[:,8])
+```
+
+```julia
+for i = 1:length(afiddistro[:,1]) #Need to skip over the transition foils to make the AFID numbers nice. 
+    if lowercase(afiddistro[i,2])=="transition"
+        afiddistro[i,2] = "s809"
+    end
+end
+
+radsafid = OpenFASTsr.namefit(afiddistro[:,1], afiddistro[:,2], rads)
+```
+
+```julia
+
+adblade, irads = OpenFASTsr.CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=50, notes = "20kW UAE Turbine", verbose=false)
+
+```
