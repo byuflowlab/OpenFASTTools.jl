@@ -4,7 +4,7 @@ Once you've successfully installed OpenFAST, a quick run through these examples 
 
 ## AeroDyn Only
 
-Let's start off with just running AeroDyn by itself. There are three files required to run AeroDyn, a driver file, an input file, and a blade file. We'll use the Unsteady Aerodynamics Experiment (UAE) 20 kW wind turbine as an example. 
+Let's start off with just running AeroDyn by itself. There are at least four files required to run AeroDyn, a driver file, an input file, a blade file, and an airfoil input file. We'll use the Unsteady Aerodynamics Experiment (UAE) 20 kW wind turbine as an example. 
 
 ### ADDriver
 First, the driver file. The driver file provides the basic turbine description, operating conditions, and points the driver at the input file. So naturally we need to declare those things. 
@@ -83,6 +83,14 @@ adblade, irads = OpenFASTsr.CreateAD15Blade(rads, radschords, radstwists, radsco
 
 ```
 
+### AirfoilInput Files
+
+
+!!! Tip
+    Correcting the airfoil polars is essential to obtaining accurate results from the BEM. I use [CCBlade's functions](https://flow.byu.edu/CCBlade.jl/stable/howto/#Airfoil-Data) to correct, extrapolate, and smooth airfoil data before creating my AirfoilInput files. 
+
+
+
 ### Writing to File
 At this point, we can do what we want with the files now. Likely you'll want to use them in a simulation, so first we'll write the objects to file. 
 
@@ -97,7 +105,19 @@ At this point, we can do what we want with the files now. Likely you'll want to 
 
 
 ## Running OpenFAST
-Because you have to use a minimum of three modules (InflowWind, AeroDyn, and ElastoDyn), this is a little more involved. Luckily, it follows about the same procedure from before. 
+Because you have to use a minimum of three modules (InflowWind, AeroDyn, and ElastoDyn), this is a little more involved. Luckily, it follows about the same procedure from before. A file for the glue code is also required. 
 
 !!! tip
     While reading and writing your files using OpenFASTsr can be useful, sometimes I just take an old input file and change it manually (especially if I don't plan on making lots of changes). 
+
+### OpenFAST Glue Code
+
+
+### InflowWind
+
+
+### AeroDyn
+Now, because we are using the OpenFAST glue code to drive AeroDyn, we don't need the ADDriver file, but we will still need the ADInput, ADBlade, and AirfoilInput files. We can just use the same files from before. 
+
+### ElastoDyn
+

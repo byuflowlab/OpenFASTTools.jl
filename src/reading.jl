@@ -312,7 +312,7 @@ function readnumber(line)
     end
 end
 
-function readoutlist(lines)
+function readoutlist(lines) #Todo: This function needs to be upgraded to recognize words with or without quotation marks. 
     count = 0
     outlist = String[]
     for i =1:length(lines)

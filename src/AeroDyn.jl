@@ -307,7 +307,7 @@ function read_adfile(filename, filepath)
     MaxIter = parse(Int, lines[31][1:14])
     #Line 32 is a general title
     DBEMT_Mod = parse(Int, lines[33][1:14])
-    tau1_const = parse(Int, lines[34][1:14])
+    tau1_const = parse(Float64, lines[34][1:14])
     #Line 35 is a general title
     OLAFInputFileName = fetchword(lines[36];lengthofword=length(lines[14]))
     #Line 37 is a general title
@@ -423,20 +423,32 @@ file.
 - aerodata::Aerodata
 
 """
-function read_aerodata(filename, filepath)
+function read_aerodata(filename) #(filename, filepath) #Todo: This is broken and doesn't read every aerodata file. 
     # cd(filepath)
-    fi = open(filepath*"/"*filename, "r")
+    # fi = open(filepath*"/"*filename, "r")
+    fi = open(filename, "r")
     lines = readlines(fi)
     close(fi)
 
+    # # Eliminate the comments from the file so we don't have to deal with multi-line comments
+    # lines = String[]
+    # for i=1:length(lined)
+    #     # println(lined[i])
+    #     if lined[i][1]!='!'
+    #         line = lined[i]
+    #         push!(lines,line)
+    #     end
+    # end
+
     flag = false
     j = 1
-    while flag
+    while flag #I'm not really sure what I'm doing here. I bet there is a better way to read and parse all of these files. 
         if contains(lines[j], "Number of airfoil tables")
             break
         end
         j += 1
     end
+    
     Notes = join(lines[1:j])
     NumAirfoils = parse(Int,lines[3][1:firstletter(lines[3])-1])
     TableID = Int(parse(Float64,lines[4][1:firstletter(lines[4])-1]))
@@ -488,9 +500,10 @@ This function reads in the airfoil input file, which is similar to the aerodata 
 - airfoilinput::AirfoilInput
 
 """
-function read_airfoilinput(filename, filepath)
+function read_airfoilinput(filename) #(filename, filepath)
     
-    fi = open(filepath*"/"*filename, "r")
+    # fi = open(filepath*"/"*filename, "r")
+    fi = open(filename, "r")
     lined = readlines(fi)
     close(fi)
 
@@ -529,61 +542,61 @@ function read_airfoilinput(filename, filepath)
         C_nalpha = parse(Float64,lines[13][1:14])
         
         if contains(lowercase(lines[14][1:14]), "d")
-            T_f0 = NaN
+            T_f0 = 3.0
         else
             T_f0 = parse(Float64,lines[14][1:14])
         end
         
         if contains(lowercase(lines[15][1:14]), "d")
-            T_V0 = NaN
+            T_V0 = 6.0
         else
             T_V0 = parse(Float64,lines[15][1:14])
         end
         
         if contains(lowercase(lines[16][1:14]), "d")
-            T_p = NaN
+            T_p = 1.7
         else
             T_p = parse(Float64,lines[16][1:14])
         end
         
         if contains(lowercase(lines[17][1:14]), "d")
-            T_VL = NaN
+            T_VL = 11.0
         else
             T_VL = parse(Float64,lines[17][1:14])
         end
         
         if contains(lowercase(lines[18][1:14]), "d")
-            b1 = NaN
+            b1 = 0.14
         else
             b1 = parse(Float64,lines[18][1:14]) 
         end
         
         if contains(lowercase(lines[19][1:14]), "d")
-            b2 = NaN
+            b2 = 0.53
         else
             b2 = parse(Float64,lines[19][1:14])
         end
         
         if contains(lowercase(lines[20][1:14]), "d")
-            b5 = NaN
+            b5 = 5.0
         else
             b5 = parse(Float64,lines[20][1:14])
         end
         
         if contains(lowercase(lines[21][1:14]), "d")
-            A1 = NaN
+            A1 = 0.3
         else
             A1 = parse(Float64,lines[21][1:14])
         end
         
         if contains(lowercase(lines[22][1:14]), "d")
-            A2 = NaN
+            A2 = 0.7
         else
             A2 = parse(Float64,lines[22][1:14])
         end
         
         if contains(lowercase(lines[23][1:14]), "d")
-            A5 = NaN
+            A5 = 1.0
         else
             A5 = parse(Float64,lines[23][1:14])
         end
@@ -596,7 +609,7 @@ function read_airfoilinput(filename, filepath)
         Cn2 = parse(Float64,lines[29][1:14])
         
         if contains(lowercase(lines[30][1:14]), "d")
-            St_sh = NaN
+            St_sh = 0.19
         else
             St_sh = parse(Float64,lines[30][1:14])
         end
@@ -610,19 +623,19 @@ function read_airfoilinput(filename, filepath)
         k1_hat = parse(Float64,lines[37][1:14])
         
         if contains(lowercase(lines[38][1:14]), "d")
-            x_cp_bar = NaN
+            x_cp_bar = 0.2
         else
             x_cp_bar = parse(Float64,lines[38][1:14])
         end
         
         if contains(lowercase(lines[39][1:14]), "d")
-            UACutout = NaN
+            UACutout = 45.0
         else
             UACutout = parse(Float64, lines[39][1:14])
         end
         
         if contains(lowercase(lines[40][1:14]), "d")
-            filtCutOff = NaN
+            filtCutOff = 20.0
         else
             filtCutOff = parse(Float64, lines[40][1:14])
         end
@@ -1606,7 +1619,7 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
 
     # Convert from blfracs to radius positions and their radial locations
     blrads = blfracs.*(bladelength) #Note do not use this to get any property values    with the fits.
-    locs = blrads.+0.508 #The rads location of the blrads nodes
+    locs = blrads.+0.508 #The rads location of the blrads nodes #Todo: What is this 0.508? This looks like a hard coded thing.... which should probably be hub radius. 
     n = length(blrads)
     precone = conefit.(locs)
     sweep = sweepfit.(locs)
@@ -1715,4 +1728,53 @@ function CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimAre
     filtCutOff="Default"
     NumAlf, n = size(Polar)
     return AirfoilInput(InterpOrd, NonDimArea, NumCoords, BL_file, NumTabs, Re, UserProp, InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1, b2, b5, A1, A2, A5, S1, S2, S3, S4, Cn1, Cn2, St_sh, Cd0, Cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, UACutout, filtCutOff, NumAlf, Polar)
+end
+
+export make_dsairfoil
+
+function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=-3, separationpointfun::Symbol=:Fit) 
+    if radians || maximum(afi.aoa)<=pi
+        aoa = afi.aoa
+    else
+        aoa = afi.aoa.*(pi/180)
+    end
+    polar = hcat(aoa, afi.cl, afi.cd, afi.cm)
+
+    cl = Akima(polar[:,1], polar[:,2])
+    cd = Akima(polar[:,1], polar[:,3])
+    cm = Akima(polar[:,1], polar[:,4])
+
+    dcldalpha = afi.c_nalpha #TODO: Is this in the correct units? I think it is. It's close to 2pi. -> It appears that the input file wants it in radians, as we want. 
+    alpha0 = afi.alpha0*(pi/180)
+    alphasep = sort([afi.alpha2, afi.alpha1].*(pi/180))
+
+    A = [afi.a1, afi.a2]
+    b = [afi.b1, afi.b2]
+    T = [afi.t_p, afi.t_f0, afi.t_v0, afi.t_vl]
+
+    # 
+    if separationpointfun==:Fit
+        sfun = DS.ADFSP(polar, alpha0, alphasep, dcldalpha)
+
+    elseif separationpointfun==:Fun
+        S = [afi.s1, afi.s2, afi.s3, afi.s4]
+        sfun = DS.ADSP(S)
+
+    else
+        @warn("make_dsairfoil() only acts on a :Fit or :Fun argument for calculating the separation point. Returning to default (:Fit).")
+        sfun = DS.ADFSP(polar, alpha0, alphasep, dcldalpha)
+
+    end
+
+    xcp = afi.x_cp_bar
+
+    airfoil = DS.Airfoil(polar, cl, cd, cm, dcldalpha, alpha0, alphasep, A, b, T, sfun, xcp)
+
+    A5 = afi.a5
+    b5 = afi.b5
+    Tsh = afi.st_sh
+    eta = afi.eta_e
+    constants = [zeta, A5, b5, Tsh, eta]
+
+    return airfoil, constants
 end

@@ -80,10 +80,10 @@ mutable struct BDBladeNode{TF}
     iflp::TF
     iplr::TF
 
-    function BDBlade(frac::TF, stiffmatrix::Array{TF, 2}, massmatrix::Array{TF, 2}, shredg::TF, shrflp::TF, ea::TF, eiedg::TF, eiflp::TF, gj::TF, e::TF, g::TF, j::TF, mass::TF, ycm::TF, xcm::TF, iedg::TF, icp::TF, iflp::TF, iplr::TF) where {TF}
+    # function BDBlade(frac::TF, stiffmatrix::Array{TF, 2}, massmatrix::Array{TF, 2}, shredg::TF, shrflp::TF, ea::TF, eiedg::TF, eiflp::TF, gj::TF, e::TF, g::TF, j::TF, mass::TF, ycm::TF, xcm::TF, iedg::TF, icp::TF, iflp::TF, iplr::TF) where {TF}
 
-        return new{TF}(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
-    end
+    #     return new{TF}(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
+    # end
 end
 
 """
@@ -114,9 +114,9 @@ function makenode(frac, stiffmat, massmat)
     EIedg = stiffmat[4,4]
     EIflp = stiffmat[5,5]
     GJ = stiffmat[6,6]
-    E = EIedg/iedg
+    E = 1.0 # EIedg/iedg #Todo: I don't think that this works... because that i should be the mass momentum of inertia. 
     G = 1.0
-    J = 1.0 #Isn't the iplr? 
+    J = 1.0 #Isn't that the iplr? No, because it is Ix + Iy, not ix + iy. It's the difference if mass is included or not. 
     
 
     return BDBladeNode(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
@@ -126,7 +126,7 @@ mutable struct BDBlade{TS, TF, TI}
     Notes::TS
     station_total::TI
     damp_type::TI
-    dampcoef::Array{TF,1}
+    dampcoef::Array{TF,1} #Length = 6
     nodes::Array{BDBladeNode,1}
 end
 
@@ -519,3 +519,108 @@ end
 ##############################################################
 ############### CREATING FUNCTIONS ###########################
 ##############################################################
+
+function make_element(x, points, stiffness, mass, Cab, damping)
+    # element length
+    DeltaL = LinearAlgebra.norm(points[2] - points[1])
+    # @show DeltaL
+    # @show x
+    
+    #Reorganize the openfast stiffness matrix into the form that GXBeam uses.
+    stiffness_gx = deepcopy(stiffness) #TODO: This will only work for diagonal dominate matrices.  
+    stiffness_gx[1,1] = stiffness[3,3]
+    stiffness_gx[3,3] = stiffness[1,1]
+    stiffness_gx[4,4] = stiffness[6,6]
+    stiffness_gx[6,6] = stiffness[4,4]
+
+    compliance = LinearAlgebra.inv(stiffness_gx) #TODO: It might be faster to manually invert the matrix. 
+ 
+    # element compliance matrix
+    C = SMatrix{6,6}(compliance)  
+
+    # element mass matrix
+    mu = mass[1,1]
+    xm2 = mass[2,6]/mu
+    xm3 = mass[3,4]/mu
+    i22 = mass[4,4]
+    i33 = mass[5,5]
+    i23 = -mass[5,4]
+
+    mass_gx = @SMatrix [
+             mu       0     0       0 mu*xm3 -mu*xm2;
+             0       mu     0  -mu*xm3     0      0;
+             0       0     mu   mu*xm2     0      0;
+             0  -mu*xm3 mu*xm2 i22+i33     0      0;
+          mu*xm3      0     0       0   i22   -i23;
+         -mu*xm2      0     0       0  -i23    i33]
+ 
+       
+     
+ 
+    mu = SVector(damping[1], damping[2], damping[3], damping[4], damping[5], damping[6]) #Damping coefficients
+     
+    return GXBeam.Element(DeltaL, x, C, mass_gx, Cab, mu) #For constant-mass-matrix branch
+    # return GXBeam.Element(DeltaL, x, C, mass_gx, Cab)
+end
+
+
+"""
+make_assembly(rhub, rtip, bdblade)
+
+Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assembly struct for use with the Rotors.jl package. 
+
+### Inputs:
+- rhub::TF - hub radius
+- rtip::TF - tip radius
+- bdblade::BDBlade - a BeamDyn blade struct
+
+### Outputs:
+- assembly::GXBeam.Assembly
+"""
+function make_assembly(rhub, rtip, bdblade)
+
+    np = length(bdblade.nodes) #Number of points
+    ne = np - 1 #Number of elements
+
+
+
+    L = rtip - rhub #Length of the blade
+
+    rvec = [L*bdblade.nodes[i].frac + rhub for i in 1:np]
+
+    points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. 
+
+    x_elements = [SVector((rvec[i]+rvec[i+1])/2, 0.0, 0.0) for i in 1:ne] #The xyz location of each of the structural nodes. 
+    
+    # element triad
+    Cab = @SMatrix [
+        1.0 0.0 0.0;
+         0.0 1.0 0.0;
+         0.0 0.0 1.0]
+
+    ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes. 
+    elements = [make_element(x_elements[i], points[i:i+1], bdblade.nodes[i].stiffmatrix, bdblade.nodes[i].massmatrix, Cab, bdblade.dampcoef) for i = 1:ne]
+
+    start = 1:ne
+    stop = 2:np
+     
+    return GXBeam.Assembly(points, start, stop, elements)
+end
+
+"""
+make_assembly(edfile, bdblade)
+
+Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assembly struct for use with the Rotors.jl package. 
+
+### Inputs:
+- edfile::EDFile - ElastoDyn file struct
+- bdblade::BDBlade - a BeamDyn blade struct
+
+### Outputs:
+- assembly::GXBeam.Assembly
+"""
+function make_assembly(edfile, bdblade)
+    rhub = edfile.hubrad
+    rtip = edfile.tiprad
+    return make_assembly(rhub, rtip, bdblade)
+end

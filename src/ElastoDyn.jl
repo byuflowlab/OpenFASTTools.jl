@@ -27,10 +27,10 @@ mutable struct EDFile{TS, TF, TI, TB}
     ptfmydof::TB
     oopdefl::TF
     ipdefl::TF
-    blpitchs::Array{TF, 1} 
+    blpitchs::Array{TF, 1} #Initial pitch
     teetdefl::TF
     azimuth::TF
-    rotspeed::TF
+    rotspeed::TF #RPM
     nacyaw::TF
     ttdspfa::TF
     ttdspss::TF
@@ -69,7 +69,7 @@ mutable struct EDFile{TS, TF, TI, TB}
     ptfmriner::TF
     ptfmpiner::TF
     ptfmyiner::TF
-    bldnodes::TI
+    bldnodes::TI #Number of blade nodes
     bldfiles::Array{TS, 1} 
     teetmod::TI
     teetdmpp::TF
@@ -389,7 +389,11 @@ function read_edfile(filename::String, filepath::String)
     bldnd_bladesout = parse(Int, lines[nodeoutputstitleidx+1][1:14])
     bldnd_bloutnd = readvector(lines[nodeoutputstitleidx+2], bldnd_bladesout) 
     # nodeoutputstitleidx+3 is a general title
-    nodeoutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
+    nodeoutlist = readoutlist(lines[nodeoutputstitleidx+4:end]) #Todo: This function needs to be upgraded to recognize words with or without quotation marks. 
+    # nnn = length(lines[nodeoutputstitleidx+4:end])
+    # for i = 1:nnn
+    #     println(lines[nodeoutputstitleidx+3+i])
+    # end
 
     return EDFile(notes, echo, method, dt, gravity, flapdof1, flapdof2, edgedof, teetdof, drtrdof, gendof, yawdof, twfadof1, twfadof2, twssdof1, twssdof2, ptfmsgdof, ptfmswdof, ptfmhvdof, ptfmrdof, ptfmpdof, ptfmydof, oopdefl, ipdefl, blpitchs, teetdefl, azimuth, rotspeed, nacyaw, ttdspfa, ttdspss, ptfmsurge, ptfmsway, ptfmheave, ptfmroll, ptfmpitch, ptfmyaw, numbl, tiprad, hubrad, precones, hubcm, undsling, delta3, azimb1up, overhang, shftgagl, shfttilt, naccmxyzn, ncimuxyzn, twr2shft, towerht, towerbsht, ptfmcmxyzt, ptfmrefzt, tipmasses, hubmass, hubiner, geniner, nacmass, nacyiner, yawbrmass, ptfmmass, ptfmriner, ptfmpiner, ptfmyiner, bldnodes, bldfiles, teetmod, teetdmpp, teetdmp, teetcdmp, teetsstp, teethstp, teetsssp, teethssp, gboxeff, gbratio, dttorspr, dttordmp, furling, furlfile, twrnodes, twrfile, sumprint, outfile, tabdelim, outfmt, tstart, decfact, ntwgages, twrgagnd, nblgages, bldgagnd, outlist, bldnd_bladesout, bldnd_bloutnd, nodeoutlist)
 end

@@ -1,12 +1,13 @@
 module OpenFASTsr
 
-greet() = print("Hello World!")
 
-# This wrapper just calls openFAST from the command line.
+# This wrapper just calls openFAST from the command line. 
 
-using Printf
-using FLOWMath
-using DelimitedFiles
+#Todo: I need to add the example files to the repo. 
+
+using Printf, FLOWMath, DelimitedFiles, GXBeam, StaticArrays, LinearAlgebra, DynamicStallModels
+
+DS = DynamicStallModels
 
 include("GlueCode.jl")
 include("reading.jl")
@@ -17,5 +18,6 @@ include("AeroDyn.jl")
 include("BeamDyn.jl")
 include("ElastoDyn.jl")
 include("InflowWind.jl")
+
 
 end # module
