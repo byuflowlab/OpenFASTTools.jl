@@ -4,6 +4,7 @@ module OpenFASTsr
 # This wrapper just calls openFAST from the command line. 
 
 #Todo: I need to add the example files to the repo. 
+#Todo: Where do I use LinearAlgebra? 
 
 using Printf, FLOWMath, DelimitedFiles, GXBeam, StaticArrays, LinearAlgebra, DynamicStallModels
 
