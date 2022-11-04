@@ -1,3 +1,194 @@
+
+"""
+removes tab characters and doublespaces
+"""
+function rmspaces(line)
+    line = replace(line, "\t" => " ")
+    # println("line: ", line)
+    while occursin("  ", line)
+        line = replace(line, "  "=>" ")
+        # println("line: ", line)
+    end
+
+    return line
+end
+
+function nospaces(line)
+    line = replace(line, "\t" => "")
+    # println("line: ", line)
+    while occursin(" ", line)
+        line = replace(line, " "=>"")
+        # println("line: ", line)
+    end
+    # println("\"", line, "\"")
+    return line
+end
+
+
+
+function cleanfile!(lines)
+    comment_idxs = Int[]
+    for i = 1:length(lines) #Iterate through lines and clean everything up. 
+        if occursin("---", lines[i]) #Flag title lines to get rid of them later. I can't get rid of them now, otherwise that'll throw of the iteration. 
+            push!(comment_idxs, i)
+            continue
+        elseif occursin("===", lines[i])
+            push!(comment_idxs, i)
+            continue
+        end
+
+        if occursin("!", lines[i]) #Remove comments #Todo: This didn't work on line 66
+            cidx = findfirst("!", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+        end
+
+        lines[i] = rmspaces(lines[i]) #Remove tabs and double spaces. 
+        lines[i] = strip(lines[i]) #Remove leading and trailing whitespace
+    end
+
+    for idx in reverse(comment_idxs) #Get rid of title lines
+        popat!(lines, idx)
+    end
+    return lines
+end
+
+
+
+function removecomment(line)
+    return strip(chopsuffix(line, line[findfirst("- ", line)[1]:end]))
+end
+
+function parseentry(word; tryint=false)
+    out = nothing
+    if tryint
+        out = tryparse(Int, word)
+    end
+
+    if isnothing(out)
+        out = tryparse(Float64, word)
+    end
+
+    if isnothing(out)
+        out = tryparse(Bool, word)
+    end
+
+    if isnothing(out)
+        if contains(word, ",")
+            try
+                out = vec(readdlm(IOBuffer(word), ','))
+            catch
+                out = nothing
+            end
+        else
+            out =nothing
+        end
+    end
+
+    if isnothing(out)
+        out = word
+    end
+
+    return out
+end
+
+
+
+function parseline(line_initial)
+    line = removecomment(line_initial)
+    # println("\"", line, "\"")
+    entryend = findlast(" ", line)[1]-1 #Todo. This will cause problem if the requested line is a vector. -> I'll make a function that does this functionality. Inside that it'll see if this space occurs before or after a comma. -> Or just use findlast().... because I've used strip(), then the last space that occurs, should be just before the key. 
+    entry = parseentry(line[1:entryend])
+    key = nospaces(line[entryend+1:end])
+    # println("\"", key, "\"")
+
+    return key, entry
+end
+
+function parsematrix(lines; nameheader=true, unitheader=true)
+    if nameheader
+        names = vec(readdlm(IOBuffer(strip(lines[1])),' '))
+        idx = 2
+    else
+        return cat(readdlm.(IOBuffer.(lines),' ')...,dims=1)
+    end
+
+    if unitheader
+        idx += 1
+    end
+
+    mat = cat(readdlm.(IOBuffer.(lines[idx:end]),' ')...,dims=1)
+
+    return names, mat
+end
+
+function findlistbounds(lines)
+    for i = 1:length(lines)
+        if occursin("end", lowercase.(lines[i]))
+            # println("Got here")
+            return 1:i
+        end
+    end
+
+    return 1:length(lines)
+end
+
+function readlist(lines)
+    
+    nl = length(lines)
+
+    # @show nl
+    blacklist = ["AFNames", "OutList"] 
+    for i = 1:length(blacklist), j = 1:nl
+        if occursin(blacklist[i], lines[j])
+            # @show j
+            startidx = findfirst(blacklist[i], lines[j])[1]
+            lines[j] = strip(lines[j][1:startidx-1])
+            break
+        end
+    end
+
+    outvec = String[]
+    for i = 1:nl
+        lines[i] = strip(lines[i], '\"')
+        if length(lines[i])<1
+            # println("Option a")
+            continue
+        elseif occursin("end", lowercase(lines[i]))
+            # println("Option b")
+            continue
+        elseif occursin(",", lines[i])
+            # println("Option c")
+            veci = readdlm.(IOBuffer.(lines[i]),',')
+            append!(outvec, veci)
+        else
+            # println("Option d")
+            push!(outvec, lines[i])
+        end
+    end
+
+    return outvec
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 """
 endofword(word; quotes=true)
 
@@ -424,19 +615,19 @@ function readvector(line)
     return cat(readdlm.(IOBuffer.(line))...,dims=1)
 end
 
-"""
-removes tab characters and doublespaces
-"""
-function rmspaces(line)
-    line = replace(line, "\t" => " ")
-    # println("line: ", line)
-    while occursin("  ", line)
-        line = replace(line, "  "=>" ")
-        # println("line: ", line)
-    end
+# """
+# removes tab characters and doublespaces
+# """
+# function rmspaces(line)
+#     line = replace(line, "\t" => " ")
+#     # println("line: ", line)
+#     while occursin("  ", line)
+#         line = replace(line, "  "=>" ")
+#         # println("line: ", line)
+#     end
 
-    return line
-end
+#     return line
+# end
 
 
 """
@@ -489,3 +680,14 @@ function seprows(line, m)
     # println("length: ", length(line))
     return rows
 end
+
+# function cleanfile!(lines)
+
+#     for i = 1:length(lines) #Get rid of comments
+#         if occursin("--", lines[i][1:6])
+#             popat!(lines, i)
+#         end
+#     end
+#     return lines
+# end
+

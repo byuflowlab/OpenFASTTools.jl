@@ -246,127 +246,74 @@ end
 """
     read_adfile(filename, filepath)
 
-Reads in AeroDyn input file and stores the options as a mutable struct.
+Reads in AeroDyn input file and stores the options as a dictionary.
 
 ### Inputs: 
 - filename::String - The name of the file. 
 - filepath::String - the path to the file. 
 
 ### Outputs: 
-- adfile::ADfile
+- adfile::Dict() - a dictionary using the variable names as strings for keys, and the variable as the value. 
 
 """
 function read_adfile(filename, filepath)
+    
     fi = open(filepath*"/"*filename, "r")
     lines = readlines(fi)
     close(fi)
 
-    ### Lines 1-44 are constant
-    # Title = lines[1]
-    Notes = lines[2]
-    #Line 3 is a general title
-    Echo = fetchword(lines[4]; adapt=true)
-    if contains(lowercase(lines[5][1:14]), "d")
-        DTAero = NaN
-    else
-        DTAero = parse(Float64, lines[5])
+    lines = cleanfile!(lines)
+
+    adfile = Dict()
+    adfile["Notes"] = lines[1]
+
+    ### General Options, Environmental Conditions, BEM theory options, DBEM theory options, OLAF, Beddoes-Leishman, and Airfoil Information sections
+    for i = 2:40
+        key, entry = parseline(lines[i])
+        adfile[key] = entry
     end
-    WakeMod = parse(Int, lines[6][1:14])
-    AFAeroMod = parse(Int, lines[7][1:14])
-    TwrPotent = parse(Int, lines[8][1:14])
-    TwrShadow = fetchword(lines[9]; adapt=true)
-    TwrAero = fetchword(lines[10]; adapt=true)
-    FrozenWake = fetchword(lines[11]; adapt=true)
-    CavitCheck = fetchword(lines[12]; adapt=true)
-    CompAA = fetchword(lines[13]; adapt=true)
-    AA_InputFile = fetchword(lines[14]; lengthofword=length(lines[14]))
-    #Line 15 is a general title
-    AirDens = parse(Float64, lines[16][1:14])
-    KinVisc = parse(Float64, lines[17][1:14])
-    SpdSound = parse(Float64, lines[18][1:14])
-    Patm = parse(Float64, lines[19][1:14])
-    Pvap = parse(Float64, lines[20][1:14])
-    FluidDepth = parse(Float64, lines[21][1:14])
-    #Line 22 is a general title
-    SkewMod = parse(Int, lines[23][1:14])
-    if contains(lowercase(lines[24][1:14]), 'd')
-        SkewModFactor = NaN
-    else
-        SkewModFactor = parse(Float64, lines[24][1:14])
+
+    ### Airfoil names section
+    adfile["AFNames"] = readlist(lines[41:41+Int(adfile["NumAFfiles"])-1])
+
+    ### Rotor/Blade Properties and Tower Influence and Aerodynamics sections
+    idx = 41+Int(adfile["NumAFfiles"])
+    for i = idx:idx+4
+        key, entry = parseline(lines[i])
+        adfile[key] = entry
     end
-    TipLoss = fetchword(lines[25]; adapt=true)
-    HubLoss = fetchword(lines[26]; adapt=true) #TODO: Maybe change fetchword to also parse numbers. That might be slick. Just no matter what goes in, one function to grab it. 
-    TanInd = fetchword(lines[27]; adapt=true)
-    AIDrag = fetchword(lines[28]; adapt=true)
-    TIDrag = fetchword(lines[29]; adapt=true)
-    if contains(lowercase(lines[30][1:14]), 'd')
-        IndToler = NaN
-    else
-        IndToler = parse(Float64, lines[30][1:14])
+
+    
+    ### Tower Matrix
+    twrnames, twrdata = parsematrix(lines[idx+5:idx+5+2+Int(adfile["NumTwrNds"])-1])
+    for i = 1:length(twrnames)
+        adfile[twrnames[i]] = twrdata[:,i]
     end
-    MaxIter = parse(Int, lines[31][1:14])
-    #Line 32 is a general title
-    DBEMT_Mod = parse(Int, lines[33][1:14])
-    tau1_const = parse(Float64, lines[34][1:14])
-    #Line 35 is a general title
-    OLAFInputFileName = fetchword(lines[36];lengthofword=length(lines[14]))
-    #Line 37 is a general title
-    UAMod = parse(Int, lines[38][1:14])
-    FLookup = fetchword(lines[39]; adapt=true)
-    #Line 40 is a general title
-    AFTabMod = parse(Int, lines[41][1:14])
-    InCol_Alfa = parse(Int, lines[42][1:14])
-    InCol_Cl = parse(Int, lines[43][1:14])
-    InCol_Cd = parse(Int, lines[44][1:14])
-    InCol_Cm = parse(Int, lines[45][1:14])
-    InCol_Cpmin = parse(Int, lines[46][1:14])
-    NumAFfiles = parse(Int, lines[47][1:14])
-    Foils = String[]
-    i = 1
-    for i = 1:NumAFfiles
-        foilname = fetchword(lines[47 + i];lengthofword=length(lines[47 + i]))
-        push!(Foils, foilname)
+
+
+    ### Outputs section
+    idx = idx+5+2+Int(adfile["NumTwrNds"])
+    for i = idx:idx+4
+        key, entry = parseline(lines[i])
+        adfile[key] = entry
     end
-    #Line 48+NumAFfiles is a general title
-    UseBlCm = fetchword(lines[49+NumAFfiles]; adapt=true)
-    Blades = String[]
-    idx = 49+NumAFfiles
-    i = 1
-    for i = 1:3
-       bladename = fetchword(lines[idx + i];lengthofword=length(lines[idx + i]))
-       push!(Blades, bladename)
+
+    outlist1idx = findlistbounds(lines[idx+5:end])
+    outputs = readlist(lines[idx+5:idx+5+outlist1idx[end]-1])
+    adfile["OutList"] = outputs
+
+    ### Nodal outputs
+    idx = idx+5+outlist1idx[end]
+    for i = idx:idx+1
+        key, entry = parseline(lines[i])
+        adfile[key] = entry
     end
-    #Line 53+NumAFfiles is a general title
-    NumTwrNds = parse(Int, lines[54 + NumAFfiles][1:14])
-    #Line 55+NumAFfiles is a matrix title
-    #Line 56+NumAFfiles is a matrix title
-    ##Read Twr Nodes matrix
-    for i = 57+NumAFfiles:56+NumAFfiles+NumTwrNds
-        lines[i] = rmspaces(lines[i])
-    end
-    TwrNds = cat(readdlm.(IOBuffer.(lines[57+NumAFfiles:56+NumAFfiles+NumTwrNds]),' ')...,dims=1) 
-    idx = NumAFfiles+NumTwrNds
-    #Line 57 + idx is a general title
-    SumPrint = fetchword(lines[58+idx]; adapt=true)
-    NBlOuts = parse(Int, lines[59+idx][1:14])
-    BlOutNd = readvector(lines[60+idx],NBlOuts) #Todo Can I replace read with the cat(readdlm) command? -> No need to. The cat(readdlm) command is built into the readvector command. 
-    NTwOuts = parse(Int, lines[61+idx][1:14])
-    TwOutNd = readvector(lines[62+idx])
-    #Line 63+idx is a general title
-    Outlist = readoutlist(lines[64+idx:end])
-    # Node Outputs (Can't tell where the end, no way to hint how many   outputs we're looking at) 
-    nodeoutputstitleidx = 0 
-    for i = 1:length(lines)
-        if lowercase(lines[i][1:3]) == "end"
-            nodeoutputstitleidx = i+1 #This is the title index
-            break
-        end
-    end
-    BldNd_BladesOut = parse(Int, lines[nodeoutputstitleidx+1][1:14])
-    BldNd_BlOutNd = readvector(lines[nodeoutputstitleidx+2],    BldNd_BladesOut) 
-    # nodeoutputstitleidx+3 is a general title
-    NodeOutlist = readoutlist(lines[nodeoutputstitleidx+4:end])
-    return ADfile(Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
+
+    outlist2idx = findlistbounds(lines[idx+2:end])
+    outlist = readlist(lines[idx+2:idx+2+outlist2idx[end]-1])
+    adfile["SectionOutlist"] = outlist
+
+    return adfile
 end
 
 """
@@ -379,7 +326,7 @@ This function navigates to the location of the file given, and reads in the name
     filepath - A string of the path to the file
 
 ### Outputs: 
-    adblade - an immutable struct of the AD blade file
+    adblade - a dictionary of the AD blade file variables
 
 """
 function read_adblade(filename, filepath)
@@ -387,24 +334,19 @@ function read_adblade(filename, filepath)
     lines = readlines(fi)
     close(fi)
 
-    Notes = lines[2]
-    #Line 3 is a general title
-    NumBlNds = parse(Int, lines[4][1:14])
-    #Lines 5-6 are general titles
-    for i = 7:6+NumBlNds
-        lines[i] = rmspaces(lines[i])
-    end
-    BldProps = cat(readdlm.(IOBuffer.(lines[7:6+NumBlNds]),' ')...,dims=1) #readmatrix(lines[7:6+NumBlNds], 7) #This is not an error, I overloaded the function readmatrix. 
-    BlSpn = BldProps[:,1]
-    BlCrvAC = BldProps[:,2]
-    BlSwpAC = BldProps[:,3]
-    BlCrvAng = BldProps[:,4]
-    BlTwist = BldProps[:,5]
-    BlChord = BldProps[:,6]
-    BlAFID = Int.(BldProps[:,7])
+    lines = cleanfile!(lines)
 
-    adblade = ADBlade(Notes, NumBlNds, BlSpn, BlCrvAC, BlSwpAC,
-                BlCrvAng, BlTwist, BlChord, BlAFID)
+    adblade = Dict()
+    adblade["Notes"] = lines[1]
+
+    key, entry = parseline(lines[2])
+    adblade[key] = entry
+
+    bladenames, bladedata = parsematrix(lines[3:3+2+Int(adblade["NumBlNds"])-1])
+
+    for i = 1:length(bladenames)
+        adblade[bladenames[i]] = bladedata[:,i]
+    end
     return adblade
 end
 
@@ -728,7 +670,7 @@ Returns an ADDriver object by reading a ADDriver input file. Note that the drive
 - filepath::String - The path to the file to be read, not including the filename in the path
 
 ### Outputs
-- addriver - the read AD driver file object
+- addriver - a dictionary containing the AD driver file entries
 
 ### Notes
 - Note that the reading function moves you to the directory of the file to be read. 
@@ -739,40 +681,28 @@ function read_addriver(filename::String, filepath::String)
     lines = readlines(fi)
     close(fi)
 
-    #Line 1 is the main title
-    Notes = lines[2]
-    #Line 3 is the input configuration title
-    Echo = fetchword(lines[4]; adapt=true)
-    AD_InputFile = fetchword(lines[5]; lengthofword=length(lines[5])) 
-    NumBlades = parse(Int, lines[7][1:14])
-    HubRad = parse(Float64, lines[8][1:14])
-    HubHt = parse(Float64, lines[9][1:14])
-    Overhang = parse(Float64, lines[10][1:14])
-    ShftTilt = parse(Float64, lines[11][1:14])
-    Precone = parse(Float64, lines[12][1:14])
-    #Line 13 is the I/O Settings title
-    OutFileRoot = fetchword(lines[14]; lengthofword=length(lines[14])) 
-    TabDel = fetchword(lines[15]; adapt=true)
-    OutFmt = fetchword(lines[16])  
-    Beep = fetchword(lines[17]; adapt=true)
-    #Line 18 is the combined-case Analysis title
-    NumCases = parse(Int, lines[19][1:14])
-    #Line 20 is the wind data header
-    #Line 21 is the wind data units
-    # WindData = readmatrix(lines[22:21+NumCases], 7)
-    for i = 22:21+NumCases
-        lines[i] = rmspaces(lines[i])
-    end
-    WindData = cat(readdlm.(IOBuffer.(lines[22:21+NumCases]),' ')...,dims=1)
-    windspeed = WindData[:,1]
-    shearexp = WindData[:,2]
-    rpm = WindData[:,3]
-    pitch = WindData[:,4]
-    yaw = WindData[:,5]
-    dt = WindData[:,6]
-    tmax = WindData[:,7]
+    lines = cleanfile!(lines)
 
-    return ADDriver(Notes, Echo, AD_InputFile, NumBlades, HubRad, HubHt, Overhang, ShftTilt, Precone , OutFileRoot, TabDel, OutFmt, Beep, NumCases, windspeed, shearexp, rpm, pitch, yaw, dt, tmax)
+    addriver = Dict()
+    addriver["notes"] = lines[1]
+    for i = 2:38
+        key, entry = parseline(lines[i])
+        addriver[key] = entry
+    end
+
+    windnames, winddata = parsematrix(lines[39:41+Int(addriver["NumCases"])-1])
+
+    for i = 1:Int(addriver["NumCases"])
+        addriver[windnames[i]] = winddata[:,i]
+    end
+
+    idx = 41+Int(addriver["NumCases"])
+    for i = idx:length(lines)
+        key, entry = parseline(lines[i])
+        addriver[key] = entry
+    end
+
+    return addriver
 end
 
 
