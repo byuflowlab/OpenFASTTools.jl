@@ -26,12 +26,12 @@ False           Echo         - Echo input parameters to "<rootname>.ech"?
         True    BasicHAWTFormat(1) - Flag to switch between basic or generic input format {True: next 7 lines are basic inputs, False: Base/Twr/Nac/Hub/Bld geometry and motion must follow}
        0,0,0    BaseOriginInit(1) - Coordinate of tower base in base coordinates (m)
            3    NumBlades(1)    - Number of blades (-)
-          3.    HubRad(1)       - Hub radius (m)
-      140.82513 HubHt(1)        - Hub height (m)
-          -7    Overhang(1)     - Overhang (m)
-          -6    ShftTilt(1)     - Shaft tilt (deg)
-          -4    Precone(1)      - Blade precone (deg)
-     3.09343    Twr2Shft(1)     - Vertical distance from the tower-top to the rotor shaft (m)
+         1.5    HubRad(1)       - Hub radius (m)
+       89.56    HubHt(1)        - Hub height (m)
+     -5.0191    Overhang(1)     - Overhang (m)
+         0.0    ShftTilt(1)     - Shaft tilt (deg)
+         2.5    Precone(1)      - Blade precone (deg)
+         1.0    Twr2Shft(1)     - Vertical distance from the tower-top to the rotor shaft (m)
 ----- Turbine(1) Motion [used only when AnalysisType=1] ---------------------------------
 1               BaseMotionType(1)      - Type of motion prescribed for this base {0: fixed, 1: Sinusoidal motion, 2: arbitrary motion} (flag)
 1               DegreeOfFreedom(1)     - {1:xt, 2:yt, 3:zt, 4:theta_xt, 5:theta_yt, 6:theta_zt} [used only when BaseMotionType=1] (flag)
@@ -44,16 +44,13 @@ False           Echo         - Echo input parameters to "<rootname>.ech"?
 ----- Time-dependent Analysis [used only when AnalysisType=2, numTurbines=1] ------------
 "unused"         TimeAnalysisFileName - Filename containing time series (6 column: Time, HWndSpeed, PLExp, RotSpd, Pitch, Yaw). 
 -----  Combined-Case Analysis [used only when AnalysisType=3, numTurbines=1 -------------
-         4  NumCases     - Number of cases to run
+         1  NumCases     - Number of cases to run
 HWndSpeed  PLExp  RotSpd  Pitch   Yaw   dT    Tmax  DOF  Amplitude Frequency 
 (m/s)      (-)    (rpm)   (deg)  (deg)  (s)   (s)   (-)   (-)       (Hz)
-  8.0      0.0     6.      0.      0.   1.0   100    0    0          0 
-  8.0      0.0     6.      0.      0.   1.0   100    0    0          0 
-  9.0      0.1     7.      1.      0.   0.5   51     1    5.0        0.1 
-  9.0      0.2     8.      2.      0.   0.51  52     1    2.0        0.2 
+  10.0     0.01   11.444   0.0    0.0   0.1   10.0   0     0          0 
 ----- Output Settings -------------------------------------------------------------------
 "ES15.8E2"       OutFmt      - Format used for text tabular output, excluding the time channel.  Resulting field should be 10 characters. (quoted string)
-2                OutFileFmt  - Format for tabular (time-marching) output file (switch) {1: text file [<RootName>.out], 2: binary file [<RootName>.outb], 3: both}
+1                OutFileFmt  - Format for tabular (time-marching) output file (switch) {1: text file [<RootName>.out], 2: binary file [<RootName>.outb], 3: both}
 0                WrVTK       - VTK visualization data output: (switch) {0=none; 1=init; 2=animation}
 1                WrVTK_Type  - VTK visualization data type: (switch) {1=surfaces; 2=lines; 3=both}
 2                VTKHubRad   - HubRadius for VTK visualization (m)

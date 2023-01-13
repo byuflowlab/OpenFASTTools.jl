@@ -16,33 +16,33 @@ filename = "ad_primary_example.dat"
 # adfile = Dict()
 # adfile["Notes"] = lines[1]
 
-# for i = 2:40
+# for i = 2:41
 #     key, entry = of.parseline(lines[i])
 #     adfile[key] = entry
 # end
 
-# adfile["AFNames"] = of.readlist(lines[41:41+Int(adfile["NumAFfiles"])-1]) 
+# adfile["AFNames"] = of.readlist(lines[42:42+Int(adfile["NumAFfiles"])-1]) 
 
-# idx = 41+Int(adfile["NumAFfiles"])
+# idx = 42+Int(adfile["NumAFfiles"])
 # # @show idx
 
-# for i = idx:idx+4
+# for i = idx:idx+8
 #     key, entry = of.parseline(lines[i])
 #     adfile[key] = entry
 # end
 
 # # @show idx+4
 
-# twrnames, twrdata = of.parsematrix(lines[idx+5:idx+5+2+Int(adfile["NumTwrNds"])-1])
+# twrnames, twrdata = of.parsematrix(lines[idx+9:idx+9+2+Int(adfile["NumTwrNds"])-1])
 
-
-# for i = 1:length(twrnames)
+# #Todo: The parsematrix function only works when there aren't comments interjected in the header of the function.... :| I might need to come up with an alternate function. :| ... At least when it comes to getting the length of the matrix I'm trying to read. 
+# for i = 1:5 #length(twrnames)
 #     adfile[twrnames[i]] = twrdata[:,i]
 # end
 
 
 # ### Outputs section
-# idx = idx+5+2+Int(adfile["NumTwrNds"])
+# idx = idx+9+2+Int(adfile["NumTwrNds"])
 # # @show idx
 
 # for i = idx:idx+4

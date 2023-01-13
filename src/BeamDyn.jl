@@ -599,7 +599,7 @@ function make_assembly(rhub, rtip, bdblade)
          0.0 0.0 1.0]
 
     ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes. 
-    elements = [make_element(x_elements[i], points[i:i+1], bdblade.nodes[i].stiffmatrix, bdblade.nodes[i].massmatrix, Cab, bdblade.dampcoef) for i = 1:ne]
+    elements = [make_element(x_elements[i], points[i:i+1], bdblade.nodes[i].stiffmatrix, bdblade.nodes[i].massmatrix, Cab, 500*bdblade.dampcoef) for i = 1:ne]
 
     start = 1:ne
     stop = 2:np

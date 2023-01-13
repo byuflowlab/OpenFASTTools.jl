@@ -267,43 +267,50 @@ function read_adfile(filename, filepath)
     adfile = Dict()
     adfile["Notes"] = lines[1]
 
-    ### General Options, Environmental Conditions, BEM theory options, DBEM theory options, OLAF, Beddoes-Leishman, and Airfoil Information sections
-    for i = 2:40
+    for i = 2:41
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    ### Airfoil names section
-    adfile["AFNames"] = readlist(lines[41:41+Int(adfile["NumAFfiles"])-1])
+    adfile["AFNames"] = readlist(lines[42:42+Int(adfile["NumAFfiles"])-1]) 
 
-    ### Rotor/Blade Properties and Tower Influence and Aerodynamics sections
-    idx = 41+Int(adfile["NumAFfiles"])
-    for i = idx:idx+4
+    idx = 42+Int(adfile["NumAFfiles"])
+    # @show idx
+
+    for i = idx:idx+8
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    
-    ### Tower Matrix
-    twrnames, twrdata = parsematrix(lines[idx+5:idx+5+2+Int(adfile["NumTwrNds"])-1])
-    for i = 1:length(twrnames)
+    # @show idx+4
+
+    twrnames, twrdata = parsematrix(lines[idx+9:idx+9+2+Int(adfile["NumTwrNds"])-1])
+
+    #Todo: The parsematrix function only works when there aren't comments interjected in the header of the function.... :| I might need to come up with an alternate function. :| ... At least when it comes to getting the length of the matrix I'm trying to read. 
+    for i = 1:5 #length(twrnames)
         adfile[twrnames[i]] = twrdata[:,i]
     end
 
 
     ### Outputs section
-    idx = idx+5+2+Int(adfile["NumTwrNds"])
+    idx = idx+9+2+Int(adfile["NumTwrNds"])
+    # @show idx
+
     for i = idx:idx+4
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
     outlist1idx = findlistbounds(lines[idx+5:end])
+
+    # println("")
+    # println("This list")
     outputs = readlist(lines[idx+5:idx+5+outlist1idx[end]-1])
     adfile["OutList"] = outputs
 
-    ### Nodal outputs
     idx = idx+5+outlist1idx[end]
+
+    ### Nodal outputs
     for i = idx:idx+1
         key, entry = parseline(lines[i])
         adfile[key] = entry
@@ -692,7 +699,7 @@ function read_addriver(filename::String, filepath::String)
 
     windnames, winddata = parsematrix(lines[39:41+Int(addriver["NumCases"])-1])
 
-    for i = 1:Int(addriver["NumCases"])
+    for i = 1:length(windnames)
         addriver[windnames[i]] = winddata[:,i]
     end
 
@@ -1662,7 +1669,7 @@ end
 
 export make_dsairfoil
 
-function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=-3, separationpointfun::Symbol=:Fit) 
+function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima) 
     if radians || maximum(afi.aoa)<=pi
         aoa = afi.aoa
     else
@@ -1670,21 +1677,34 @@ function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=-3, separ
     end
     polar = hcat(aoa, afi.cl, afi.cd, afi.cm)
 
-    cl = Akima(polar[:,1], polar[:,2])
-    cd = Akima(polar[:,1], polar[:,3])
-    cm = Akima(polar[:,1], polar[:,4])
+    cl = interp(polar[:,1], polar[:,2])
+    cd = interp(polar[:,1], polar[:,3])
+    cm = interp(polar[:,1], polar[:,4])
 
-    dcldalpha = afi.c_nalpha #TODO: Is this in the correct units? I think it is. It's close to 2pi. -> It appears that the input file wants it in radians, as we want. 
+    cnvec = @. afi.cl*cos(aoa) + afi.cd*sin(aoa)
+    ccvec = @. afi.cl*sin(aoa) - afi.cd*cos(aoa)
+
+    cn = interp(aoa, cnvec)
+    cc = interp(aoa, ccvec)
+
+    dcldalpha = afi.c_nalpha #Todo: Get the dcldalpha. I don't know if I'll ever use it, but yeah. 
+    dcndalpha = afi.c_nalpha
+
     alpha0 = afi.alpha0*(pi/180)
     alphasep = sort([afi.alpha2, afi.alpha1].*(pi/180))
 
-    A = [afi.a1, afi.a2]
-    b = [afi.b1, afi.b2]
-    T = [afi.t_p, afi.t_f0, afi.t_v0, afi.t_vl]
+    A = [afi.a1, afi.a2, afi.a5]
+    b = [afi.b1, afi.b2, afi.b5]
+    T = [afi.t_p, afi.t_f0, afi.t_v0, afi.t_vl, afi.st_sh]
 
-    # 
+    eta = afi.eta_e
+
     if separationpointfun==:Fit
-        sfun = DS.ADFSP(polar, alpha0, alphasep, dcldalpha)
+        if model==:Original
+            sfun = DS.ADFSP(aoa, cnvec, ccvec, alpha0, alphasep, dcldalpha, eta)
+        elseif model == :Gonzalez
+            sfun = DS.ADGSP()
+        end
 
     elseif separationpointfun==:Fun
         S = [afi.s1, afi.s2, afi.s3, afi.s4]
@@ -1692,19 +1712,20 @@ function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=-3, separ
 
     else
         @warn("make_dsairfoil() only acts on a :Fit or :Fun argument for calculating the separation point. Returning to default (:Fit).")
-        sfun = DS.ADFSP(polar, alpha0, alphasep, dcldalpha)
+        sfun = DS.ADFSP(aoa, cn, cc, alpha0, alphasep, dcldalpha, eta)
 
     end
 
     xcp = afi.x_cp_bar
+    
 
-    airfoil = DS.Airfoil(polar, cl, cd, cm, dcldalpha, alpha0, alphasep, A, b, T, sfun, xcp)
+    airfoil = DS.Airfoil(polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, A, b, T, sfun, xcp, eta, zeta)
 
     A5 = afi.a5
     b5 = afi.b5
     Tsh = afi.st_sh
-    eta = afi.eta_e
-    constants = [zeta, A5, b5, Tsh, eta]
 
-    return airfoil, constants
+    # constants = [zeta, A5, b5, Tsh] #Todo: Move these into the airfoil. 
+
+    return airfoil #, constants
 end
