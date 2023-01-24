@@ -2,133 +2,133 @@
 ##################     STRUCTURES     ########################
 ##############################################################
 
-mutable struct BDFile{TS, TB, TF, TI}
-    notes::TS
-    echo::TB
-    quasistaticinit::TB
-    rhoinf::TF
-    quadrature::TI
-    refine::TI #has default
-    n_fract::TI #has default
-    dtbeam::TF #has default
-    load_retries::TI #has default
-    nrmax::TI #has default
-    stop_tol::TF #has default
-    tngt_stf_fd::Flag #has default  
-    tngt_stf_comp::Flag #has default 
-    tngt_stf_pert::TF #has default
-    tngt_stf_difftol::TF #has default
-    rotstates::TB
-    member_total::TI
-    kp_total::TI
-    membernumber::Array{Tuple{TI, TI}, 1}
-    kp_xr::Array{TF, 1}
-    kp_yr::Array{TF, 1}
-    kp_zr::Array{TF, 1}
-    initial_twist::Array{TF, 1}
-    order_elem::TI
-    bldfile::TS
-    usepitchact::TB
-    pitchj::TF
-    pitchk::TF
-    pitchc::TF
-    sumprint::TB
-    outfmt::TS
-    nnodeouts::TI
-    outnd::Array{TI, 1}
-    outlist::Array{TS, 1}
-    nodeoutlist::Array{TS, 1}
+# mutable struct BDFile{TS, TB, TF, TI}
+#     notes::TS
+#     echo::TB
+#     quasistaticinit::TB
+#     rhoinf::TF
+#     quadrature::TI
+#     refine::TI #has default
+#     n_fract::TI #has default
+#     dtbeam::TF #has default
+#     load_retries::TI #has default
+#     nrmax::TI #has default
+#     stop_tol::TF #has default
+#     tngt_stf_fd::Flag #has default  
+#     tngt_stf_comp::Flag #has default 
+#     tngt_stf_pert::TF #has default
+#     tngt_stf_difftol::TF #has default
+#     rotstates::TB
+#     member_total::TI
+#     kp_total::TI
+#     membernumber::Array{Tuple{TI, TI}, 1}
+#     kp_xr::Array{TF, 1}
+#     kp_yr::Array{TF, 1}
+#     kp_zr::Array{TF, 1}
+#     initial_twist::Array{TF, 1}
+#     order_elem::TI
+#     bldfile::TS
+#     usepitchact::TB
+#     pitchj::TF
+#     pitchk::TF
+#     pitchc::TF
+#     sumprint::TB
+#     outfmt::TS
+#     nnodeouts::TI
+#     outnd::Array{TI, 1}
+#     outlist::Array{TS, 1}
+#     nodeoutlist::Array{TS, 1}
 
-    function BDFile(Notes::TS, Echo::TB, QuasiStaticInit::TB, rhoinf::TF, quadrature::TI, refine::TI, n_fract::TI, DTBeam::TF, load_retries::TI, NRMax::TI, stop_tol::TF, tngt_stf_fd::Flag  , tngt_stf_comp::Flag , tngt_stf_pert::TF, tngt_stf_difftol::TF, RotStates::TB, member_total::TI, kp_total::TI, membernumber::Array{Tuple{TI, TI}, 1}, kp_xr::Array{TF, 1}, kp_yr::Array{TF, 1}, kp_zr::Array{TF, 1}, initial_twist::Array{TF, 1}, order_elem::TI, BldFile::TS, UsePitchAct::TB, PitchJ::TF, PitchK::TF, PitchC::TF, SumPrint::TB, OutFmt::TS, NNodeOuts::TI, OutNd::Array{TI, 1}, Outlist::Array{TS, 1}, NodeOutlist::Array{TS, 1}) where {TS, TB, TF, TI}
+#     function BDFile(Notes::TS, Echo::TB, QuasiStaticInit::TB, rhoinf::TF, quadrature::TI, refine::TI, n_fract::TI, DTBeam::TF, load_retries::TI, NRMax::TI, stop_tol::TF, tngt_stf_fd::Flag  , tngt_stf_comp::Flag , tngt_stf_pert::TF, tngt_stf_difftol::TF, RotStates::TB, member_total::TI, kp_total::TI, membernumber::Array{Tuple{TI, TI}, 1}, kp_xr::Array{TF, 1}, kp_yr::Array{TF, 1}, kp_zr::Array{TF, 1}, initial_twist::Array{TF, 1}, order_elem::TI, BldFile::TS, UsePitchAct::TB, PitchJ::TF, PitchK::TF, PitchC::TF, SumPrint::TB, OutFmt::TS, NNodeOuts::TI, OutNd::Array{TI, 1}, Outlist::Array{TS, 1}, NodeOutlist::Array{TS, 1}) where {TS, TB, TF, TI}
 
-        if length(kp_xr) != length(kp_yr) != length(kp_zr) != length(initial_twist)
-            error("Geometry Parameters not all the same length. - BeamDyn File")
-        end
+#         if length(kp_xr) != length(kp_yr) != length(kp_zr) != length(initial_twist)
+#             error("Geometry Parameters not all the same length. - BeamDyn File")
+#         end
 
-        if kp_total != length(kp_xr)
-            warning("Number of Key Points not correctly declared. - BeamDyn File")
-            kp_total = length(kp_xr)
-        end
+#         if kp_total != length(kp_xr)
+#             warning("Number of Key Points not correctly declared. - BeamDyn File")
+#             kp_total = length(kp_xr)
+#         end
 
-        return new{TS, TB, TF, TI}(Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fract, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, kp_xr, kp_yr, kp_zr, initial_twist, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, Outlist, NodeOutlist)
-    end
-end
+#         return new{TS, TB, TF, TI}(Notes, Echo, QuasiStaticInit, rhoinf, quadrature, refine, n_fract, DTBeam, load_retries, NRMax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, RotStates, member_total, kp_total, membernumber, kp_xr, kp_yr, kp_zr, initial_twist, order_elem, BldFile, UsePitchAct, PitchJ, PitchK, PitchC, SumPrint, OutFmt, NNodeOuts, OutNd, Outlist, NodeOutlist)
+#     end
+# end
 
 
-mutable struct BDBladeNode{TF}
-    frac::TF
-    stiffmatrix::Array{TF, 2}
-    massmatrix::Array{TF, 2}
+# # mutable struct BDBladeNode{TF}
+# #     frac::TF
+# #     stiffmatrix::Array{TF, 2}
+# #     massmatrix::Array{TF, 2}
 
-    #Stiffness Matrix values
-    shredg::TF
-    shrflp::TF
-    ea::TF
-    eiedg::TF
-    eiflp::TF
-    gj::TF
-    e::TF
-    g::TF
-    j::TF
+# #     #Stiffness Matrix values
+# #     shredg::TF
+# #     shrflp::TF
+# #     ea::TF
+# #     eiedg::TF
+# #     eiflp::TF
+# #     gj::TF
+# #     e::TF
+# #     g::TF
+# #     j::TF
 
-    #Mass Matrix values
-    mass::TF
-    ycm::TF
-    xcm::TF
-    iedg::TF
-    icp::TF
-    iflp::TF
-    iplr::TF
+# #     #Mass Matrix values
+# #     mass::TF
+# #     ycm::TF
+# #     xcm::TF
+# #     iedg::TF
+# #     icp::TF
+# #     iflp::TF
+# #     iplr::TF
 
-    # function BDBlade(frac::TF, stiffmatrix::Array{TF, 2}, massmatrix::Array{TF, 2}, shredg::TF, shrflp::TF, ea::TF, eiedg::TF, eiflp::TF, gj::TF, e::TF, g::TF, j::TF, mass::TF, ycm::TF, xcm::TF, iedg::TF, icp::TF, iflp::TF, iplr::TF) where {TF}
+# #     # function BDBlade(frac::TF, stiffmatrix::Array{TF, 2}, massmatrix::Array{TF, 2}, shredg::TF, shrflp::TF, ea::TF, eiedg::TF, eiflp::TF, gj::TF, e::TF, g::TF, j::TF, mass::TF, ycm::TF, xcm::TF, iedg::TF, icp::TF, iflp::TF, iplr::TF) where {TF}
 
-    #     return new{TF}(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
-    # end
-end
+# #     #     return new{TF}(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
+# #     # end
+# # end
 
-"""
-    makenode(frac, stiffmat, massmat)
+# """
+#     makenode(frac, stiffmat, massmat)
 
-Take the makings of a BeamDyn blade node and make it into a node. 
+# Take the makings of a BeamDyn blade node and make it into a node. 
 
-### Inputs
-- frac::Float64 - The percentage of the blade (not including hub distance) that the node is defined at. 
-- stiffmat::Array{Float64, 2} - The 6x6 array defining the flap, edge, and polar shear and extension stiffnesses. See the OpenFAST docs for a description of this matrix (and the next one). 
-- massmat::Array{Float64, 2} - The 6x6 array defining the mass, center of mass, and area moment of inertia. 
+# ### Inputs
+# - frac::Float64 - The percentage of the blade (not including hub distance) that the node is defined at. 
+# - stiffmat::Array{Float64, 2} - The 6x6 array defining the flap, edge, and polar shear and extension stiffnesses. See the OpenFAST docs for a description of this matrix (and the next one). 
+# - massmat::Array{Float64, 2} - The 6x6 array defining the mass, center of mass, and area moment of inertia. 
 
-### Outputs
-- BDBladeNode - An object containing the extractable data from the matrices. 
-"""
-function makenode(frac, stiffmat, massmat)
-    mass = massmat[1,1]
-    Ycm = massmat[3,4]/mass
-    Xcm = massmat[2,6]/mass
-    iedg = massmat[4,4]
-    iflp = massmat[5,5]
-    icp = -massmat[4,5]
-    iplr = massmat[6,6]
+# ### Outputs
+# - BDBladeNode - An object containing the extractable data from the matrices. 
+# """
+# function makenode(frac, stiffmat, massmat)
+#     mass = massmat[1,1]
+#     Ycm = massmat[3,4]/mass
+#     Xcm = massmat[2,6]/mass
+#     iedg = massmat[4,4]
+#     iflp = massmat[5,5]
+#     icp = -massmat[4,5]
+#     iplr = massmat[6,6]
 
-    shrflp = stiffmat[1,1]
-    shredg = stiffmat[2,2]
-    EA = stiffmat[3,3]
-    EIedg = stiffmat[4,4]
-    EIflp = stiffmat[5,5]
-    GJ = stiffmat[6,6]
-    E = 1.0 # EIedg/iedg #Todo: I don't think that this works... because that i should be the mass momentum of inertia. 
-    G = 1.0
-    J = 1.0 #Isn't that the iplr? No, because it is Ix + Iy, not ix + iy. It's the difference if mass is included or not. 
+#     shrflp = stiffmat[1,1]
+#     shredg = stiffmat[2,2]
+#     EA = stiffmat[3,3]
+#     EIedg = stiffmat[4,4]
+#     EIflp = stiffmat[5,5]
+#     GJ = stiffmat[6,6]
+#     E = 1.0 # EIedg/iedg #Todo: I don't think that this works... because that i should be the mass momentum of inertia. 
+#     G = 1.0
+#     J = 1.0 #Isn't that the iplr? No, because it is Ix + Iy, not ix + iy. It's the difference if mass is included or not. 
     
 
-    return BDBladeNode(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
-end
+#     return BDBladeNode(frac, stiffmat, massmat, shredg, shrflp, EA, EIedg, EIflp, GJ, E, G, J, mass, Ycm, Xcm, iedg, icp, iflp, iplr)
+# end
 
-mutable struct BDBlade{TS, TF, TI}
-    Notes::TS
-    station_total::TI
-    damp_type::TI
-    dampcoef::Array{TF,1} #Length = 6
-    nodes::Array{BDBladeNode,1}
-end
+# mutable struct BDBlade{TS, TF, TI}
+#     Notes::TS
+#     station_total::TI
+#     damp_type::TI
+#     dampcoef::Array{TF,1} #Length = 6
+#     nodes::Array{BDBladeNode,1}
+# end
 
 ##############################################################
 ################## READING FUNCTIONS #########################
@@ -144,77 +144,59 @@ Reads a BeamDyn file and creates an object to be used.
 - filepath::String - path to the directory containing the file to read
 
 ### Outputs
-- bdfile::BDFile - the BeamDyn object
+- bdfile::Dict - a dictionary holding the BeamDyn primary file. 
 """
 function read_bdfile(filename::String, filepath::String)
     fi = open(filepath*"/"*filename, "r")
     lines = readlines(fi)
     close(fi)
 
-    # Line 1 is the title
-    notes = lines[2]
-    # Line 3 is the simulation control title
-    echo = fetchword(lines[4]; adapt=true)
-    quasistaticinit = fetchword(lines[5]; adapt=true)
-    rhoinf = parse(Float64, lines[6][1:14])
-    quadrature = parse(Int64, lines[7][1:14])
-    refine = readinteger(lines[8])
-    n_fract = readinteger(lines[9])
-    dtbeam = readnumber(lines[10])
-    load_retries = readinteger(lines[11])
-    nrmax = readinteger(lines[12])
-    stop_tol = readnumber(lines[13])
-    tngt_stf_fd = readflag(lines[14][1:14])
-    tngt_stf_comp = readflag(lines[15][1:14])
-    tngt_stf_pert = readnumber(lines[16])
-    tngt_stf_difftol = readnumber(lines[17])
-    rotstates = fetchword(lines[18]; adapt=true)
-    # Line 19 is the Geometry Parameter title
-    member_total = parse(Int64, lines[20][1:14])
-    kp_total = parse(Int64, lines[21][1:14])
+    lines = cleanfile!(lines)
 
-    membernumber = Tuple{Int64, Int64}[] 
-    for i=1:member_total
-        temp = readpair(lines[21+i])
-        push!(membernumber, temp)
+    bdfile = Dict()
+    bdfile["Notes"] = lines[1]
+
+    for i = 2:18
+        key, entry = parseline(lines[i])
+        bdfile[key] = entry
     end
 
-    idx = kp_total+member_total+24
-    geoparams = cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
+    idx = 18+Int(bdfile["member_total"])
+    bdfile["KeyPairs"] = parsepairs(lines[19:idx])
 
-    kp_xr = geoparams[:,1]
-    kp_yr = geoparams[:,2]
-    kp_zr = geoparams[:,3]
-    initial_twist = geoparams[:,4]
+    twrnames, twrdata = parsematrix(lines[idx+1:idx+Int(bdfile["kp_total"])+2])
 
-    # Line idx is the Mesh Parameter title
-    order_elem = parse(Int64, lines[idx+1][1:14])
-    # Line idx+2 is the Material Paramer title
-    bldfile = fetchword(lines[idx+3];lengthofword=length(lines[idx+3]))
-    # Line idx+4 is the Pitch actuator parameters title
-    usepitchact = fetchword(lines[idx+5]; adapt=true)
-    pitchj = parse(Float64, lines[idx+6][1:14])
-    pitchk = parse(Float64, lines[idx+7][1:14])
-    pitchc = parse(Float64, lines[idx+8][1:14])
-    # Line idx+9 is the Outputs title
-    sumprint = fetchword(lines[idx+10]; adapt=true)
-    outfmt = fetchword(lines[idx+11])
-    nnodeouts = parse(Int64, lines[idx+12][1:14])
-    outnd = Int64.(readvector(lines[idx+13])) 
-    outlist = readoutlist(lines[idx+14:end])
-    nodeoutputstitleidx = 0 
-    for i = 1:length(lines)
-        if lowercase(lines[i][1:3]) == "end"
-            nodeoutputstitleidx = i+1 #This is the title index
-            break
-        end
+    #Todo: The parsematrix function only works when there aren't comments interjected in the header of the  function.... :| I might need to come up with an alternate function. :| ... At least when it comes to getting the     length of the matrix I'm trying to read. 
+    for i = eachindex(twrnames)
+        bdfile[twrnames[i]] = twrdata[:,i]
     end
 
-    # nodeoutputstitleidx+3 is a general title
-    nodeoutlist = readoutlist(lines[nodeoutputstitleidx+3:end])
+    idx += Int(bdfile["kp_total"]) + 3
 
+    for i = idx:idx+10
+        key, entry = parseline(lines[i])
+        bdfile[key] = entry
+    end
 
-    return BDFile(notes, echo, quasistaticinit, rhoinf, quadrature, refine, n_fract, dtbeam, load_retries, nrmax, stop_tol, tngt_stf_fd, tngt_stf_comp, tngt_stf_pert, tngt_stf_difftol, rotstates, member_total, kp_total, membernumber, kp_xr, kp_yr, kp_zr, initial_twist, order_elem, bldfile, usepitchact, pitchj, pitchk, pitchc, sumprint, outfmt, nnodeouts, outnd, outlist, nodeoutlist)
+    ### Outputs section
+    outlist1idx = findlistbounds(lines[idx+11:end])
+
+    outputs = readlist(lines[idx+11:idx+11+outlist1idx[end]-1])
+    bdfile["OutList"] = outputs
+
+    idx = idx+11+outlist1idx[end]
+
+    for i = idx:idx+1
+        key, entry = parseline(lines[i])
+        bdfile[key] = entry
+    end
+
+    ### Nodal outputs
+    outlist2idx = findlistbounds(lines[idx+2:end])
+    outlist = readlist(lines[idx+2:idx+2+outlist2idx[end]-1])
+    bdfile["NodeOutList"] = outlist
+
+    return bdfile
 end
 
 """
@@ -234,34 +216,34 @@ function read_bdblade(filename::String, filepath::String)
     lines = readlines(fi)
     close(fi)
 
-    # Line 1 is the title
-    Notes = lines[2]
-    # Line 3 is the Blade Parameters title
-    station_total = parse(Int, lines[4][1:5])
-    damp_type = parse(Int, lines[5][1:5])
-    # Line 6 is the damping coefficient title
-    # line 7 is the damping coefficents header
-    # line 8 is the damping coefficients units
-    dampcoef = cat(readdlm.(IOBuffer.(lines[9]))...,dims=1)
-    # line 10 is the distributed properties title
-    nodes = BDBladeNode[]
-    # for i=11:length(lines)
-    #     lines[i] = string(" ", rmspaces(lines[i]), " ")
-    # end
-    let 
-        idx = 11
-        for i = 1:station_total
-            frac = parse(Float64, lines[idx])
-            # println("\"", lines[idx+1])
-            stiffmat = cat(readdlm.(IOBuffer.(lines[idx+1:idx+6]))...,dims=1)
-            # println(stiffmat)
-            massmat = cat(readdlm.(IOBuffer.(lines[idx+8:idx+13]))...,dims=1)
-            node = makenode(frac, stiffmat, massmat)
-            push!(nodes, node)
-            idx += 15
-        end
+    lines = cleanfile!(lines)
+
+    bdblade = Dict()
+    bdblade["Notes"] = lines[1]
+
+    for i = 2:3
+        key, entry = parseline(lines[i])
+        bdblade[key] = entry
     end
-    return BDBlade(Notes, station_total, damp_type, dampcoef, nodes)
+
+    _, mus = parsematrix(lines[4:6])
+
+    bdblade["mu"] = mus
+
+    rfracvec = zeros(Int(bdblade["station_total"]))
+
+    for i = 1:Int(bdblade["station_total"])
+        idx = (i-1) + 6 + 14*(i-1)
+        # @show lines[idx+1]
+        rfracvec[i] = parseentry(lines[idx+1])
+
+        bdblade["K$i"] = parsematrix(lines[idx+2:idx+7]; nameheader=false)
+        bdblade["M$i"] = parsematrix(lines[idx+9:idx+14]; nameheader=false)
+    end
+
+    bdblade["rfrac"] = rfracvec
+
+    return bdblade
 end
 
 
@@ -281,79 +263,95 @@ Writes a BeamDyn struct to file.
 - outputpath::String : Path to the desired write location, otherwise, will write at current location. 
 
 """
-function write_bdfile(bdfile::BDFile, outputfile::String; outputpath::String=pwd())
+function write_bdfile(bdfile::Dict, outputfile::String; outputpath::String=pwd())
     lines = String[]
     line = string("-"^9, " BEAMDYN with OpenFAST INPUT FILE ", "-"^43)
     push!(lines,line)
 
-    push!(lines, bdfile.notes)
+    push!(lines, bdfile["Notes"])
 
+
+
+
+    ##############################################################
     line = string("-"^22, " SIMULATION CONTROL ", "-"^43)
     push!(lines,line)
 
-    line = string(formatword(bdfile.echo;quotes=false),"   Echo             - Echo  input data to \"<RootName>.ech\"? (flag)")
+    line = string(formatword(bdfile["Echo"];quotes=false),"   Echo             - Echo  input data to \"<RootName>.ech\"? (flag)")
     push!(lines,line)
 
-    line = string(formatword(string(bdfile.quasistaticinit);quotes=false),"   QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
+    line = string(formatword(string(bdfile["QuasiStaticInit"]);quotes=false),"   QuasiStaticInit  - Use quasistatic pre-conditioning with centripetal  accelerations in initialization? (flag) [dynamic solve only]")
     push!(lines,line)
 
-    line = string(formatword(string(bdfile.rhoinf);location="back",quotes=false),"   rhoinf           - Numerical damping parameter for generalized-alpha integrator")
+    line = string(formatword(string(bdfile["rhoinf"]);location="back",quotes=false),"   rhoinf           - Numerical damping parameter for generalized-alpha integrator")
     push!(lines,line)
 
-    line = string(formatword(string(bdfile.quadrature);location="back", quotes=false),  "   quadrature       - Quadrature method: 1=Gaussian; 2=Trapezoidal (switch)")
+    line = string(formatword(Int(bdfile["quadrature"]);location="back", quotes=false),  "   quadrature       - Quadrature method: 1=Gaussian; 2=Trapezoidal (switch)")
     push!(lines,line)
 
-    line = string(formatword(bdfile.refine;quotes=false),"   refine           - Refinement factor for trapezoidal quadrature (-) [DEFAULT = 1; used only when   quadrature=2]")
+    line = string(formatword(bdfile["refine"];quotes=false),"   refine           - Refinement factor for trapezoidal quadrature (-) [DEFAULT = 1; used only when   quadrature=2]")
     push!(lines,line)
 
-    line = string(formatword(bdfile.n_fract;quotes=false),"   n_fact           -   Factorization frequency for the Jacobian in N-R iteration(-) [DEFAULT = 5]")
+    line = string(formatword(bdfile["n_fact"];quotes=false),"   n_fact           -   Factorization frequency for the Jacobian in N-R iteration(-) [DEFAULT = 5]")
     push!(lines,line)
 
-    line = string(formatword(bdfile.dtbeam;quotes=false),"   DTBeam           - Time step size (s)")
+    line = string(formatword(bdfile["DTBeam"];quotes=false),"   DTBeam           - Time step size (s)")
     push!(lines,line)
 
-    line = string(formatword(bdfile.load_retries;quotes=false),"   load_retries  -   Number of factored load retries before quitting the aimulation [DEFAULT = 20]")
+    line = string(formatword(bdfile["load_retries"];quotes=false),"   load_retries  -   Number of factored load retries before quitting the aimulation [DEFAULT = 20]")
     push!(lines,line)
 
-    line = string(formatword(bdfile.nrmax;quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
+    line = string(formatword(Int(bdfile["NRMax"]);quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
     push!(lines,line)
 
-    line = string(formatword(bdfile.stop_tol;quotes=false),"   stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]")
+    line = string(formatword(bdfile["stop_tol"];quotes=false),"   stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]")
     push!(lines,line)
 
-    temp = typeof(bdfile.tngt_stf_fd)
-    line = string(formatword("$temp";quotes=false),"   tngt_stf_fd      -    Use finite differenced tangent stiffness matrix? (flag)")
+    line = string(formatword(bdfile["tngt_stf_fd"];quotes=false),"   tngt_stf_fd      -    Use finite differenced tangent stiffness matrix? (flag)")
     push!(lines,line)
 
-    temp = typeof(bdfile.tngt_stf_comp)
-    line = string(formatword("$temp";quotes=false),"   tngt_stf_comp       - Compare analytical finite differenced tangent stiffness matrix? (flag)")
+    line = string(formatword(bdfile["tngt_stf_comp"];quotes=false),"   tngt_stf_comp       - Compare analytical finite differenced tangent stiffness matrix? (flag)")
     push!(lines,line)
 
-    line = string(formatword(bdfile.tngt_stf_pert;quotes=false),"   tngt_stf_pert       - Perturbation size for finite differencing (-) [DEFAULT = 1E-6]")
+    line = string(formatword(bdfile["tngt_stf_pert"];quotes=false),"   tngt_stf_pert       - Perturbation size for finite differencing (-) [DEFAULT = 1E-6]")
     push!(lines,line)
 
-    line = string(formatword(bdfile.tngt_stf_difftol;quotes=false),"   tngt_stf_difftol - Maximum allowable relative difference between analytical and  fd tangent stiffness (-); [DEFAULT = 0.1]")
+    line = string(formatword(bdfile["tngt_stf_difftol"];quotes=false),"   tngt_stf_difftol - Maximum allowable relative difference between analytical and  fd tangent stiffness (-); [DEFAULT = 0.1]")
     push!(lines,line)
 
-    line = string(formatword(bdfile.rotstates;quotes=false),"   RotStates        -  Orient states in the rotating frame during linearization? (flag) [used only when     linearizing]")
+    line = string(formatword(bdfile["RotStates"];quotes=false),"   RotStates        -  Orient states in the rotating frame during linearization? (flag) [used only when     linearizing]")
     push!(lines,line)
 
+
+
+
+
+
+
+
+
+
+
+
+    ##############################################################
     line = string("-"^22, " GEOMETRY PARAMETER ", "-"^42)
     push!(lines, line)
-    line = string(formatword(string(bdfile.member_total);location="back",   quotes=false),"   member_total    - Total number of members (-)")
+
+    line = string(formatword(Int(bdfile["member_total"]);location="back",   quotes=false),"   member_total    - Total number of members (-)")
     push!(lines,line)
 
-    line = string(formatword(string(bdfile.kp_total);location="back", quotes=false),    "   kp_total        - Total number of key points (-) [must be at least 3]")
+    line = string(formatword(Int(bdfile["kp_total"]);location="back", quotes=false),    "   kp_total        - Total number of key points (-) [must be at least 3]")
     push!(lines,line)
 
-    if bdfile.member_total==1
-        local line = string(formatpair(bdfile.membernumber[1]), "       - Member    number; Number of key points in this member ")
+    if bdfile["member_total"]==1
+        local line = string(formatpair(Int.(bdfile["KeyPairs"][1,:])), "       - Member    number; Number of key points in this member ")
         push!(lines, line)
     else
-        line = string(formatpair(bdfile.membernumber[1]), "       - Member number;  Number of key points in this member ")
+        line = string(formatpair(Int.(bdfile["KeyPairs"][1,:])), "       - Member number;  Number of key points in this member ")
         push!(lines, line)
-        for i = 2:bdfile.member_total
-            line = formatpair(bdfile.membernumber[i])
+        
+        for i = 2:bdfile["member_total"]
+            line = formatpair(Int.(bdfile["KeyPairs"][i, :]))
             push!(lines,line)
 
         end
@@ -365,56 +363,96 @@ function write_bdfile(bdfile::BDFile, outputfile::String; outputpath::String=pwd
     line = "   (m)            (m)          (m)            (deg)"
     push!(lines,line)
 
-    mat = formatmatrix(hcat(bdfile.kp_xr, bdfile.kp_yr, bdfile.kp_zr, bdfile.initial_twist))
+    mat = formatmatrix(hcat(bdfile["kp_xr"], bdfile["kp_yr"], bdfile["kp_zr"], bdfile["initial_twist"]))
     append!(lines, mat)
 
+
+
+
+
+
+
+
+    ##############################################################
     line = string("-"^22, " MESH PARAMETER ", "-"^42)
     push!(lines, line)
 
-    line = string(formatword(string(bdfile.order_elem);location="back", quotes=false),  "   order_elem     - Order of interpolation (basis) function (-)")
+    line = string(formatword(Int(bdfile["order_elem"]);location="back", quotes=false),  "   order_elem     - Order of interpolation (basis) function (-)")
     push!(lines, line)
 
+
+
+
+
+
+
+
+
+
+
+    ##############################################################
     line = string("-"^22, " MATERIAL PARAMETER ", "-"^39)
     push!(lines, line)
 
-    line = string(formatword(bdfile.bldfile;quotes=true, desiredlength=length(bdfile.bldfile)+2),"   BldFile - Name of file containing properties for blade (quoted    string)")
+    line = string(formatword(bdfile["BldFile"];quotes=true, desiredlength=length(bdfile["BldFile"])+2),"   BldFile - Name of file containing properties for blade (quoted    string)")
     push!(lines, line)
 
+
+
+
+
+
+
+
+    ##############################################################
     line = string("-"^22, "PITCH ACTUATOR PARAMETERS", "-"^33)
     push!(lines, line)
 
-    line = string(formatword(bdfile.usepitchact;quotes=false),"   UsePitchAct -     Whether a pitch actuator should be used (flag)")
+    line = string(formatword(bdfile["UsePitchAct"];quotes=false),"   UsePitchAct -     Whether a pitch actuator should be used (flag)")
     push!(lines, line)
 
-    line = string(formatword(string(bdfile.pitchj);location="back", quotes=false),"     PitchJ      - Pitch actuator inertia (kg-m^2) [used only when UsePitchAct is true]    ")
+    line = string(formatword(string(bdfile["PitchJ"]);location="back", quotes=false),"     PitchJ      - Pitch actuator inertia (kg-m^2) [used only when UsePitchAct is true]    ")
     push!(lines, line)
 
-    line = string(formatword(string(bdfile.pitchk);location="back", quotes=false),"     PitchK      - Pitch actuator stiffness (kg-m^2/s^2) [used only when UsePitchAct   is true]")
+    line = string(formatword(string(bdfile["PitchK"]);location="back", quotes=false),"     PitchK      - Pitch actuator stiffness (kg-m^2/s^2) [used only when UsePitchAct   is true]")
     push!(lines, line)
 
-    line = string(formatword(string(bdfile.pitchc);location="back", quotes=false),"     PitchC      - Pitch actuator damping (kg-m^2/s) [used only when UsePitchAct is    true]")
+    line = string(formatword(string(bdfile["PitchC"]);location="back", quotes=false),"     PitchC      - Pitch actuator damping (kg-m^2/s) [used only when UsePitchAct is    true]")
     push!(lines, line)
 
+
+
+
+
+
+
+
+
+
+    ##############################################################
     line = string("-"^22, " OUTPUTS ", "-"^50)
     push!(lines, line)
 
-    line = string(formatword(bdfile.sumprint;quotes=false),"   SumPrint       - Print   summary data to \"<RootName>.sum\" (flag)")
+    line = string(formatword(bdfile["SumPrint"];quotes=false),"   SumPrint       - Print   summary data to \"<RootName>.sum\" (flag)")
     push!(lines, line)
 
-    line = string(formatword(bdfile.outfmt;quotes=false),"   OutFmt          - Format   used for text tabular output, excluding the time channel.")
+    line = string(formatword(bdfile["OutFmt"];quotes=true),"   OutFmt          - Format   used for text tabular output, excluding the time channel.")
     push!(lines, line)
 
-    line = string(formatword(string(bdfile.nnodeouts);quotes=false),"       NNodeOuts      - Number of nodes to output to file [0 - 9] (-)")
+    line = string(formatword(Int(bdfile["NNodeOuts"]);quotes=false),"       NNodeOuts      - Number of nodes to output to file [0 - 9] (-)")
     push!(lines, line)
 
-    line = string(formatvector(bdfile.outnd), "   OutNd          - Nodes whose values   will be output  (-)")
+    line = string(formatvector(Int.(bdfile["OutNd"])), "   OutNd          - Nodes whose values   will be output  (-)")
     push!(lines, line)
 
-    line = "          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
-    push!(lines, line)
+    # line = 
+    # push!(lines, line)
 
-    for i=1:length(bdfile.outlist)
-       local line = string("\"", bdfile.outlist[i], "\"")
+    for i=1:length(bdfile["OutList"])
+        local line = formatword(bdfile["OutList"][i]; quotes=true)
+        if i==1
+            line = line*"          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
+        end
        push!(lines,line)
 
     end
@@ -424,13 +462,17 @@ function write_bdfile(bdfile::BDFile, outputfile::String; outputpath::String=pwd
     line = "---------------------- NODE OUTPUTS --------------------------------------------"
     push!(lines,line)
 
-    line = "         99   BldNd_BlOutNd   - Blade nodes on each blade (currently    unused)" # Not sure if this section will get used because the other sections are   all the same, but for some odd reason, this nodal output section is different. 
+    line = string(formatvector(Int(bdfile["BldNd_BladesOut"])), "   BldNd_BladesOut  - Blades to output")
     push!(lines, line)
+
+    line = string(formatvector(bdfile["BldNd_BlOutNd"]), "   BldNd_BlOutNd - Blade nodes on each blade (currently unused)")
+    push!(lines, line)
+
     line = "                   OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)"
     push!(lines, line)
 
-    for i=1:length(bdfile.nodeoutlist)
-       local line = string("\"", bdfile.nodeoutlist[i], "\"")
+    for i=1:length(bdfile["NodeOutList"])
+       local line = formatword(bdfile["NodeOutList"][i]; quotes=true)
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first  columns of    this last OutList line)"
@@ -447,6 +489,12 @@ function write_bdfile(bdfile::BDFile, outputfile::String; outputpath::String=pwd
     close(fi)
 end
 
+
+
+
+
+
+
 """
     write_bdblade(bdblade, outputfile; outputpath=pwd())
 
@@ -460,17 +508,26 @@ Writes a bdblade object to file.
 ### Outputs:
 -  N/A - A file will be written. 
 """
-function write_bdblade(bdblade::BDBlade, outputfile::String; outputpath::String=pwd())
+function write_bdblade(bdblade::Dict, outputfile::String; outputpath::String=pwd())
+    
     lines = String[]
     line = string("-"^9, " BEAMDYN V1.00.* INDIVIDUAL BLADE INPUT FILE ", "-"^43)
     push!(lines,line)
-    push!(lines, bdblade.Notes)
+    push!(lines, bdblade["Notes"])
+
+
+
     line = string("-"^22, " BLADE PARAMETERS ", "-"^43)
     push!(lines,line)
-    line = string(formatword(string(bdblade.station_total);location="back", quotes=false, desiredlength=5),  "   station_total    - Number of blade input stations (-)")
+    line = string(formatword(Int(bdblade["station_total"]);location="back", quotes=false, desiredlength=5),  "   station_total    - Number of blade input stations (-)")
     push!(lines,line)
-    line = string(formatword(string(bdblade.damp_type);location="back", quotes=false, desiredlength=5),  "   damp_type        - Damping type: 0: no damping; 1: damped")
+    line = string(formatword(Int(bdblade["damp_type"]);location="back", quotes=false, desiredlength=5),  "   damp_type        - Damping type: 0: no damping; 1: damped")
     push!(lines,line)
+
+
+
+
+    ##############################################################
     line = string("-"^22, " DAMPING COEFFICIENT ", "-"^30)
     push!(lines,line)
     line = "   mu1        mu2        mu3        mu4        mu5        mu6"
@@ -479,9 +536,9 @@ function write_bdblade(bdblade::BDBlade, outputfile::String; outputpath::String=
     push!(lines,line)
     let
         line = ""
-        for i = 1:length(bdblade.dampcoef)
-            s = @sprintf "%.1E" bdblade.dampcoef[i]
-            if i<length(bdblade.dampcoef)
+        for i = 1:length(bdblade["mu"])
+            s = @sprintf "%.1E" bdblade["mu"][i]
+            if i<length(bdblade["mu"])
                 space = "    "
             else
                 space = ""
@@ -490,15 +547,25 @@ function write_bdblade(bdblade::BDBlade, outputfile::String; outputpath::String=
         end
         push!(lines,line)
     end
+
+
+
+
+
+
+
+    ##############################################################
     line = string("-"^22, " DISTRIBUTED PROPERTIES ", "-"^30)
     push!(lines,line)
-    for i = 1:bdblade.station_total
-        local line = string("  ", bdblade.nodes[i].frac)
+    for i = 1:Int(bdblade["station_total"])
+        local line = string("  ", bdblade["rfrac"][i])
         push!(lines, line)
-        line = formatmatrix(bdblade.nodes[i].stiffmatrix;spacing=4)
+
+        line = formatmatrix(bdblade["K$i"];spacing=4)
         append!(lines, line)
         push!(lines, "")
-        line = formatmatrix(bdblade.nodes[i].massmatrix;spacing=4)
+
+        line = formatmatrix(bdblade["M$i"];spacing=4)
         #There is some wonky spacing happening here because of the negative signs. 
         append!(lines, line)
         push!(lines, "")
@@ -520,6 +587,112 @@ end
 ############### CREATING FUNCTIONS ###########################
 ##############################################################
 
+"""
+    stiffness_matrix(E, nu, A, Ix, Iy; G=E/(2*(1+nu)), xc=0, yc=0, xs=xc, ys=yc, theta_p=0, theta_s=theta_p, kxs=1, kys=kxs)
+
+### Inputs
+- E = Young's Modulus
+- A = Cross sectional area
+- Ix = Area moment of inertia about the x axis
+- Iy = Area moment of inertia about the y axis
+- G = !!
+- xc, yc = Coordinates of the centroid
+- xs, ys = Coordinates of the shear center
+- theta_p = angle between the cross section axes, and the principle axes of the axial force. 
+- theta_s = andgle between the cross section axes and the principle axes of the shear.
+- kxs, kys = dimensionless shear factor 
+
+### Notes:
+- From the BeamDyn inputs and sectional properties manual
+"""
+function stiffness_matrix(E, nu, A, Ix, Iy; G=E/(2*(1+nu)), xc=0, yc=0, xs=xc, ys=yc, theta_p=0, theta_s=theta_p, kxs=1, kys=kxs)
+    
+
+    
+    Kxx = G*A*(kxs*(cos(theta_s)^2) + kys*(sin(theta_s)^2))
+    Kyy = G*A*(kxs*(sin(theta_s)^2) + kys*(cos(theta_s)^2))
+    Kxy = G*A*(kys-kxs)*sin(theta_s)*cos(theta_s)
+
+    Hxx = E*Ix*(cos(theta_p)^2) + E*Iy*(sin(theta_p)^2)
+    Hyy = E*Ix*(sin(theta_p)^2) + E*Iy*(cos(theta_p)^2)
+    Hxy = E*(Iy - Ix)*sin(theta_p)*cos(theta_p)
+
+
+    Kt = Ix + Iy
+
+
+    K11 = Kxx
+    K12 = K21 = Kxy
+    K16 = K61 = -Kxx*ys - Kxy*xs
+    K22 = Kyy
+    K26 = K62 = Kxy*ys + Kyy*xs
+    K66 = G*Kt + Kxx*(ys^2) + 2*Kxy*xs*ys + Kyy*(xs^2)
+    K33 = E*A
+    K34 = K43 = E*A*yc
+    K35 = K53 = -E*A*xc
+    K44 = Hxx + E*A*(yc^2)
+    K45 = K54 = -Hxy - E*A*xc*yc
+    K55 = Hyy + E*A*(xc^2)
+
+    return [K11 K12 0 0 0 K16;
+            K21 K22 0 0 0 K26;
+            0 0 K33 K34 K35 0;
+            0 0 K43 K44 K45 0;
+            0 0 K53 K54 K55 0;
+            K61 K62 0 0 0 K66]
+end
+
+
+"""
+    mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
+
+### Inputs
+- m = distributed mass
+- Ix, Iy = mass moment of inertia about its respective axis
+- x, y = coordinates of the center of principle inertia relative to the cross section coordinate frame
+- theta = the angle between the principle inertial axes and the cross-section frame. 
+"""
+function mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
+
+    Ixx = Ix*(cos(theta)^2) + Iy*(sin(theta)^2) + m*(y^2)
+    Iyy = Ix*(sin(theta)^2) + Iy*(cos(theta)^2) + m*(x^2)
+    Ixy = (Iy - Ix)*sin(theta)*cos(theta) + m*x*y
+    Ip = Ix + Iy + m*(x^2 + y^2)
+
+
+    return [m 0 0 0 0 -m*y;
+            0 m 0 0 0 m*x;
+            0 0 m m*y -m*x 0;
+            0 0 m*y Ixx -Ixy 0;
+            0 0 -m*x -Ixy Iyy 0;
+            -m*y m*x 0 0 0 Ip]
+end
+
+
+
+
+
+
+
+function rotate_x(alpha_x)
+    return [
+        1.0     0.0             0.0;
+        0.0     cos(alpha_x)   -sin(alpha_x);
+        0.0     sin(alpha_x)    cos(alpha_x)]
+end
+
+function rotate_y(alpha_y)
+    return [cos(alpha_y) 0 sin(alpha_y);
+            0.0 1.0 0.0;
+            -sin(alpha_y) 0 cos(alpha_y)]
+end
+
+function rotate_z(alpha_z)
+    return [cos(alpha_z) -sin(alpha_z) 0.0;
+            sin(alpha_z) cos(alpha_z) 0.0;
+            0.0 0.0 1.0]
+end
+
 function make_element(x, points, stiffness, mass, Cab, damping)
     # element length
     DeltaL = LinearAlgebra.norm(points[2] - points[1])
@@ -527,26 +700,41 @@ function make_element(x, points, stiffness, mass, Cab, damping)
     # @show x
     
     #Reorganize the openfast stiffness matrix into the form that GXBeam uses.
-    stiffness_gx = deepcopy(stiffness) #TODO: This will only work for diagonal dominate matrices.  
-    stiffness_gx[1,1] = stiffness[3,3]
-    stiffness_gx[3,3] = stiffness[1,1]
-    stiffness_gx[4,4] = stiffness[6,6]
-    stiffness_gx[6,6] = stiffness[4,4]
+    # stiffness_gx = zero(stiffness)  
+    # stiffness_gx[1,:] = stiffness[3,:]
+    # stiffness_gx[2,:] = stiffness[1,:]
+    # stiffness_gx[3,:] = stiffness[2,:]
+    # stiffness_gx[4,:] = stiffness[6,:]
+    # stiffness_gx[5,:] = stiffness[4,:]
+    # stiffness_gx[6,:] = stiffness[5,:]
 
-    compliance = LinearAlgebra.inv(stiffness_gx) #TODO: It might be faster to manually invert the matrix. 
+    # R = rotate_y(-pi/2)
+    # stiffness_gx = R*stiffness*(R')
+
+    k = view(stiffness, :, :)
+
+    stiffness_gx = [
+        k[3,3] k[3,2] k[3,1] k[3,6] k[3,5] k[3,4]
+        k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4]
+        k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4]
+        k[6,3] k[6,2] k[6,1] k[6,6] k[6,5] k[6,4]
+        k[5,3] k[5,2] k[5,1] k[5,6] k[5,5] k[5,4]
+        k[4,3] k[4,2] k[4,1] k[4,6] k[4,5] k[4,4]] #TODO: Back it out to a tensor, then do the rotation, and map to stiffness matrix. Dr. Ning sent out a pdf. 
+
+    compliance = LinearAlgebra.inv(stiffness_gx) #TODO. It might be faster to manually invert the matrix. -> Not worried about speed here.
  
     # element compliance matrix
     C = SMatrix{6,6}(compliance)  
 
-    # element mass matrix
+    ### element mass matrix 
     mu = mass[1,1]
-    xm2 = mass[2,6]/mu
-    xm3 = mass[3,4]/mu
-    i22 = mass[4,4]
-    i33 = mass[5,5]
+    xm2 = -mass[1,6]/mu
+    xm3 = mass[2,6]/mu
+    i22 = mass[5,5]
+    i33 = mass[4,4]
     i23 = -mass[5,4]
 
-    mass_gx = @SMatrix [
+    M = @SMatrix [
              mu       0     0       0 mu*xm3 -mu*xm2;
              0       mu     0  -mu*xm3     0      0;
              0       0     mu   mu*xm2     0      0;
@@ -555,11 +743,12 @@ function make_element(x, points, stiffness, mass, Cab, damping)
          -mu*xm2      0     0       0  -i23    i33]
  
        
-     
+    # mass_gx = R*mass*(R')
+    # M = SMatrix{6,6}(mass_gx)
  
     mu = SVector(damping[1], damping[2], damping[3], damping[4], damping[5], damping[6]) #Damping coefficients
      
-    return GXBeam.Element(DeltaL, x, C, mass_gx, Cab, mu) #For constant-mass-matrix branch
+    return GXBeam.Element(DeltaL, x, C, M, Cab, mu) #For constant-mass-matrix branch
     # return GXBeam.Element(DeltaL, x, C, mass_gx, Cab)
 end
 
@@ -577,7 +766,7 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(rhub, rtip, bdblade)
+function make_assembly(rhub, rtip, rstructural, twist, bdblade)
 
     np = length(bdblade.nodes) #Number of points
     ne = np - 1 #Number of elements
@@ -591,6 +780,11 @@ function make_assembly(rhub, rtip, bdblade)
     points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. 
 
     x_elements = [SVector((rvec[i]+rvec[i+1])/2, 0.0, 0.0) for i in 1:ne] #The xyz location of each of the structural nodes. 
+
+    twist = twist .- twist[1] #Decreased instabilities. 
+ 
+
+    twistfit = Akima(rstructural, twist)
     
     # element triad
     Cab = @SMatrix [
@@ -598,8 +792,11 @@ function make_assembly(rhub, rtip, bdblade)
          0.0 1.0 0.0;
          0.0 0.0 1.0]
 
+
+    Cabvec = [rotate_x(-twistfit(x_elements[i][1]))*Cab for i in 1:ne] #Todo: I might need a negative on the twist angle that comes out of there. 
+
     ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes. 
-    elements = [make_element(x_elements[i], points[i:i+1], bdblade.nodes[i].stiffmatrix, bdblade.nodes[i].massmatrix, Cab, 500*bdblade.dampcoef) for i = 1:ne]
+    elements = [make_element(x_elements[i], points[i:i+1], bdblade.nodes[i].stiffmatrix, bdblade.nodes[i].massmatrix, Cabvec[i], bdblade.dampcoef) for i = 1:ne]
 
     start = 1:ne
     stop = 2:np
@@ -619,8 +816,12 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(edfile, bdblade)
-    rhub = edfile.hubrad
-    rtip = edfile.tiprad
-    return make_assembly(rhub, rtip, bdblade)
+function make_assembly(edfile, bdfile, bdblade)
+    rhub = edfile["HubRad"]
+    rtip = edfile["TipRad"]
+
+    rstructural = bdfile["kp_zr"]
+    twist = bdfile["initial_twist"].*(pi/180) #Structural twist given in the BeamDyn file, converted to radians.
+
+    return make_assembly(rhub, rtip, rstructural, twist, bdblade)
 end

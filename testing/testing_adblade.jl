@@ -27,3 +27,5 @@ filename = "ad_blade_example.dat"
 # end
 
 adblade = of.read_adblade(filename, filepath)
+
+of.write_adblade(adblade, "test_writeADblade.dat"; outputpath=localdir*"/test_writefiles")

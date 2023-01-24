@@ -121,6 +121,16 @@ function parsematrix(lines; nameheader=true, unitheader=true)
     return names, mat
 end
 
+function parsepairs(lines)
+    nl = length(lines)
+
+    lines[1] = removecomment(lines[1])
+
+    pairs = cat(readdlm.(IOBuffer.(lines),' ')...,dims=1)
+
+    return pairs
+end
+
 function findlistbounds(lines)
     for i = 1:length(lines)
         if occursin("end", lowercase.(lines[i]))
@@ -159,6 +169,9 @@ function readlist(lines)
         elseif occursin(",", lines[i])
             # println("Option c")
             veci = readdlm.(IOBuffer.(lines[i]),',')
+            for i in eachindex(veci)
+                veci[i] = replace(veci[i], " " => "")
+            end
             append!(outvec, veci)
         else
             # println("Option d")

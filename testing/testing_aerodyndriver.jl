@@ -35,3 +35,5 @@ filename = "ad_driver_example.dvr"
 # end
 
 addriver = of.read_addriver(filename, filepath)
+
+of.write_addriver(addriver, "test_writeADdriver.dvr"; outputpath=localdir*"/test_writefiles")

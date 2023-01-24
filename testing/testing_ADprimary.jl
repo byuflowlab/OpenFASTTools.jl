@@ -73,3 +73,5 @@ filename = "ad_primary_example.dat"
 
 
 adfile = of.read_adfile(filename, filepath)
+
+of.write_adfile(adfile, "test_writeADfile.dat"; outputpath=localdir*"/test_writefiles")

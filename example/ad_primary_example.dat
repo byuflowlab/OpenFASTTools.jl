@@ -68,7 +68,7 @@ true          UseBlCm            - Include aerodynamic pitching moment in calcul
 0.0, 0.0, 0.0 NacCenB            - Position of nacelle center of buoyancy from yaw bearing in nacelle coordinates (m)
 ======  Tower Influence and Aerodynamics ============================================================ [used only when TwrPotent/=0, TwrShadow/=0, TwrAero=True, or Buoyancy=True]
           12   NumTwrNds         - Number of tower nodes used in the analysis  (-) [used only when TwrPotent/=0, TwrShadow/=0, or TwrAero=True]
-TwrElev        TwrDiam        TwrCd          TwrTI (used only with TwrShadow=2)  TwrCb (used only with Buoyancy=True)
+TwrElev        TwrDiam        TwrCd          TwrTI        TwrCb
 (m)            (m)            (-)            (-)                                 (-)
 0.0000000E+00  6.0000000E+00  1.0000000E+00  1.0000000E-01                       0.0
 8.5261000E+00  5.7870000E+00  1.0000000E+00  1.0000000E-01                       0.0

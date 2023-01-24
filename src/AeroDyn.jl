@@ -268,6 +268,7 @@ function read_adfile(filename, filepath)
     adfile["Notes"] = lines[1]
 
     for i = 2:41
+        # @show i
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
@@ -288,7 +289,7 @@ function read_adfile(filename, filepath)
 
     #Todo: The parsematrix function only works when there aren't comments interjected in the header of the function.... :| I might need to come up with an alternate function. :| ... At least when it comes to getting the length of the matrix I'm trying to read. 
     for i = 1:5 #length(twrnames)
-        adfile[twrnames[i]] = twrdata[:,i]
+        adfile[twrnames[i]*("_mat")] = twrdata[:,i]
     end
 
 
@@ -318,7 +319,7 @@ function read_adfile(filename, filepath)
 
     outlist2idx = findlistbounds(lines[idx+2:end])
     outlist = readlist(lines[idx+2:idx+2+outlist2idx[end]-1])
-    adfile["SectionOutlist"] = outlist
+    adfile["NodeOutList"] = outlist
 
     return adfile
 end
@@ -691,7 +692,7 @@ function read_addriver(filename::String, filepath::String)
     lines = cleanfile!(lines)
 
     addriver = Dict()
-    addriver["notes"] = lines[1]
+    addriver["Notes"] = lines[1]
     for i = 2:38
         key, entry = parseline(lines[i])
         addriver[key] = entry
@@ -700,7 +701,7 @@ function read_addriver(filename::String, filepath::String)
     windnames, winddata = parsematrix(lines[39:41+Int(addriver["NumCases"])-1])
 
     for i = 1:length(windnames)
-        addriver[windnames[i]] = winddata[:,i]
+        addriver[windnames[i]*"_mat"] = winddata[:,i]
     end
 
     idx = 41+Int(addriver["NumCases"])
@@ -729,198 +730,339 @@ Writes a AeroDyn v15 object to file.
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute path of the written file.
 """
-function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd()) 
+function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()) 
+
     lines = String[]
     line = string("-"^7, " AERODYN v15 for OpenFAST INPUT FILE ", "-"^47)
     push!(lines,line)
-    push!(lines, adfile.notes)
+    push!(lines, adfile["Notes"])
+
+    ########################################################################
     line = string("="^6, "  General Options  ", "="^76)
     push!(lines, line)
-    line = string(formatword(adfile.echo;quotes=false),"   Echo               - Echo the input to \"<rootname>.AD.ech\"?  (flag)")
+
+    line = string(formatword(adfile["Echo"];quotes=false),"   Echo               - Echo the input to \"<rootname>.AD.ech\"?  (flag)")
     push!(lines, line)
-    if isnan(adfile.dtaero)
-        line = string(formatword("Default";quotes=true),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
-    else
-        line = string(formatword(adfile.dtaero;quotes=false, location="back"),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
-    end
+
+    line = string(formatword(adfile["DTAero"];quotes=false, location="back"),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
     push!(lines, line)
-    line = string(formatword(string(adfile.wakemod);location="back",quotes=false), "   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
+
+    line = string(formatword(Int(adfile["WakeMod"]);location="back",quotes=false), "   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
     push!(lines, line)
-    line = string(formatword(string(adfile.afaeromod);location="back",quotes=false),"   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model} [AFAeroMod must be 1 when linearizing]")
+
+    line = string(formatword(Int(adfile["AFAeroMod"]);location="back",quotes=false),"   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model} [AFAeroMod must be 1 when linearizing]")
     push!(lines, line)
-    line = string(formatword(string(adfile.twrpotent);location="back",quotes=false),"   TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}")
+
+    line = string(formatword(Int(adfile["TwrPotent"]);location="back",quotes=false),"   TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}")
     push!(lines, line)
-    line = string(formatword(adfile.twrshadow;quotes=false), "   TwrShadow          - Calculate tower influence on wind based on downstream tower shadow? (flag)")
+
+    line = string(formatword(Int(adfile["TwrShadow"]);quotes=false, location="back"), "   TwrShadow          - Calculate tower influence on wind based on downstream tower shadow? (flag)")
     push!(lines,line)
-    line = string(formatword(adfile.twraero;quotes=false), "   TwrAero            - Calculate tower aerodynamic loads? (flag)")
+
+    line = string(formatword(adfile["TwrAero"];quotes=false), "   TwrAero            - Calculate tower aerodynamic loads? (flag)")
     push!(lines, line)
-    line = string(formatword(adfile.frozenwake;quotes=false), "   FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]")
+
+    line = string(formatword(adfile["FrozenWake"];quotes=false), "   FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]")
     push!(lines, line)
-    line = string(formatword(adfile.cavitcheck;quotes=false), "   CavitCheck         - Perform cavitation check? (flag) [AFAeroMod must be 1 when CavitCheck=true]")
+
+    line = string(formatword(adfile["CavitCheck"];quotes=false), "   CavitCheck         - Perform cavitation check? (flag) [AFAeroMod must be 1 when CavitCheck=true]")
     push!(lines, line)
-    line = string(formatword(adfile.compaa;quotes=false), "   CompAA             - Flag to compute AeroAcoustics calculation [only used when WakeMod=1 or 2]")
+
+    line = string(formatword(adfile["Buoyancy"];quotes=false), "   Buoyancy           - Include buoyancy effects? (flag)")
     push!(lines, line)
-    line = string(formatword(adfile.aa_inputfile), "   - Aeroacoustics input file")
+
+    line = string(formatword(adfile["CompAA"];quotes=false), "   CompAA             - Flag to compute AeroAcoustics calculation [only used when WakeMod=1 or 2]")
     push!(lines, line)
+
+    line = string(formatword(adfile["AA_InputFile"], quotes=false,desiredlength=length(adfile["AA_InputFile"])+5), " AA_InputFile       - Aeroacoustics input file")
+    push!(lines, line)
+
+
+
+
+    #######################################################################
     line = string("="^6, "  Environmental Conditions  ", "="^67)
     push!(lines, line)
-    line = string(formatword(string(adfile.airdens);location="back", quotes=false), "   AirDens            - Air density (kg/m^3)")
+
+    line = string(formatword(string(adfile["AirDens"]);location="back", quotes=false), "   AirDens            - Air density (kg/m^3)")
     push!(lines, line)
-    line = string(formatword(string(adfile.kinvisc);location="back", quotes=false), "   KinVisc            - Kinematic air viscosity (m^2/s)")
+
+    line = string(formatword(string(adfile["KinVisc"]);location="back", quotes=false), "   KinVisc            - Kinematic air viscosity (m^2/s)")
     push!(lines, line)
-    line = string(formatword(string(adfile.spdsound);location="back", quotes=false), "   SpdSound           - Speed of sound (m/s)")
+
+    line = string(formatword(string(adfile["SpdSound"]);location="back", quotes=false), "   SpdSound           - Speed of sound (m/s)")
     push!(lines, line)
-    line = string(formatword(string(adfile.patm);location="back", quotes=false), "   Patm               - Atmospheric pressure (Pa) [used only when CavitCheck=True]")
+
+    line = string(formatword(string(adfile["Patm"]);location="back", quotes=false), "   Patm               - Atmospheric pressure (Pa) [used only when CavitCheck=True]")
     push!(lines, line)
-    line = string(formatword(string(adfile.pvap);location="back", quotes=false), "   Pvap               - Vapour pressure of fluid (Pa) [used only when CavitCheck=True]")
+
+    line = string(formatword(string(adfile["Pvap"]);location="back", quotes=false), "   Pvap               - Vapour pressure of fluid (Pa) [used only when CavitCheck=True]")
     push!(lines, line)
-    line = string(formatword(string(adfile.fluiddepth);location="back", quotes=false), "   FluidDepth         - Water depth above mid-hub height (m) [used only when CavitCheck=True]")
-    push!(lines, line)
+
+
+
+
+
+    ########################################################################
     line = string("="^6, "  Blade-Element/Momentum Theory Options  ", "="^54)
     push!(lines, line)
-    line = string(formatword(string(adfile.skewmod);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
+
+    line = string(formatword(Int(adfile["SkewMod"]);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
     push!(lines, line)
-    if isnan(adfile.skewmodfactor)
-        line = string(formatword("Default"), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
-    else
-        line = string(formatword(adfile.skewmodfactor; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
-    end
+
+    line = string(formatword(adfile["SkewModFactor"]; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(adfile.tiploss;quotes=false), "   TipLoss            - Use the Prandtl tip-loss model? (flag) [unused when WakeMod=0]")
+
+    line = string(formatword(adfile["TipLoss"]; quotes=false), "   TipLoss            - Use the Prandtl tip-loss model? (flag) [unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(adfile.hubloss;quotes=false), "   HubLoss            - Use the Prandtl hub-loss model? (flag) [unused when WakeMod=0]")
+
+    line = string(formatword(adfile["HubLoss"]; quotes=false), "   HubLoss            - Use the Prandtl hub-loss model? (flag) [unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(adfile.tanind;quotes=false), "   TanInd             - Include tangential induction in BEMT calculations? (flag) [unused when WakeMod=0]")
+
+    line = string(formatword(adfile["TanInd"];quotes=false), "   TanInd             - Include tangential induction in BEMT calculations? (flag) [unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(adfile.ai_drag;quotes=false), "   AIDrag             - Include the drag term in the axial-induction calculation? (flag) [unused when WakeMod=0]")
+
+    line = string(formatword(adfile["AIDrag"];quotes=false), "   AIDrag             - Include the drag term in the axial-induction calculation? (flag) [unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(adfile.ti_drag;quotes=false), "   TIDrag             - Include the drag term in the tangential-induction calculation? (flag) [unused when WakeMod=0 or TanInd=FALSE]")
+
+    line = string(formatword(adfile["TIDrag"];quotes=false), "   TIDrag             - Include the drag term in the tangential-induction calculation? (flag) [unused when WakeMod=0 or TanInd=FALSE]")
     push!(lines, line)
-    if isnan(adfile.ind_toler)
-        line = string(formatword("Default"), "   IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or \"default\"} (-) [unused when WakeMod=0]")
-    else
-        line = string(formatword(adfile.ind_toler; quotes=false, location="back"), "   IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or \"default\"} (-) [unused when WakeMod=0]")
-    end
+
+    line = string(formatword(adfile["IndToler"]; quotes=false, location="back"), "   IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or \"default\"} (-) [unused when WakeMod=0]")
     push!(lines, line)
-    line = string(formatword(string(adfile.maxiter);location="back", quotes=false), "   MaxIter            - Maximum number of iteration steps (-) [unused when WakeMod=0]")
+
+    line = string(formatword(Int(adfile["MaxIter"]);location="back", quotes=false), "   MaxIter            - Maximum number of iteration steps (-) [unused when WakeMod=0]")
     push!(lines, line)
+
+
+
+
+
+
+    #####################################################################
     line = string("="^6, "  Dynamic Blade-Element/Momentum Theory Options  ", "="^46)
     push!(lines, line)
-    line = string(formatword(string(adfile.dbemt_mod);location="back", quotes=false), "   DBEMT_Mod          - Type of dynamic BEMT (DBEMT) model {1=constant tau1, 2=time-dependent tau1} (-) [used only when WakeMod=2]")
+
+    line = string(formatword(Int(adfile["DBEMT_Mod"]);location="back", quotes=false), "   DBEMT_Mod          - Type of dynamic BEMT (DBEMT) model {1=constant tau1, 2=time-dependent tau1} (-) [used only when WakeMod=2]")
     push!(lines, line)
-    line = string(formatword(string(adfile.tau1_const);location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
+
+    line = string(formatword(Int(adfile["tau1_const"]);location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
     push!(lines, line)
+
+
+
+
+
+    #########################################################################
     line = string("="^6, "   OLAF -- cOnvecting LAgrangian Filaments (Free Vortex Wake) Theory Options", "="^46)
     push!(lines, line)
-    line = string(formatword(adfile.olaf_inputfilename), "   - Aeroacoustics input file")
+
+    line = string(formatword(adfile["OLAFInputFileName"]), "   OLAFInputFileName - Input file for OLAF [used only when WakeMod=3]")
     push!(lines, line)
+
+
+
+
+
+    ###########################################################################
     line = string("="^6, "  Beddoes-Leishman Unsteady Airfoil Aerodynamics Options  ", "="^37)
     push!(lines, line)
-    line = string(formatword(string(adfile.uamod);location="back", quotes=false), "   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
+
+    line = string(formatword(Int(adfile["UAMod"]);location="back", quotes=false), "   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
     push!(lines, line)
-    line = string(formatword(adfile.flookup;quotes=false), "   FLookup            - Flag to indicate whether a lookup for f\' will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when AFAeroMod=2]")
+
+    line = string(formatword(adfile["FLookup"];quotes=false), "   FLookup            - Flag to indicate whether a lookup for f\' will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when AFAeroMod=2]")
     push!(lines, line)
+
+    line = string(formatword(adfile["UAStartRad"];quotes=false), "   UAStartRad         - Starting radius for dynamic stall (fraction of rotor radius) [used only when AFAeroMod=2; if line is missing UAStartRad=0]]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["UAEndRad"];quotes=false), "   UAEndRad           - Ending radius for dynamic stall (fraction of rotor radius) [used only when AFAeroMod=2; if line is missing UAEndRad=1]")
+    push!(lines, line)
+
+
+
+
+
+
+
+    #############################################################################
     line = string("="^6, "  Airfoil Information ", "="^73)
     push!(lines, line)
-    line = string(formatword(string(adfile.aftabmod);location="back", quotes=false), "   AFTabMod           - Interpolation method for multiple airfoil tables {1=1D interpolation on AoA (first table only); 2=2D interpolation on AoA and Re; 3=2D interpolation on AoA and UserProp} (-)")
-    push!(lines, line)
-    line = string(formatword(string(adfile.incol_alfa);location="back", quotes=false), "   InCol_Alfa         - The column in the airfoil tables that contains the angle of attack (-)")
-    push!(lines, line)
-    line = string(formatword(string(adfile.incol_cl);location="back", quotes=false), "   InCol_Cl           - The column in the airfoil tables that contains the lift coefficient (-)")
-    push!(lines, line)
-    line = string(formatword(string(adfile.incol_cd);location="back", quotes=false), "   InCol_Cd           - The column in the airfoil tables that contains the drag coefficient (-)")
-    push!(lines, line)
-    line = string(formatword(string(adfile.incol_cm);location="back", quotes=false), "   InCol_Cm           - The column in the airfoil tables that contains the pitching-moment coefficient; use zero if there is no Cm column (-)")
-    push!(lines, line)
-    line = string(formatword(string(adfile.incol_cpmin);location="back", quotes=false), "   InCol_Cpmin        - The column in the airfoil tables that contains the Cpmin coefficient; use zero if there is no Cpmin column (-)")
-    push!(lines, line)
-    line = string(formatword(string(adfile.numaffiles);location="back", quotes=false), "   NumAFfiles         - Number of airfoil files used (-)")
+
+    line = string(formatword(Int(adfile["AFTabMod"]);location="back", quotes=false), "   AFTabMod           - Interpolation method for multiple airfoil tables {1=1D interpolation on AoA (first table only); 2=2D interpolation on AoA and Re; 3=2D interpolation on AoA and UserProp} (-)")
     push!(lines, line)
 
-    line = string(formatword(adfile.foils[1];desiredlength=length(adfile.foils[2])+5), "AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)")
+    line = string(formatword(Int(adfile["InCol_Alfa"]);location="back", quotes=false), "   InCol_Alfa         - The column in the airfoil tables that contains the angle of attack (-)")
     push!(lines, line)
 
-    for i=2:length(adfile.foils)
-       line = string("\"",adfile.foils[i],"\"")
+    line = string(formatword(Int(adfile["InCol_Cl"]);location="back", quotes=false), "   InCol_Cl           - The column in the airfoil tables that contains the lift coefficient (-)")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["InCol_Cd"]);location="back", quotes=false), "   InCol_Cd           - The column in the airfoil tables that contains the drag coefficient (-)")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["InCol_Cm"]);location="back", quotes=false), "   InCol_Cm           - The column in the airfoil tables that contains the pitching-moment coefficient; use zero if there is no Cm column (-)")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["InCol_Cpmin"]);location="back", quotes=false), "   InCol_Cpmin        - The column in the airfoil tables that contains the Cpmin coefficient; use zero if there is no Cpmin column (-)")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["NumAFfiles"]);location="back", quotes=false), "   NumAFfiles         - Number of airfoil files used (-)")
+    push!(lines, line)
+
+    line = string(formatword(adfile["AFNames"][1];desiredlength=length(adfile["AFNames"][1])+5, quotes=true), "AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)")
+    push!(lines, line)
+
+    for i=2:length(adfile["AFNames"])
+       line = formatword(adfile["AFNames"][i]; desiredlength=length(adfile["AFNames"][i])+5, quotes=true)
        push!(lines,line)
     end
 
+
+
+
+
+
+    ##################################################################
     line = string("="^6, "  Rotor/Blade Properties  ", "="^69)
     push!(lines,line)
-    line = string(formatword(adfile.useblcm;quotes=false), "   UseBlCm            - Include aerodynamic pitching moment in calculations?  (flag)")
+
+    line = string(formatword(adfile["UseBlCm"];quotes=false), "   UseBlCm            - Include aerodynamic pitching moment in calculations?  (flag)")
     push!(lines,line)
 
-    while length(adfile.blades)<3 #If only one blade file is given, this repeats it 3 times so that the file is the correct length. I suppose I could always add "unused" instead, but the same name works just fine. 
-       push!(adfile.blades,adfile.blades[1])
-    end
-
-    for i=1:length(adfile.blades)
-       line = string(formatword(adfile.blades[i];desiredlength=length(adfile.blades[i])+2),"   ADBlFile($i)        - Name of file containing distributed aerodynamic properties for Blade #$i (-)")
+    for i=1:3
+       line = string(formatword(adfile["ADBlFile($i)"];desiredlength=length(adfile["ADBlFile($i)"])+2),"   ADBlFile($i)        - Name of file containing distributed aerodynamic properties for Blade #$i (-)")
        push!(lines, line)
     end
 
+
+
+
+
+    ##################################################################
+    line = string("="^6, "  Hub Properties  ", "="^69)
+    push!(lines,line)
+
+    line = string(formatword(adfile["VolHub"];quotes=false), "   VolHub             - Hub volume (m^3)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["HubCenBx"];quotes=false), "   HubCenBx           - Hub center of buoyancy x direction offset (m)")
+    push!(lines,line)
+
+
+
+
+
+
+
+    ##################################################################
+    line = string("="^6, "  Nacelle Properties  ", "="^69)
+    push!(lines,line)
+
+    line = string(formatword(adfile["VolNac"];quotes=false), "   VolNac             - Nacelle volume (m^3)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["NacCenB"];quotes=false, desiredlength=15), "   NacCenB            - Position of nacelle center of buoyancy from yaw bearing in nacelle coordinates (m)")
+    push!(lines,line)
+
+
+
+
+
+
+    ############################################################
     line = string("="^6, "  Tower Influence and Aerodynamics ", "="^61)
     push!(lines, line)
-    line = string(formatword(string(adfile.numtwrnds);location="back",quotes=false), "   NumTwrNds         - Number of tower nodes used in the analysis  (-) [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]")
+
+    line = string(formatword(Int(adfile["NumTwrNds"]);location="back",quotes=false), "   NumTwrNds         - Number of tower nodes used in the analysis  (-) [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]")
     push!(lines, line)
-    line = "TwrElev        TwrDiam        TwrCd"
+
+    line = "TwrElev        TwrDiam        TwrCd          TwrTI      TwrCb"
     push!(lines, line)
-    line = "(m)              (m)           (-)"
+
+    line = "(m)            (m)            (-)            (-)            (-)"
     push!(lines, line)
-    line = formatmatrix(adfile.twrnds) #TODO: Can I accomplish this with writedlm instead of a homegrown function? 
+
+    line = formatmatrix(hcat(adfile["TwrElev_mat"], adfile["TwrDiam_mat"], adfile["TwrCd_mat"], adfile["TwrTI_mat"], adfile["TwrCb_mat"]))
     append!(lines,line)
+
+
+
+
+
+    ###########################################################################
     line = string("="^6, "  Outputs  ", "="^84)
     push!(lines, line)
-    line = string(formatword(adfile.sumprint;quotes=false), "   SumPrint            - Generate a summary file listing input options and interpolated properties to \"<rootname>.AD.sum\"?  (flag)")
+
+    line = string(formatword(adfile["SumPrint"];quotes=false), "   SumPrint            - Generate a summary file listing input options and interpolated properties to \"<rootname>.AD.sum\"?  (flag)")
     push!(lines, line)
-    line = string(formatword(string(adfile.nblouts);location="back",quotes=false), "   NBlOuts             - Number of blade node outputs [0 - 9] (-)")
+
+    line = string(formatword(Int(adfile["NBlOuts"]);location="back",quotes=false), "   NBlOuts             - Number of blade node outputs [0 - 9] (-)")
     push!(lines, line)
-    if adfile.nblouts>0
-       line = formatvector(adfile.bloutnd)
+
+    if adfile["NBlOuts"]>0
+       line = formatvector(Int.(adfile["NBlOuts"]))
     else
        line = string(" "^11, 1)
     end
     line = string(line, "   BlOutNd             - Blade nodes whose values will be output  (-)")
     push!(lines, line)
-    line = string(formatword(string(adfile.ntwouts);location="back",quotes=false), "   NTwOuts             - Number of tower node outputs [0 - 9]  (-)")
+
+    line = string(formatword(Int(adfile["NTwOuts"]);location="back",quotes=false), "   NTwOuts             - Number of tower node outputs [0 - 9]  (-)")
     push!(lines, line)
-    if length(adfile.twoutnd)>0
-        line = formatvector(adfile.twoutnd) #doesn't need a push because I combine on the next line. 
+
+    if length(adfile["TwOutNd"])>0
+        line = formatvector(Int.(adfile["TwOutNd"])) #doesn't need a push because I combine on the next line. 
     else
         line = string("   ", 1)
     end
     line = string(line, "   TwOutNd             - Tower nodes whose values will be output  (-)")
     push!(lines, line)
+
     line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
     push!(lines, line)
-    for i=1:length(adfile.outlist)
-       line = string("\"", adfile.outlist[i], "\"")
+
+    for i=1:length(adfile["OutList"])
+       line = formatword(adfile["OutList"][i]; quotes=true, desiredlength=length(adfile["OutList"][i])+2)
        push!(lines,line)
     end
+
     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
     push!(lines,line)
+
+
+
+
+    ########################################################################
     line = "---------------------- NODE OUTPUTS --------------------------------------------"
     push!(lines, line)
-    line = string(formatword(string(adfile.bldnd_bladesout);location="back",quotes=false), "   BldNd_BladesOut  - Blades to output")
+
+    line = string(formatword(Int(adfile["BldNd_BladesOut"]);location="back",quotes=false), "   BldNd_BladesOut  - Blades to output")
     push!(lines, line)
 
-    if adfile.bldnd_bladesout>0
-        line = formatvector(adfile.bldnd_bloutnd)
+    if adfile["BldNd_BladesOut"]>0
+        if isa(eltype(adfile["BldNd_BlOutNd"]), Number)
+            line = formatvector(Int.(adfile["BldNd_BlOutNd"]))
+        else
+            line = formatword(adfile["BldNd_BlOutNd"]; quotes=true)
+        end
     else
         line = " "^11
     end
-     line = string(line, "   - Blade nodes on each blade (currently unused)")
-     push!(lines, line)
+    line = string(line, "    BldNd_BlOutNd       - Future feature will allow selecting a portion of the nodes to output.  Not implemented yet. (-)")
+    push!(lines, line)
 
-     line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
+    line = "                   OutList             - The next line(s) contains a list of output parameters.  See s for a listing of available output channels, (-)"
+    push!(lines, line)
+    
+    for i=1:length(adfile["NodeOutList"])
+       line = formatword(adfile["NodeOutList"][i]; quotes=true, desiredlength=length(adfile["NodeOutList"][i])+2)
+       push!(lines,line)
+    end
 
-     push!(lines, line)
-     for i=1:length(adfile.nodeoutlist)
-        line = string("\"", adfile.nodeoutlist[i], "\"")
-        push!(lines,line)
-     end
-     line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
-     push!(lines,line)
+    line = "END of input file (the word \"END\" must appear in the first 3 columns of this last OutList line)"
+    push!(lines,line)
 
     ### Write lines to file
     fi = open(outputpath*"/"*outputfile,"w+")
@@ -933,6 +1075,12 @@ function write_adfile(adfile::ADfile, outputfile::String; outputpath::String=pwd
     close(fi)
 end
 
+
+
+
+
+
+
 """
     write_adblade(adblade::ADBlade, outputfile::String; outputpath::String = pwd())
 
@@ -943,21 +1091,28 @@ Writes an AeroDyn Blade object to file.
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute write location of the file. 
 """
-function write_adblade(adblade::ADBlade, outputfile::String; outputpath::String=pwd())
+function write_adblade(adblade::Dict, outputfile::String; outputpath::String=pwd())
+
     lines = String[]
     line = string("-"^7, " AERODYN v15.00.* BLADE DEFINITION INPUT FILE ", "-"^37)
     push!(lines, line)
-    line = adblade.notes
+
+    line = adblade["Notes"]
     push!(lines, line)
+
     line = string("="^6, "  Blade Properties ", "="^65)
     push!(lines, line)
-    line = string(formatword(string(adblade.numnds);location="back", quotes=false),"   NumBlNds           - Number of blade nodes used in the analysis (-)")
+
+    line = string(formatword(Int(adblade["NumBlNds"]);location="back", quotes=false),"   NumBlNds           - Number of blade nodes used in the analysis (-)")
     push!(lines, line)
+
     line = "  BlSpn        BlCrvAC        BlSwpAC        BlCrvAng       BlTwist        BlChord          BlAFID"
     push!(lines, line)
+
     line = "   (m)           (m)            (m)            (deg)         (deg)           (m)              (-)"
     push!(lines, line)
-    BldProps = hcat(adblade.span, adblade.curve, adblade.sweep, adblade.curveangle, adblade.twist, adblade.chord, adblade.afid)
+
+    BldProps = hcat(adblade["BlSpn"], adblade["BlCrvAC"], adblade["BlSwpAC"], adblade["BlCrvAng"], adblade["BlTwist"], adblade["BlChord"], adblade["BlAFID"])
     line = formatmatrix(BldProps[:,1:end-1])
     newcolumn = formatwidecolumn(Int.(BldProps[:,end]))
     line = formatmatrix_appendcolumn(line, newcolumn)
@@ -989,8 +1144,10 @@ function write_airfoilcoordinates(airfoilcoords::AirfoilCoords, outputfile::Stri
     lines = String[]
     line = string(formatword(string(airfoilcoords.numcoords);location="back", quotes=false),"   NumCoords         ! The number of coordinates in the airfoil shape file (including an extra coordinate for airfoil reference).  Set to zero if coordinates not included." )
     push!(lines, line)
+
     line = "! ......... x-y coordinates are next if NumCoords > 0 ............."
     push!(lines, line)
+
     line = "! x-y coordinate of airfoil reference"
     push!(lines, line)
     line = "!  x/c        y/c"
@@ -1259,7 +1416,7 @@ function write_airfoilinput(airfoilinput::AirfoilInput, outputfile::String; outp
 end
 
 """
-    WriteAerodata(aerodata::Aerodata, outputfile::String; outputpath::String=pwd())
+    write_aerodata(aerodata::Aerodata, outputfile::String; outputpath::String=pwd())
 
 This function takes an aerodata structure and writes an output file for it.
 
@@ -1319,80 +1476,218 @@ end
 Writes the desired AD driver file at the stated location. 
 
 ### Inputs 
-- addriver - the AD driver file
+- addriver::Dict - the AD driver file
 - outputfile::String - The name of the file, containing the file ending.
 - outputpath::String - the location to write the file
 
 ### No Outputs, but a file will be written
 """
-function write_addriver(addriver::ADDriver, outputfile::String; outputpath::String=pwd())
+function write_addriver(addriver::Dict, outputfile::String; outputpath::String=pwd())
     lines = []
     line = string("-"^7, " AeroDyn Driver v1.00.x Input File ", "-"^37)
     push!(lines, line)
 
-    line = addriver.notes
+    line = addriver["Notes"]
     push!(lines, line)
 
-    line = string("="^7, "  General Options  ", "="^30)
+    line = string("-"^7, "  Input Options  ", "-"^30)
     push!(lines, line)
 
-    line = string(formatword(addriver.echo;quotes=false),"   Echo               -   Echo the input to \"<rootname>.ech\"?  (flag)")
+    line = string(formatword(addriver["Echo"];quotes=false),"   Echo               -   Echo the input to \"<rootname>.ech\"?  (flag)")
     push!(lines, line)
 
-    line = string(formatword(addriver.ad_inputfile;quotes=true,desiredlength=length(addriver.ad_inputfile)+5),"   AD_InputFile    -  Name of the primary AeroDyn input file")
+    line = string(formatword(Int(addriver["MHK"]);quotes=false),"   MHK          - MHK turbine type (switch) {0: not an MHK turbine, 1: fixed MHK turbine, 2: floating MHK turbine}")
     push!(lines, line)
 
+    line = string(formatword(Int(addriver["AnalysisType"]);quotes=false),"   AnalysisType - {1: multiple turbines, one simulation, 2: one turbine, one time-dependent simulation, 3: one turbine, combined cases}")
+    push!(lines, line)
+
+    line = string(formatword(addriver["TMax"];quotes=false),"   TMax         - Total run time [used only when AnalysisType/=3] (s)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["DT"];quotes=false),"   DT           - Simulation time step [used only when AnalysisType/=3] (s)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["AeroFile"];quotes=true,desiredlength=length(addriver["AeroFile"])+5),"   AeroFile    -  Name of the primary AeroDyn input file")
+    push!(lines, line)
+
+
+    ##########################################################################
+    line = string("-"^7, " Environmental Data ", "-"^30)
+    push!(lines, line)
+
+    line = string(formatword(addriver["FldDens"];quotes=false),"   FldDens      - Density of working fluid (kg/m^3)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["KinVisc"];quotes=false),"   KinVisc      - Kinematic viscosity of working fluid (m^2/s)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["SpdSound"];quotes=false),"   SpdSound     - Speed of sound in working fluid (m/s)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["Patm"];quotes=false),"   Patm         - Atmospheric pressure (Pa) [used only for an MHK turbine cavitation check]")
+    push!(lines, line)
+
+    line = string(formatword(addriver["Pvap"];quotes=false),"   Pvap         - Vapour pressure of working fluid (Pa) [used only for an MHK turbine cavitation check]")
+    push!(lines, line)
+
+    line = string(formatword(addriver["WtrDpth"];quotes=false),"   WtrDpth      - Water depth (m)")
+    push!(lines, line)
+
+
+
+    ##########################################################################
+    line = string("-"^7, " Inflow Data ", "-"^30)
+    push!(lines, line)
+
+    line = string(formatword(Int(addriver["CompInflow"]);quotes=false),"   CompInflow  - Compute inflow wind velocities (switch) {0=Steady Wind; 1=InflowWind}")
+    push!(lines, line)
+
+    line = string(formatword(addriver["InflowFile"];quotes=true, desiredlength=length(addriver["InflowFile"])+5),"   InflowFile  - Name of the InflowWind input file [used only when CompInflow=1]")
+    push!(lines, line)
+
+    line = string(formatword(addriver["HWindSpeed"];quotes=false),"   HWindSpeed  - Horizontal wind speed   [used only when CompInflow=0 and AnalysisType=1] (m/s)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["RefHt"];quotes=false),"   RefHt       - Reference height for horizontal wind speed [used only when CompInflow=0]  (m)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["PLExp"];quotes=false),"   PLExp       - Power law exponent   [used only when CompInflow=0 and AnalysisType=1]   (-)")
+    push!(lines, line)
+
+
+
+
+    ######################################################################
     line = string("-"^7, " Turbine Data ", "-"^30)
     push!(lines, line)
 
-    line = string(formatword(string(addriver.numblades);location="back", quotes=false)  , "   NumBlades       - Number of blades (-)")
+    line = string(formatword(Int(addriver["NumTurbines"]);quotes=false),"   NumTurbines  - Number of turbines")
     push!(lines, line)
 
-    line = string(formatword(string(addriver.hubrad);location="back", quotes=false),    "   HubRad          - Hub radius (m)")
+
+    
+    ######################################################################
+
+    for i = 1:Int(addriver["NumTurbines"])
+        line = string("-"^7, " Turbine($i) Geometry ", "-"^30)
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["BasicHAWTFormat($i)"]);location="back", quotes=false)  , "   BasicHAWTFormat($i) - Flag to switch between basic or generic input format {True: next 7 lines are basic inputs, False: Base/Twr/Nac/Hub/Bld geometry and motion must follow}")
+        push!(lines, line)
+
+        line = string(formatword(addriver["BaseOriginInit($i)"];location="back", quotes=false, desiredlength=18)  , "   BaseOriginInit($i) - Coordinate of tower base in base coordinates (m)")
+        push!(lines, line)
+
+        line = string(formatword(Int(addriver["NumBlades($i)"]);location="back", quotes=false),    "   NumBlades($i)    - Number of blades (-)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["HubRad($i)"]);location="back", quotes=false),    "   HubRad($i)          - Hub radius (m)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["HubHt($i)"]);location="back", quotes=false),     "   HubHt($i)           - Hub height (m)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["Overhang($i)"]);location="back", quotes=false)   , "   Overhang($i)        - Overhang (m)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["ShftTilt($i)"]);location="back", quotes=false)   , "   ShftTilt($i)        - Shaft tilt (deg)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["Precone($i)"]);location="back", quotes=false),   "   Precone($i)         - Blade precone (deg)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["Twr2Shft($i)"]);location="back", quotes=false),   "   Twr2Shft(1)     - Vertical distance from the tower-top to the rotor shaft (m)")
+        push!(lines, line)
+
+        #############################
+        line = string("-"^7, "Turbine($i) Motion [used only when AnalysisType=1]", "-"^30)
+        push!(lines, line)
+
+        line = string(formatword(Int(addriver["BaseMotionType($i)"]);location="back", quotes=false),   "   BaseMotionType($i)      - Type of motion prescribed for this base {0: fixed, 1: Sinusoidal motion, 2: arbitrary motion} (flag)")
+        push!(lines, line)
+
+        line = string(formatword(Int.(addriver["DegreeOfFreedom($i)"]);location="back", quotes=false),   "   DegreeOfFreedom(1)     - {1:xt, 2:yt, 3:zt, 4:theta_xt, 5:theta_yt, 6:theta_zt} [used only when BaseMotionType=1] (flag)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["Amplitude($i)"]);location="back", quotes=false),   "   Amplitude(1)           - Amplitude of sinusoidal motion   [used only when BaseMotionType=1] (m or rad)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["Frequency($i)"]);location="back", quotes=false),   "   Frequency(1)           - Frequency of sinusoidal motion   [used only when BaseMotionType=1] (Hz)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["BaseMotionFileName($i)"]);location="back", quotes=true, desiredlength=length(addriver["BaseMotionFileName($i)"])+5),   "   BaseMotionFileName($i)  - Filename containing arbitrary base motion (19 columns: Time, x, y, z, theta_x, ..., alpha_z)  [used only when BaseMotionType=2]")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["NacYaw($i)"]);location="back", quotes=false),   "   NacYaw(1)              - Yaw angle (about z_t) of the nacelle (deg)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["RotSpeed($i)"]);location="back", quotes=false),   "   RotSpeed(1)            - Rotational speed of rotor in rotor coordinates (rpm)")
+        push!(lines, line)
+
+        line = string(formatword(string(addriver["BldPitch($i)"]);location="back", quotes=false),   "   BldPitch(1)            - Blade 1 pitch (deg)")
+        push!(lines, line)
+
+    end
+
+
+    
+
+
+
+    #############################
+    line = string("-"^7, "Time-dependent Analysis [used only when AnalysisType=2, numTurbines=1]", "-"^30)
     push!(lines, line)
 
-    line = string(formatword(string(addriver.hubht);location="back", quotes=false),     "   HubHt           - Hub height (m)")
+    line = string(formatword(string(addriver["TimeAnalysisFileName"]);location="back", quotes=true, desiredlength=length(addriver["TimeAnalysisFileName"])+5),   "   TimeAnalysisFileName - Filename containing time series (6 column: Time, HWndSpeed, PLExp, RotSpd, Pitch, Yaw). ")
     push!(lines, line)
 
-    line = string(formatword(string(addriver.overhang);location="back", quotes=false)   , "   Overhang        - Overhang (m)")
+
+
+
+
+
+    ##############################################################################
+    line = string("-"^7, "  Combined-Case Analysis [used only when AnalysisType=3, numTurbines=1 ", "-"^30)
     push!(lines, line)
 
-    line = string(formatword(string(addriver.shfttilt);location="back", quotes=false)   , "   ShftTilt        - Shaft tilt (deg)")
+    line = string(formatword(string(addriver["NumCases"]);location="back", quotes=false),   "   NumCases     - Number of cases to run")
     push!(lines, line)
 
-    line = string(formatword(string(addriver.precone);location="back", quotes=false),   "   Precone         - Blade precone (deg)")
+    line = "HWndSpeed  PLExp  RotSpd  Pitch   Yaw   dT    Tmax  DOF  Amplitude Frequency "
     push!(lines, line)
 
-    line = string("-"^7, " I/O Settings ", "-"^30)
+    line = "(m/s)      (-)    (rpm)   (deg)  (deg)  (s)   (s)   (-)   (-)       (Hz)"
     push!(lines, line)
 
-    line = string(formatword(addriver.outfileroot;quotes=true, desiredlength=length(addriver.outfileroot)+5),"   OutFileRoot     -   Root name for any output files (use \"\" for .dvr rootname) (-)")
-    push!(lines, line)
-
-    line = string(formatword(addriver.tabdel;quotes=false),"   TabDel          - When   generating formatted output (OutForm=True), make output tab-delimited     (fixed-width otherwise) (flag)")
-    push!(lines, line)
-
-    line = string(formatword(addriver.outfmt;quotes=true),"   OutFmt          -    Format used for text tabular output, excluding the time channel.  Resulting field  should be 10 characters. (quoted string)")
-    push!(lines, line)
-
-    line = string(formatword(addriver.beep;quotes=false),"   Beep            - Beep     on exit (flag)")
-    push!(lines, line)
-
-    line = string("-"^7, "  Combined-Case Analysis  ", "-"^30)
-    push!(lines, line)
-
-    line = string(formatword(string(addriver.numcases);location="back", quotes=false)   , "   NumCases        - Number of cases to run")
-    push!(lines, line)
-
-    line = "WndSpeed       ShearExp       RotSpd        Pitch               Yaw           dT             Tmax"
-    push!(lines, line)
-
-    line = "(m/s)            (-)          (rpm)         (deg)               (deg)          (s)            (s)"
-    push!(lines, line)
-
-    WindData = hcat(addriver.windspeed, addriver.shearexp, addriver.rpm, addriver.pitch, addriver.yaw, addriver.dt, addriver.tmax)
+    WindData = hcat(addriver["HWndSpeed_mat"], addriver["PLExp_mat"], addriver["RotSpd_mat"], addriver["Pitch_mat"], addriver["Yaw_mat"], addriver["dT_mat"], addriver["Tmax_mat"], addriver["DOF_mat"], addriver["Amplitude_mat"], addriver["Frequency_mat"])
     line = formatmatrix(WindData)
     append!(lines, line)
+
+
+    ##############################################################################
+    line = string("-"^7, " Output Settings ", "-"^30)
+    push!(lines, line)
+
+    line = string(formatword(addriver["OutFmt"];quotes=true, desiredlength=length(addriver["OutFmt"])+5),"   OutFmt      - Format used for text tabular output, excluding the time channel.  Resulting field should be 10 characters. (quoted string)")
+    push!(lines, line)
+
+    line = string(formatword(Int(addriver["OutFileFmt"]);quotes=false, desiredlength=length(addriver["OutFileFmt"])+5),"        OutFileFmt  - Format for tabular (time-marching) output file (switch) {1: text file [<RootName>.out], 2: binary file [<RootName>.outb], 3: both}")
+    push!(lines, line)
+
+    line = string(formatword(Int(addriver["WrVTK"]);quotes=false),"   WrVTK       - VTK visualization data output: (switch) {0=none; 1=init; 2=animation}")
+    push!(lines, line)
+
+    line = string(formatword(Int(addriver["WrVTK_Type"]);quotes=false),"   WrVTK_Type  - VTK visualization data type: (switch) {1=surfaces; 2=lines; 3=both}")
+    push!(lines, line)
+
+    line = string(formatword(addriver["VTKHubRad"];quotes=false, location="back"),"   VTKHubRad   - HubRadius for VTK visualization (m)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["VTKNacDim"];quotes=false, desiredlength=length(addriver["VTKNacDim"])*6),"   VTKNacDim   - Nacelle Dimension for VTK visualization x0,y0,z0,Lx,Ly,Lz (m)")
+    push!(lines, line)
+    # @show typeof(addriver["VTKNacDim"])
+
 
     #Write lines to file
     fi = open(outputpath*"/"*outputfile,"w+")
