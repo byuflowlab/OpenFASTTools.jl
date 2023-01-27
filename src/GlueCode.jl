@@ -447,10 +447,10 @@ function write_inputfile(inputfile::Dict, outputfile::String; outputpath::String
     line = "---------------------- ENVIRONMENTAL CONDITIONS --------------------------------"
     push!(lines, line)
 
-    line = string(formatword(inputfile["Gravity"], quotes=false), "   Gravity               - Gravitational acceleration (m/s^2)")
+    line = string(formatword(inputfile["Gravity"], quotes=false), "   Gravity         - Gravitational acceleration (m/s^2)")
     push!(lines, line)
 
-    line = string(formatword(inputfile["AirDens"], quotes=false), "   AirDens             - Air density (kg/m^3)")
+    line = string(formatword(inputfile["AirDens"], quotes=false), "   AirDens         - Air density (kg/m^3)")
     push!(lines, line)
 
     line = string(formatword(inputfile["WtrDens"], quotes=false), "   WtrDens         - Water density (kg/m^3)")
@@ -468,7 +468,7 @@ function write_inputfile(inputfile::Dict, outputfile::String; outputpath::String
     line = string(formatword(inputfile["Pvap"], quotes=false), "   Pvap            - Vapour pressure of working fluid (Pa) [used only for an MHK turbine cavitation check]")
     push!(lines, line)
 
-    line = string(formatword(inputfile["WtrDpth"], quotes=false), "     WtrDpth         - Water depth (m)")
+    line = string(formatword(inputfile["WtrDpth"], quotes=false), "   WtrDpth         - Water depth (m)")
     push!(lines, line)
 
     line = string(formatword(inputfile["MSL2SWL"], quotes=false), "   MSL2SWL         - Offset between still-water level and mean sea level (m) [positive upward]")
@@ -527,7 +527,7 @@ function write_inputfile(inputfile::Dict, outputfile::String; outputpath::String
     line = "---------------------- OUTPUT --------------------------------------------------"
     push!(lines, line)
 
-    line = string(formatword(inputfile["SumPrint"], quotes=true), "   SumPrint        - Print summary data to \"<RootName>.sum\" (flag)")
+    line = string(formatword(inputfile["SumPrint"], quotes=false), "   SumPrint        - Print summary data to \"<RootName>.sum\" (flag)")
     push!(lines, line)
 
     line = string(formatword(inputfile["SttsTime"], quotes=false), "   SttsTime        - Amount of time between screen status messages (s)")

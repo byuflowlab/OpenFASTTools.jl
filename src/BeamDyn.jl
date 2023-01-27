@@ -173,18 +173,22 @@ function read_bdfile(filename::String, filepath::String)
 
     idx += Int(bdfile["kp_total"]) + 3
 
-    for i = idx:idx+10
+    # @show lines[idx]
+    # @show lines[80]
+    # @show lines[123]
+    for i = idx:idx+9
+        # @show i
         key, entry = parseline(lines[i])
         bdfile[key] = entry
     end
 
     ### Outputs section
-    outlist1idx = findlistbounds(lines[idx+11:end])
+    outlist1idx = findlistbounds(lines[idx+10:end])
 
-    outputs = readlist(lines[idx+11:idx+11+outlist1idx[end]-1])
+    outputs = readlist(lines[idx+10:idx+10+outlist1idx[end]-1])
     bdfile["OutList"] = outputs
 
-    idx = idx+11+outlist1idx[end]
+    idx = idx+10+outlist1idx[end]
 
     for i = idx:idx+1
         key, entry = parseline(lines[i])
@@ -448,7 +452,12 @@ function write_bdfile(bdfile::Dict, outputfile::String; outputpath::String=pwd()
     # line = 
     # push!(lines, line)
 
-    for i=1:length(bdfile["OutList"])
+    if length(bdfile["OutList"])==0
+        line = "          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
+        push!(lines,line)
+    end
+
+    for i=1:length(bdfile["OutList"]) 
         local line = formatword(bdfile["OutList"][i]; quotes=true)
         if i==1
             line = line*"          OutList        - The next line(s) contains a list of output   parameters. See OutListParameters.xlsx for a listing of available output  channels, (-)"
@@ -468,11 +477,17 @@ function write_bdfile(bdfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatvector(bdfile["BldNd_BlOutNd"]), "   BldNd_BlOutNd - Blade nodes on each blade (currently unused)")
     push!(lines, line)
 
-    line = "                   OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)"
-    push!(lines, line)
+    if length(bdfile["NodeOutList"])==0
+        line = "                   OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)"
+        push!(lines, line)
+    end
 
     for i=1:length(bdfile["NodeOutList"])
        local line = formatword(bdfile["NodeOutList"][i]; quotes=true)
+
+         if i==1
+              line = line*"                   OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)"
+         end
        push!(lines,line)
     end
     line = "END of input file (the word \"END\" must appear in the first  columns of    this last OutList line)"
@@ -768,14 +783,16 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 """
 function make_assembly(rhub, rtip, rstructural, twist, bdblade)
 
-    np = length(bdblade.nodes) #Number of points
+    rfrac = bdblade["rfrac"]
+
+    np = length(rfrac) #Number of points #Todo: The points do not align with where the GXBeam elements are.
     ne = np - 1 #Number of elements
 
 
 
     L = rtip - rhub #Length of the blade
 
-    rvec = [L*bdblade.nodes[i].frac + rhub for i in 1:np]
+    rvec = [L*rfrac[i] + rhub for i in 1:np]
 
     points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. 
 
@@ -793,10 +810,10 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade)
          0.0 0.0 1.0]
 
 
-    Cabvec = [rotate_x(-twistfit(x_elements[i][1]))*Cab for i in 1:ne] #Todo: I might need a negative on the twist angle that comes out of there. 
+    Cabvec = [rotate_x(-twistfit(x_elements[i][1]))*Cab for i in 1:ne] #Todo: I might need a negative on the twist angle that comes out of there. -> Todo: I need to interpolate the twist to where the structural nodes are.
 
     ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes. 
-    elements = [make_element(x_elements[i], points[i:i+1], bdblade.nodes[i].stiffmatrix, bdblade.nodes[i].massmatrix, Cabvec[i], bdblade.dampcoef) for i = 1:ne]
+    elements = [make_element(x_elements[i], points[i:i+1], bdblade["K$i"], bdblade["M$i"], Cabvec[i], bdblade["mu"]) for i = 1:ne]
 
     start = 1:ne
     stop = 2:np
