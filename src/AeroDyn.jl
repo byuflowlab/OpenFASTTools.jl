@@ -1996,31 +1996,22 @@ function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, sepa
 
     if separationpointfun==:Fit
         if model==:Original
-            sfun = DS.ADFSP(aoa, cnvec, ccvec, alpha0, alphasep, dcldalpha, eta)
+            sfun = DS.ADSP(aoa, cnvec, ccvec, alpha0, alphasep, dcldalpha, eta)
         elseif model == :Gonzalez
             sfun = DS.ADGSP()
         end
 
     elseif separationpointfun==:Fun
         S = [afi.s1, afi.s2, afi.s3, afi.s4]
-        sfun = DS.ADSP(S)
+        sfun = DS.BLSP(S)
 
     else
         @warn("make_dsairfoil() only acts on a :Fit or :Fun argument for calculating the separation point. Returning to default (:Fit).")
-        sfun = DS.ADFSP(aoa, cn, cc, alpha0, alphasep, dcldalpha, eta)
+        sfun = DS.ADSP(aoa, cn, cc, alpha0, alphasep, dcldalpha, eta)
 
     end
 
     xcp = afi.x_cp_bar
     
-
-    airfoil = DS.Airfoil(polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, A, b, T, sfun, xcp, eta, zeta)
-
-    A5 = afi.a5
-    b5 = afi.b5
-    Tsh = afi.st_sh
-
-    # constants = [zeta, A5, b5, Tsh] #Todo: Move these into the airfoil. 
-
-    return airfoil #, constants
+    return DS.Airfoil(polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, A, b, T, sfun, xcp, eta, zeta) 
 end

@@ -253,7 +253,9 @@ function read_edfile(filename::String, filepath::String)
     edfile = Dict()
     edfile["Notes"] = lines[1]
 
+    # @show lines[107]
     for i = 2:107 #Todo: I need to update parseline so that if there isn't an entry. Apparently that doesn't screw up OpenFAST. 
+        # @show i
         key, entry = parseline(lines[i])
         edfile[key] = entry
     end

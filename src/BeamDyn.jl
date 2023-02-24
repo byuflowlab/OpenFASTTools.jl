@@ -135,9 +135,46 @@
 ##############################################################
 
 """
+    read_bddriver(filename, filepath)
+Reads a BeamDyn driver file and creates a dictionary to be used.
+"""
+function read_bddriver(filename::String, filepath::String)
+    fi = open(filepath*"/"*filename, "r")
+    lines = readlines(fi)
+    close(fi)
+
+    lines = cleanfile!(lines)
+
+    bddriver = Dict()
+    bddriver["Notes"] = lines[1]
+
+    for i = 2:11
+        key, entry = parseline(lines[i])
+        bddriver[key] = entry
+    end
+
+    idx = 12
+
+    bddriver["GlbDCM"] = parsematrix(lines[idx:idx+2]; nameheader=false)
+
+    idx += 3
+
+    for i = idx:idx+16
+        key, entry = parseline(lines[i])
+        bddriver[key] = entry
+    end
+
+    # pointnames, pointdata = parsematrix(lines[idx+17:idx+Int(bddriver["kp_total"])+2]) #Todo: This isn't going to work. 
+
+    keyi, entryi = parseline(lines[idx+Int(bddriver["NumPointLoads"])+19])
+    bddriver[keyi] = entryi
+    return bddriver
+end
+
+"""
     read_bdfile(filename, filepath)
 
-Reads a BeamDyn file and creates an object to be used. 
+Reads a BeamDyn file and creates a dictionary to be used. 
 
 ### Inputs 
 - filename::String - name of the file to read in. 
@@ -190,10 +227,13 @@ function read_bdfile(filename::String, filepath::String)
 
     idx = idx+10+outlist1idx[end]
 
-    for i = idx:idx+1
-        key, entry = parseline(lines[i])
-        bdfile[key] = entry
-    end
+    key, entry = parseline(lines[idx])
+    bdfile[key] = entry
+
+    bdfile["BldNd_BlOutNd"] = 99
+
+
+
 
     ### Nodal outputs
     outlist2idx = findlistbounds(lines[idx+2:end])
@@ -257,6 +297,198 @@ end
 ##############################################################
 
 """
+    write_bddriver(bddriver, outputfile; outputpath=pwd())
+"""
+function write_bddriver(bddriver::Dict, outputfile::String; outputpath::String=pwd())
+    lines = String[]
+    line = string("-"^9, " BEAMDYN Driver with OpenFAST INPUT FILE ", "-"^43)
+    push!(lines,line)
+
+    push!(lines, bddriver["Notes"])
+
+
+
+
+    ########################################################################
+    line = string("-"^22, " SIMULATION CONTROL ", "-"^38)
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DynamicSolve"];quotes=false),"   DynamicSolve  - Dynamic solve (false for static solve) (-)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["t_initial"];quotes=false),"   t_initial     - Starting time of simulation (s) [used only when DynamicSolve=TRUE]")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["t_final"];quotes=false),"   t_final       - Ending time of simulation   (s) [used only when DynamicSolve=TRUE]")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["dt"];quotes=false),"   dt            - Time increment size         (s) [used only when DynamicSolve=TRUE]")
+    push!(lines,line)
+
+
+
+
+
+
+
+    ########################################################################
+    line = string("-"^22, " GRAVITY PARAMETER ", "-"^38)
+    push!(lines,line)
+
+    line = string(formatword(bddriver["Gx"];quotes=false),"   Gx            - Component of gravity vector along X direction (m/s^2)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["Gy"];quotes=false),"   Gy            - Component of gravity vector along Y direction (m/s^2)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["Gz"];quotes=false),"   Gz            - Component of gravity vector along Z direction (m/s^2)")
+    push!(lines,line)
+
+
+
+
+
+
+
+    ########################################################################
+    line = string("-"^22, " FRAME PARAMETER ", "-"^38)
+    push!(lines,line)
+
+    line = string(formatword(bddriver["GlbPos(1)"];quotes=false),"   GlbPos(1)     - Component of position vector of the reference blade frame along X direction (m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["GlbPos(2)"];quotes=false),"   GlbPos(2)     - Component of position vector of the reference blade frame along Y direction (m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["GlbPos(3)"];quotes=false),"   GlbPos(3)     - Component of position vector of the reference blade frame along Z direction (m)")
+    push!(lines,line)
+
+
+
+
+
+    ########################################################################
+    line = "---The following 3 by 3 matrix is the direction cosine matirx ,GlbDCM(3,3),"
+    push!(lines,line)
+
+    line = "---relates global frame to the initial blade root frame"
+    push!(lines,line)
+
+    line = formatmatrix(bddriver["GlbDCM"];spacing=2)
+    append!(lines, line)
+
+    line = string(formatword(bddriver["GlbRotBladeT0"];quotes=false),"   GlbRotBladeT0 - Reference orientation for BeamDyn calculations is aligned with initial blade root?")
+    push!(lines,line)
+
+
+
+
+
+
+
+
+    ########################################################################
+    line = string("-"^22, " ROOT VELOCITY PARAMETER ", "-"^38)
+    push!(lines,line)
+
+    line = string(formatword(bddriver["RootVel(4)"];quotes=false),"   RootVel(4)    - Component of angular velocity vector of the beam root about X axis (rad/s)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["RootVel(5)"];quotes=false),"   RootVel(5)    - Component of angular velocity vector of the beam root about Y axis (rad/s)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["RootVel(6)"];quotes=false),"   RootVel(6)    - Component of angular velocity vector of the beam root about Z axis (rad/s)")
+    push!(lines,line)
+
+
+
+
+
+
+
+    ########################################################################
+    line = string("-"^22, " APPLIED FORCE ", "-"^38)
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DistrLoad(1)"];quotes=false),"   DistrLoad(1)  - Component of distributed force vector along X direction (N/m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DistrLoad(2)"];quotes=false),"   DistrLoad(2)  - Component of distributed force vector along Y direction (N/m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DistrLoad(3)"];quotes=false),"   DistrLoad(3)  - Component of distributed force vector along Z direction (N/m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DistrLoad(4)"];quotes=false),"   DistrLoad(4)  - Component of distributed moment vector along X direction (N-m/m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DistrLoad(5)"];quotes=false),"   DistrLoad(5)  - Component of distributed moment vector along Y direction (N-m/m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["DistrLoad(6)"];quotes=false),"   DistrLoad(6)  - Component of distributed moment vector along Z direction (N-m/m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["TipLoad(1)"];quotes=false),"   TipLoad(1)    - Component of concentrated force vector at blade tip along X direction (N)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["TipLoad(2)"];quotes=false),"   TipLoad(2)    - Component of concentrated force vector at blade tip along Y direction (N)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["TipLoad(3)"];quotes=false),"   TipLoad(3)    - Component of concentrated force vector at blade tip along Z direction (N)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["TipLoad(4)"];quotes=false),"   TipLoad(4)    - Component of concentrated moment vector at blade tip along X direction (N-m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["TipLoad(5)"];quotes=false),"   TipLoad(5)    - Component of concentrated moment vector at blade tip along Y direction (N-m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["TipLoad(6)"];quotes=false),"   TipLoad(6)    - Component of concentrated moment vector at blade tip along Z direction (N-m)")
+    push!(lines,line)
+
+    line = string(formatword(bddriver["NumPointLoads"];quotes=false),"   NumPointLoads - Number of point loads along blade")
+    push!(lines,line)
+
+
+
+
+
+    line = "Non-dim blade-span eta   Fx          Fy            Fz           Mx           My           Mz"
+    push!(lines,line)
+
+    line = "(-)                      (N)         (N)           (N)          (N-m)        (N-m)        (N-m)"
+    push!(lines,line)
+
+
+
+
+
+
+
+
+    ########################################################################
+    line = string("-"^22, " APPLIED FORCE ", "-"^38)
+    push!(lines,line)
+
+    line = string(formatword(bddriver["InputFile"];quotes=false),"   InputFile - Name of the primary BeamDyn input file")
+    push!(lines,line)
+
+
+
+
+
+    ## Write lines to file
+    fi = open(outputpath*"/"*outputfile,"w+")
+    i = 1
+    for i = 1:length(lines)-1
+         write(fi,lines[i])
+         write(fi,"\n")
+    end
+    write(fi,lines[end])
+    close(fi)
+end
+
+"""
     write_bdfile(bdfile, outputfile; outputpath=pwd())
 
 Writes a BeamDyn struct to file. 
@@ -305,7 +537,8 @@ function write_bdfile(bdfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(bdfile["load_retries"];quotes=false),"   load_retries  -   Number of factored load retries before quitting the aimulation [DEFAULT = 20]")
     push!(lines,line)
 
-    line = string(formatword(Int(bdfile["NRMax"]);quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
+    #Todo: Something to differentiate between default and a Int
+    line = string(formatword(bdfile["NRMax"];quotes=false),"   NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]")
     push!(lines,line)
 
     line = string(formatword(bdfile["stop_tol"];quotes=false),"   stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]")
@@ -474,7 +707,13 @@ function write_bdfile(bdfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatvector(Int(bdfile["BldNd_BladesOut"])), "   BldNd_BladesOut  - Blades to output")
     push!(lines, line)
 
-    line = string(formatvector(bdfile["BldNd_BlOutNd"]), "   BldNd_BlOutNd - Blade nodes on each blade (currently unused)")
+    # tryint = tryparse(Int, string(bdfile["BldNd_BlOutNd"]))
+    # if tryint != nothing
+    #     line = string(formatword(tryint; quotes=false), "   BldNd_BlOutNd - Blade nodes on each blade (currently unused)")
+    # else
+    #     line = string(formatword(bdfile["BldNd_BlOutNd"]), "   BldNd_BlOutNd - Blade nodes on each blade (currently unused)")
+    # end
+    line = string(formatvector(bdfile["BldNd_BlOutNd"]), "  - Blade nodes on each blade (currently unused)")
     push!(lines, line)
 
     if length(bdfile["NodeOutList"])==0
@@ -610,11 +849,11 @@ end
 - A = Cross sectional area
 - Ix = Area moment of inertia about the x axis
 - Iy = Area moment of inertia about the y axis
-- G = !!
+- G = Shear modulus
 - xc, yc = Coordinates of the centroid
 - xs, ys = Coordinates of the shear center
 - theta_p = angle between the cross section axes, and the principle axes of the axial force. 
-- theta_s = andgle between the cross section axes and the principle axes of the shear.
+- theta_s = angle between the cross section axes and the principle axes of the shear.
 - kxs, kys = dimensionless shear factor 
 
 ### Notes:
@@ -689,24 +928,7 @@ end
 
 
 
-function rotate_x(alpha_x)
-    return [
-        1.0     0.0             0.0;
-        0.0     cos(alpha_x)   -sin(alpha_x);
-        0.0     sin(alpha_x)    cos(alpha_x)]
-end
 
-function rotate_y(alpha_y)
-    return [cos(alpha_y) 0 sin(alpha_y);
-            0.0 1.0 0.0;
-            -sin(alpha_y) 0 cos(alpha_y)]
-end
-
-function rotate_z(alpha_z)
-    return [cos(alpha_z) -sin(alpha_z) 0.0;
-            sin(alpha_z) cos(alpha_z) 0.0;
-            0.0 0.0 1.0]
-end
 
 function make_element(x, points, stiffness, mass, Cab, damping)
     # element length
@@ -723,18 +945,26 @@ function make_element(x, points, stiffness, mass, Cab, damping)
     # stiffness_gx[5,:] = stiffness[4,:]
     # stiffness_gx[6,:] = stiffness[5,:]
 
-    # R = rotate_y(-pi/2)
-    # stiffness_gx = R*stiffness*(R')
-
     k = view(stiffness, :, :)
+
+    # [3, 1, 2, 6, 4, 5]
+    # stiffness_gx = [
+    #     k[3,3] k[3,1] k[3,2] k[3,6] k[3,4] k[3,5] 
+    #     k[1,3] k[1,1] k[1,2] k[1,6] k[1,4] k[1,5]
+    #     k[2,3] k[2,1] k[2,2] k[2,6] k[2,4] k[2,5] 
+    #     k[6,3] k[6,1] k[6,2] k[6,6] k[6,4] k[6,5]
+    #     k[4,3] k[4,1] k[4,2] k[4,6] k[4,4] k[4,5] 
+    #     k[5,3] k[5,1] k[5,2] k[5,6] k[5,4] k[5,5]]
 
     stiffness_gx = [
         k[3,3] k[3,2] k[3,1] k[3,6] k[3,5] k[3,4]
-        k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4]
-        k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4]
+        k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4] 
+        k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4] 
         k[6,3] k[6,2] k[6,1] k[6,6] k[6,5] k[6,4]
         k[5,3] k[5,2] k[5,1] k[5,6] k[5,5] k[5,4]
         k[4,3] k[4,2] k[4,1] k[4,6] k[4,5] k[4,4]] #TODO: Back it out to a tensor, then do the rotation, and map to stiffness matrix. Dr. Ning sent out a pdf. 
+
+    # @show stiffness_gx
 
     compliance = LinearAlgebra.inv(stiffness_gx) #TODO. It might be faster to manually invert the matrix. -> Not worried about speed here.
  
@@ -781,7 +1011,7 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(rhub, rtip, rstructural, twist, bdblade)
+function make_assembly(rhub, rtip, rstructural, twist, bdblade;fit=Linear)
 
     rfrac = bdblade["rfrac"]
 
@@ -794,14 +1024,15 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade)
 
     rvec = [L*rfrac[i] + rhub for i in 1:np]
 
-    points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. 
+    points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. #Todo: I should include the actual station points (the key points) from BeamDyn.
 
-    x_elements = [SVector((rvec[i]+rvec[i+1])/2, 0.0, 0.0) for i in 1:ne] #The xyz location of each of the structural nodes. 
+    x_elements = [SVector((rvec[i]+rvec[i+1])/2, 0.0, 0.0) for i in 1:ne] #The xyz location of each of the structural nodes.
+    rfrac_elements = [x_elements[i][1]/rtip for i in 1:ne] #The radial location of each of the structural nodes.
 
-    twist = twist .- twist[1] #Decreased instabilities. 
- 
+    # @show rfrac_elements
 
-    twistfit = Akima(rstructural, twist)
+    twist = twist .- twist[1] #Decreased instabilities. #TODO: Is this right? 
+    twistfit = fit(rfrac, twist)
     
     # element triad
     Cab = @SMatrix [
@@ -809,11 +1040,29 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade)
          0.0 1.0 0.0;
          0.0 0.0 1.0]
 
+    # @show rfrac
+    # @show rfrac_elements
+    # error("stop")
 
-    Cabvec = [rotate_x(-twistfit(x_elements[i][1]))*Cab for i in 1:ne] #Todo: I might need a negative on the twist angle that comes out of there. -> Todo: I need to interpolate the twist to where the structural nodes are.
 
-    ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes. 
-    elements = [make_element(x_elements[i], points[i:i+1], bdblade["K$i"], bdblade["M$i"], Cabvec[i], bdblade["mu"]) for i = 1:ne]
+    Cabvec = [rotate_x(-twistfit(rfrac_elements[i]))*Cab for i in 1:ne] #Todo: I might need a negative on the twist angle that comes out of there. 
+
+    ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes.
+    Kmat = zeros(6,6,np)
+    Mmat = zeros(6,6,np)
+    for i in 1:np
+        Kmat[:,:,i] = bdblade["K$i"]
+        Mmat[:,:,i] = bdblade["M$i"]
+    end
+
+    # @show Kmat[:,:,1]
+
+    Kfit = interpolate_matrix_symmetric(rfrac, rfrac_elements, Kmat; fit) 
+    Mfit = interpolate_matrix_symmetric(rfrac, rfrac_elements, Mmat; fit)
+
+    # @show Kfit[:,:,1]
+
+    elements = [make_element(x_elements[i], points[i:i+1], Kfit[:,:,i], Mfit[:,:,i], Cabvec[i], bdblade["mu"]) for i = 1:ne]
 
     start = 1:ne
     stop = 2:np
@@ -833,12 +1082,12 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(edfile, bdfile, bdblade)
+function make_assembly(edfile, bdfile, bdblade; fit=Linear)
     rhub = edfile["HubRad"]
     rtip = edfile["TipRad"]
 
     rstructural = bdfile["kp_zr"]
     twist = bdfile["initial_twist"].*(pi/180) #Structural twist given in the BeamDyn file, converted to radians.
 
-    return make_assembly(rhub, rtip, rstructural, twist, bdblade)
+    return make_assembly(rhub, rtip, rstructural, twist, bdblade; fit)
 end

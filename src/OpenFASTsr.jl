@@ -5,11 +5,13 @@ module OpenFASTsr
 
 #Todo: I need to add the example files to the repo. 
 #Todo: Where do I use LinearAlgebra? 
+#Todo: I'm not sure that OpenFAST is case sensitive. In that case, it would be good to make sure everything is lowercase.
 
 using Printf, FLOWMath, DelimitedFiles, GXBeam, StaticArrays, LinearAlgebra, DynamicStallModels
 
 DS = DynamicStallModels
 
+include("utils.jl")
 include("GlueCode.jl")
 include("reading.jl")
 include("writing.jl")
