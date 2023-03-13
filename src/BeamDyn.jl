@@ -1015,7 +1015,7 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade;fit=Linear)
 
     rfrac = bdblade["rfrac"]
 
-    np = length(rfrac) #Number of points #Todo: The points do not align with where the GXBeam elements are.
+    np = length(rfrac) #Number of points #Todo. The points do not align with where the GXBeam elements are. -> What would you like me to do about that? 
     ne = np - 1 #Number of elements
 
 
@@ -1024,10 +1024,10 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade;fit=Linear)
 
     rvec = [L*rfrac[i] + rhub for i in 1:np]
 
-    points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. #Todo: I should include the actual station points (the key points) from BeamDyn.
+    points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. #TODO: I should include the actual station points (the key points) from BeamDyn.
 
     x_elements = [SVector((rvec[i]+rvec[i+1])/2, 0.0, 0.0) for i in 1:ne] #The xyz location of each of the structural nodes.
-    rfrac_elements = [x_elements[i][1]/rtip for i in 1:ne] #The radial location of each of the structural nodes.
+    rfrac_elements = [(x_elements[i][1]-rhub)/(rtip-rhub) for i in 1:ne] #The radial location of each of the structural nodes. #Todo. This won't give me the actual radial fraction. -> Now it should. I need to check it.  
 
     # @show rfrac_elements
 
