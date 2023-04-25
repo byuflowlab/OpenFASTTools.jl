@@ -209,19 +209,9 @@ The function requires x and xnew to be increasing order. Xnew need not be within
     the range of of x, however, values outside of the range will interpolated to
     the first value if below the range and the last value if after the range. 
 """
-function integerfit(x, y, xnew)
-    ynew = zeros(Int, length(xnew))
-    for i=1:length(xnew)
-        for j=1:length(x)
-            if xnew[i]<= x[j]
-                ynew[i] = y[j]
-                break
-            end
-            if j==length(x)
-                ynew[i] = y[end]
-            end
-        end
-    end
+function integerfit(x, y, xnew; fit=DS.Linear)
+    yfit = fit(x, y)
+    ynew = round.(Int, yfit.(xnew))
     return ynew
 end
 

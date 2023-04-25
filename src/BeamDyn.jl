@@ -1031,7 +1031,6 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade;fit=Linear)
 
     # @show rfrac_elements
 
-    twist = twist .- twist[1] #Decreased instabilities. #TODO: Is this right? 
     twistfit = fit(rfrac, twist)
     
     # element triad
@@ -1088,6 +1087,7 @@ function make_assembly(edfile, bdfile, bdblade; fit=Linear)
 
     rstructural = bdfile["kp_zr"]
     twist = bdfile["initial_twist"].*(pi/180) #Structural twist given in the BeamDyn file, converted to radians.
+    # println(twist)
 
     return make_assembly(rhub, rtip, rstructural, twist, bdblade; fit)
 end

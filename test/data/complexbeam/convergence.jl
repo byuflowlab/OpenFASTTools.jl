@@ -105,6 +105,7 @@ function prepfile(n::Int, nelem::Int, order::Int)
     bddriver["DynamicSolve"] = false
     bddriver["InputFile"] = "cb_BDfile.dat"
     bddriver["TipLoad(1)"] = 1000
+    bddriver["TipLoad(2)"] = 1000
 
     ### Write OpenFAST files
     of.write_bddriver(bddriver, "cb_bddriver.inp"; outputpath="./")
@@ -211,6 +212,7 @@ function prepfile_elements(nelem::Int, order::Int)
     bddriver["DynamicSolve"] = false
     bddriver["InputFile"] = "cb_BDfile.dat"
     bddriver["TipLoad(1)"] = 1000
+    bddriver["TipLoad(2)"] = 1000
 
     ### Write OpenFAST files
     of.write_bddriver(bddriver, "cb_bddriver.inp"; outputpath="./")
@@ -226,7 +228,8 @@ function gettipdef()
 
     bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
 
-    return bdouts["TipTDxr"][end]
+    # return bdouts["TipTDxr"][end]
+    return bdouts["TipTDyr"][end]
 end
 
 
@@ -273,8 +276,9 @@ function rungxbeam()
     nelem = length(assembly.elements)
 
     Fx = 1000.0
+    Fy = 1000.0
 
-    prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0), nelem+1 => GXBeam.PrescribedConditions(Fz = -Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
+    prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0), nelem+1 => GXBeam.PrescribedConditions(Fy=Fy, Fz=-Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
         
     ### GXBeam  solution  
     system, _ = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions) 
@@ -283,7 +287,8 @@ function rungxbeam()
 
     # def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
 
-    return -gxstate.points[end].u[3]
+    # return -gxstate.points[end].u[3]
+    return gxstate.points[end].u[2]
 end
 
 gxconvergence = collect(20:20:400)

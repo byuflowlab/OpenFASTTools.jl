@@ -1964,7 +1964,7 @@ end
 
 export make_dsairfoil
 
-function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima) 
+function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
     if radians || maximum(afi.aoa)<=pi
         aoa = afi.aoa
     else
@@ -1987,12 +1987,16 @@ function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, sepa
 
     alpha0 = afi.alpha0*(pi/180)
     alphasep = sort([afi.alpha2, afi.alpha1].*(pi/180))
+    alphacut = [-afi.uacutout, afi.uacutout].*(pi/180)
 
-    A = [afi.a1, afi.a2, afi.a5]
-    b = [afi.b1, afi.b2, afi.b5]
-    T = [afi.t_p, afi.t_f0, afi.t_v0, afi.t_vl, afi.st_sh]
-
-    eta = afi.eta_e
+   
+    Cd0 = afi.cd0
+    # Cn1 = afi.cn1
+    # Cd0 = cd(alpha0)
+    # Cm0 = cm(alpha0)
+    alpha1 = alphasep[2]
+    Cn1 = cl(alpha1)*cos(alpha1) + (cd(alpha1) - Cd0)*sin(alpha1)
+    Cm0 = afi.cm0
 
     if separationpointfun==:Fit
         if model==:Original
@@ -2012,6 +2016,18 @@ function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, sepa
     end
 
     xcp = afi.x_cp_bar
+
+
+    A = [afi.a1, afi.a2, afi.a5]
+    b = [afi.b1, afi.b2, afi.b5]
+    T = [afi.t_p, afi.t_f0, afi.t_v0, afi.t_vl, afi.st_sh]
+
+    eta = afi.eta_e
+
+    dsmodel = DS.BeddoesLeishman(DS.Indicial(), 3, A, b, T, Cn1, Cd0, Cm0, eta, zeta, a)
     
-    return DS.Airfoil(polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, A, b, T, sfun, xcp, eta, zeta) 
+    return DS.Airfoil(dsmodel, polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, alphacut, cutrad, sfun, chord, xcp) 
+end
+
+function make_blade()
 end
