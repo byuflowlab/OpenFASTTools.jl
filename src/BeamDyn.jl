@@ -973,6 +973,7 @@ function make_element(x, points, stiffness, mass, Cab, damping)
 
     ### element mass matrix 
     mu = mass[1,1]
+    # mu = 0.000000001
     xm2 = -mass[1,6]/mu
     xm3 = mass[2,6]/mu
     i22 = mass[5,5]
@@ -1011,23 +1012,29 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(rhub, rtip, rstructural, twist, bdblade;fit=Linear)
+function make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade;fit=Linear)
+
+    #Todo: How does precone and sweep affect the blade? 
 
     rfrac = bdblade["rfrac"]
 
     np = length(rfrac) #Number of points #Todo. The points do not align with where the GXBeam elements are. -> What would you like me to do about that? 
     ne = np - 1 #Number of elements
 
+    
 
 
-    L = rtip - rhub #Length of the blade
+    # L = rtip - rhub #Length of the blade
 
-    rvec = [L*rfrac[i] + rhub for i in 1:np]
+    # rvec = [L*rfrac[i] + rhub for i in 1:np]
 
-    points = [SVector(rvec[i], 0.0, 0.0) for i in 1:np] #The beginning and ending of every element. #TODO: I should include the actual station points (the key points) from BeamDyn.
+    # points = [SVector(rx[i], ry[i], rz[i]+rhub) for i in 1:np] 
+    points = [SVector(rz[i]+rhub, ry[i], -rx[i]) for i in 1:np] #The beginning and ending of every element. #TODO: I should include the actual station points (the key points) from BeamDyn.
 
-    x_elements = [SVector((rvec[i]+rvec[i+1])/2, 0.0, 0.0) for i in 1:ne] #The xyz location of each of the structural nodes.
-    rfrac_elements = [(x_elements[i][1]-rhub)/(rtip-rhub) for i in 1:ne] #The radial location of each of the structural nodes. #Todo. This won't give me the actual radial fraction. -> Now it should. I need to check it.  
+    x_elements = [(points[i]+points[i+1])/2 for i in 1:ne] #The xyz location of each of the structural nodes.
+    # rfrac_elements = [(x_elements[i][3]-rhub)/(rtip-rhub) for i in 1:ne] #The radial location of each of the structural nodes. #Todo. This won't give me the actual radial fraction. -> Now it should. I need to check it.  #TODO: I'm not sure that this will work if the blade doesn't follow the Z direction (i.e. if it has x and z components (sweep and precone))
+    rfrac_elements = [(x_elements[i][1]-rhub)/(rtip-rhub) for i in 1:ne]
+    # @show rfrac_elements
 
     # @show rfrac_elements
 
@@ -1043,7 +1050,7 @@ function make_assembly(rhub, rtip, rstructural, twist, bdblade;fit=Linear)
     # @show rfrac_elements
     # error("stop")
 
-
+    # Cabvec = [rotate_y(-pi/2)*rotate_x(-twistfit(rfrac_elements[i]))*Cab for i in 1:ne]
     Cabvec = [rotate_x(-twistfit(rfrac_elements[i]))*Cab for i in 1:ne] #Todo: I might need a negative on the twist angle that comes out of there. 
 
     ### Create each Element #TODO: This doesn't interpolate the stiffness and mass matrices, although we're interpolating the GXBeam element node as the center of two BeamDyn nodes.
@@ -1082,12 +1089,21 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 - assembly::GXBeam.Assembly
 """
 function make_assembly(edfile, bdfile, bdblade; fit=Linear)
+    
     rhub = edfile["HubRad"]
     rtip = edfile["TipRad"]
 
-    rstructural = bdfile["kp_zr"]
+    rx = bdfile["kp_xr"]
+    ry = bdfile["kp_yr"]
+    rz = bdfile["kp_zr"]
+    ##Note: I just realized that OpenFAST gives me the rx, ry, and rz for the blade in both the aerodynamic and strucutral reference frames (in the blade root reference frame of course). So... I should just read them in. So I don't need to apply sweep and curve... although... Sweep and curve would change what rotational velocity is seen.... so I'd not be able to extract the rotational velocity accurately... unless..... I extract the velocity from the structural velocity, then interpolate it to the aerodynamic nodes. Yeah... that'll work. Man... I should write more frequently. 
+
     twist = bdfile["initial_twist"].*(pi/180) #Structural twist given in the BeamDyn file, converted to radians.
     # println(twist)
 
-    return make_assembly(rhub, rtip, rstructural, twist, bdblade; fit)
+    precone = edfile["PreCone(1)"]
+    sweep = zeros(length(rx)) #Todo:
+    curve = zeros(length(rx))
+
+    return make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade; fit)
 end

@@ -36,7 +36,7 @@ omega = rpm*2*pi/60 #angular velocity (radians/second)
 
 ### Turbine description
 
-rhub = 1.0 #Hub radius
+rhub = 0.0 #Hub radius
 rtip = 100.0 #Tip radius
 
 rvec = collect(range(rhub, rtip, length=n))
@@ -117,8 +117,8 @@ let
     bdfile["BldNd_BlOutNd"] = 99
 
     bdfile["OutNd"] = Int[1]
-    bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr"]
-    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr"]
+    bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr", "TipTVxg", "TipTVyg", "TipTVzg" ]
+    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr", "TVxg", "TVyg", "TVzg", "TVxl", "TVyl", "TVzl"]
     # append!(bdfile["NodeOutList"], ["TDxr", "TDyr", "TDzr", "RVxr", "RVyr", "RVzr"])
 
     ### BD Blade file

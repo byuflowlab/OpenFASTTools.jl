@@ -24,7 +24,7 @@ bdblade = of.read_bdblade("NREL5MWrefBD_Blade.dat", ofpath)
 tmax = 5.0
 dt = 0.001
 dt_out = 0.001 # "\"default\""
-n = 200
+n = 400
 
 ### Environmental variables
 gravity = 0.0 #9.81 #Gravity (m/s^2)
@@ -36,8 +36,8 @@ omega = rpm*2*pi/60 #angular velocity (radians/second)
 
 ### Turbine description
 
-rhub = 1.0 #Hub radius
-rtip = 100.0 #Tip radius
+rhub = 0.0 #Hub radius
+rtip = 10.0 #Tip radius
 
 rvec = collect(range(rhub, rtip, length=n))
 rfrac = (rvec .- rhub)/(rtip-rhub)
@@ -98,10 +98,12 @@ let
     bdfile["DTBeam"] = "DEFAULT"
     bdfile["order_elem"] = 10
     bdfile["stop_tol"] = 1e-12
+    bdfile["RotStates"] = false
 
     # bdfile["member_total"] = 1
+    # bdfile["KeyPairs"] = [1 n]
     bdfile["member_total"] = 4
-    bdfile["KeyPairs"] = [1 50; 2 51; 3 51; 4 51]
+    bdfile["KeyPairs"] = [1 100; 2 101; 3 101; 4 101]
 
     bdfile["kp_total"] = n
     bdfile["kp_xr"] = zeros(n)
@@ -116,7 +118,7 @@ let
 
     bdfile["OutNd"] = Int[1]
     bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr"]
-    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr"]
+    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr", "TVxr", "TVyr", "TVzr"]
     # append!(bdfile["NodeOutList"], ["TDxr", "TDyr", "TDzr", "RVxr", "RVyr", "RVzr"])
 
     ### BD Blade file
