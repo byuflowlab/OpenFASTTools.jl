@@ -30,7 +30,7 @@ True          GlbRotBladeT0 - Reference orientation for BeamDyn calculations is 
           0   DistrLoad(4)  - Component of distributed moment vector along X direction (N-m/m)
           0   DistrLoad(5)  - Component of distributed moment vector along Y direction (N-m/m)
           0   DistrLoad(6)  - Component of distributed moment vector along Z direction (N-m/m)
-       1000   TipLoad(1)    - Component of concentrated force vector at blade tip along X direction (N)
+          0   TipLoad(1)    - Component of concentrated force vector at blade tip along X direction (N)
           0   TipLoad(2)    - Component of concentrated force vector at blade tip along Y direction (N)
           0   TipLoad(3)    - Component of concentrated force vector at blade tip along Z direction (N)
           0   TipLoad(4)    - Component of concentrated moment vector at blade tip along X direction (N-m)

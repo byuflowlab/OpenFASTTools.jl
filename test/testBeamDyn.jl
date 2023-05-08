@@ -417,7 +417,7 @@ cd(path)
 
         end #End distributed load
 
-        @testset "Tip Load - Spinning" begin
+        @testset "Spinning" begin
             ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
         
             Fx = 0.0
@@ -427,10 +427,10 @@ cd(path)
         
             omega = 1.0
 
+            tvec = collect(0:0.001:20.0)
 
             ### GXBeam  solution  
             system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions, angular_velocity = [0, 0, -omega]) 
-
             gxstate = AssemblyState(system, assembly; prescribed_conditions)
 
 
@@ -438,13 +438,80 @@ cd(path)
             def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
             def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
 
-            # def_x = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
-            # def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
-            # def_z = [gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
-
-            Vx = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
+            Vx = [-gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
             Vy = [gxstate.points[i].V[2] for i in eachindex(gxstate.points)]
-            Vz = [gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
+            Vz = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
+
+
+            bdread = readdlm("./data/simplebeam/sb_spinning.out", skipstart=6)
+            bdnames = bdread[1,:]
+            bddata = Float64.(bdread[3:end,:])
+
+            bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+
+            # @show assembly.points[end]
+            # @show assembly.points[end]+gxstate.points[end].u
+
+            # @show bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]
+            TVx, TVy, TVz = bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
+            # @show TVx, TVy, TVz
+
+            Vof = sqrt(TVy^2+TVz^2)
+            # bdvx = bdouts["N100_TVxl"][end]
+            # bdvy = bdouts["N100_TVyl"][end]
+            # bdvz = bdouts["N100_TVzl"][end]
+            # @show bdvx, bdvy, bdvz
+
+
+            # @show Vx[end], Vy[end], Vz[end]
+
+            dy_gx = (assembly.points[end]+gxstate.points[end].u)[2]
+            dy_bd = bdouts["TipTDyr"][end] 
+
+            dz_gx = (assembly.points[end]+gxstate.points[end].u)[1]
+            dz_bd = bdouts["TipTDzr"][end] + 100.0
+
+            Dyerr = (dy_gx-dy_bd)
+            Dzerr = 100*(dz_gx-dz_bd)/dz_bd
+            Verr = 100*(Vof+Vy[end])/Vof
+
+            @test abs(Dyerr)<0.1
+            @test abs(Dzerr)<0.1
+            @test abs(Verr)<0.1
+            
+            println("simple beam spinning Error: ")
+            println("   Dyerr: ", Dyerr, " m") #Todo:
+            println("   Dzerr: ", Dzerr, " %")
+            println("   Verr: ", Verr, " %") #Todo:
+            println("")
+        
+        end #End testing spinning
+
+
+        @testset "Tipload-Spinning" begin
+            ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
+        
+            Fx = 1000.0
+
+            prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0),
+            nelem+1 => GXBeam.PrescribedConditions(Fz = -Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
+        
+            omega = 1.0
+
+            tvec = collect(0:0.001:20.0)
+
+            ### GXBeam  solution  
+            system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions, angular_velocity = [0, 0, -omega]) 
+            gxstate = AssemblyState(system, assembly; prescribed_conditions)
+
+
+            def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
+            def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
+            def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
+
+            Vx = [-gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
+            Vy = [gxstate.points[i].V[2] for i in eachindex(gxstate.points)]
+            Vz = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
 
 
             bdread = readdlm("./data/simplebeam/sb_tipload_spinning.out", skipstart=6)
@@ -453,25 +520,54 @@ cd(path)
 
             bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
 
-            @show assembly.points[end]
-            @show assembly.points[end]+gxstate.points[end].u
+            # @show assembly.points[end]
+            # @show assembly.points[end]+gxstate.points[end].u
 
-            @show bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]
-            @show bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
-            bdvx = bdouts["N100_TVxl"][end]
-            bdvy = bdouts["N100_TVyl"][end]
-            bdvz = bdouts["N100_TVzl"][end]
-            @show bdvx, bdvy, bdvz
+            # @show bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]
+            TVx, TVy, TVz = bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
+            # @show TVx, TVy, TVz
+
+            Vof = sqrt(TVy^2+TVz^2)
+            # bdvx = bdouts["N100_TVxl"][end]
+            # bdvy = bdouts["N100_TVyl"][end]
+            # bdvz = bdouts["N100_TVzl"][end]
+            # @show bdvx, bdvy, bdvz
 
 
-            @show Vx[end], Vy[end], Vz[end]
+            # @show Vx[end], Vy[end], Vz[end]
 
+            dx_gx = -(assembly.points[end]+gxstate.points[end].u)[3]
+            dx_bd = bdouts["TipTDxr"][end]
 
-            tiperr = 100*(def_x[end]-bdouts["TipTDxr"][end])/bdouts["TipTDxr"][end]
-            println("simple beam spinning Tip load Error: ", tiperr, " %")
+            dy_gx = (assembly.points[end]+gxstate.points[end].u)[2]
+            dy_bd = bdouts["TipTDyr"][end] 
+
+            dz_gx = (assembly.points[end]+gxstate.points[end].u)[1]
+            dz_bd = bdouts["TipTDzr"][end] + 100.0
+
+            # @show bdouts["TipTDxg"], bdouts["TipTDyg"], bdouts["TipTDzg"]
+            # @show dx_bd, dy_bd, dz_bd
+            # @show sqrt(dx_bd^2 + dy_bd^2)
+            # @show dx_gx, dy_gx, dz_gx
+
+            Dxerr = 100*(dx_gx-dx_bd)/dx_bd
+            Dyerr = (dy_gx-dy_bd)
+            Dzerr = 100*(dz_gx-dz_bd)/dz_bd
+            Verr = 100*(Vof+Vy[end])/Vof
+
+            @test abs(Dxerr)<0.1
+            @test abs(Dyerr)<0.1
+            @test abs(Dzerr)<0.1
+            @test abs(Verr)<0.1
+            
+            println("simple beam spinning Tip load Error: ")
+            println("   Dxerr: ", Dxerr, " %")
+            println("   Dyerr: ", Dyerr, " m")
+            println("   Dzerr: ", Dzerr, " %")
+            println("   Verr: ", Verr, " %")
             println("")
-            # @test abs(tiperr)<1
-        end #End testing tip load spinning
+        
+        end #End testing tipload spinning
     end #End testing simple beam
 
 
@@ -586,6 +682,158 @@ cd(path)
             @test abs(tiperr)<1
 
         end #End distributed load
+
+        @testset "Spinning" begin
+            ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
+        
+            Fx = 0.0
+
+            prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0),
+            nelem+1 => GXBeam.PrescribedConditions(Fz = -Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
+        
+            omega = 1.0
+
+            tvec = collect(0:0.001:20.0)
+
+            ### GXBeam  solution  
+            system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions, angular_velocity = [0, 0, -omega]) 
+            gxstate = AssemblyState(system, assembly; prescribed_conditions)
+
+
+            def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
+            def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
+            def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
+
+            Vx = [-gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
+            Vy = [gxstate.points[i].V[2] for i in eachindex(gxstate.points)]
+            Vz = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
+
+
+            bdread = readdlm("./data/mediumbeam/mb_bddriver_spinning.out", skipstart=6)
+            bdnames = bdread[1,:]
+            bddata = Float64.(bdread[3:end,:])
+
+            bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+
+            # @show assembly.points[end]
+            # @show assembly.points[end]+gxstate.points[end].u
+
+            # @show bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]
+            TVx, TVy, TVz = bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
+            # @show TVx, TVy, TVz
+
+            Vof = sqrt(TVy^2+TVz^2)
+            # bdvx = bdouts["N100_TVxl"][end]
+            # bdvy = bdouts["N100_TVyl"][end]
+            # bdvz = bdouts["N100_TVzl"][end]
+            # @show bdvx, bdvy, bdvz
+
+
+            # @show Vx[end], Vy[end], Vz[end]
+
+            dy_gx = (assembly.points[end]+gxstate.points[end].u)[2]
+            dy_bd = bdouts["TipTDyr"][end] 
+
+            dz_gx = (assembly.points[end]+gxstate.points[end].u)[1]
+            dz_bd = bdouts["TipTDzr"][end] + 100.0
+
+            Dyerr = (dy_gx-dy_bd)
+            Dzerr = 100*(dz_gx-dz_bd)/dz_bd
+            Verr = 100*(Vof+Vy[end])/Vof
+
+            @test abs(Dyerr)<0.1
+            @test abs(Dzerr)<0.1
+            @test abs(Verr)<0.1
+            
+            println("Medium beam spinning Error: ")
+            println("   Dyerr: ", Dyerr, " m") #Todo:
+            println("   Dzerr: ", Dzerr, " %")
+            println("   Verr: ", Verr, " %") #Todo:
+            println("")
+        
+        end #End testing spinning
+
+
+        @testset "Tipload-Spinning" begin
+            ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
+        
+            Fx = 1000.0
+
+            prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0),
+            nelem+1 => GXBeam.PrescribedConditions(Fz = -Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
+        
+            omega = 1.0
+
+            tvec = collect(0:0.001:20.0)
+
+            ### GXBeam  solution  
+            system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions, angular_velocity = [0, 0, -omega]) 
+            gxstate = AssemblyState(system, assembly; prescribed_conditions)
+
+
+            def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
+            def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
+            def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
+
+            Vx = [-gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
+            Vy = [gxstate.points[i].V[2] for i in eachindex(gxstate.points)]
+            Vz = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
+
+
+            bdread = readdlm("./data/mediumbeam/mb_bddriver_tipload_spinning.out", skipstart=6)
+            bdnames = bdread[1,:]
+            bddata = Float64.(bdread[3:end,:])
+
+            bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+
+            # @show assembly.points[end]
+            # @show assembly.points[end]+gxstate.points[end].u
+
+            # @show bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]
+            TVx, TVy, TVz = bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
+            # @show TVx, TVy, TVz
+
+            Vof = sqrt(TVy^2+TVz^2)
+            # bdvx = bdouts["N100_TVxl"][end]
+            # bdvy = bdouts["N100_TVyl"][end]
+            # bdvz = bdouts["N100_TVzl"][end]
+            # @show bdvx, bdvy, bdvz
+
+
+            # @show Vx[end], Vy[end], Vz[end]
+
+            dx_gx = -(assembly.points[end]+gxstate.points[end].u)[3]
+            dx_bd = bdouts["TipTDxr"][end]
+
+            dy_gx = (assembly.points[end]+gxstate.points[end].u)[2]
+            dy_bd = bdouts["TipTDyr"][end] 
+
+            dz_gx = (assembly.points[end]+gxstate.points[end].u)[1]
+            dz_bd = bdouts["TipTDzr"][end] + 100.0
+
+            # @show bdouts["TipTDxg"], bdouts["TipTDyg"], bdouts["TipTDzg"]
+            # @show dx_bd, dy_bd, dz_bd
+            # @show sqrt(dx_bd^2 + dy_bd^2)
+            # @show dx_gx, dy_gx, dz_gx
+
+            Dxerr = 100*(dx_gx-dx_bd)/dx_bd
+            Dyerr = (dy_gx-dy_bd)
+            Dzerr = 100*(dz_gx-dz_bd)/dz_bd
+            Verr = 100*(Vof+Vy[end])/Vof
+
+            @test abs(Dxerr)<0.1
+            @test abs(Dyerr)<0.1
+            @test abs(Dzerr)<0.1
+            @test abs(Verr)<0.1
+            
+            println("Medium beam spinning Tip load Error: ")
+            println("   Dxerr: ", Dxerr, " %")
+            println("   Dyerr: ", Dyerr, " m")
+            println("   Dzerr: ", Dzerr, " %")
+            println("   Verr: ", Verr, " %")
+            println("")
+        
+        end #End testing tipload spinning
     end #End testing medium blade. 
 
 
@@ -603,7 +851,7 @@ cd(path)
         bdblade = of.read_bdblade("cb_BDblade.dat", ofpath)
 
         rhub = 0.0
-        rtip = 10.0
+        rtip = 100.0
 
         rx = bdfile["kp_xr"]
         ry = bdfile["kp_yr"]
@@ -619,7 +867,7 @@ cd(path)
         @testset "Tip Load" begin
             ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
         
-            Fx = 10000.0
+            Fx = 1000.0
             # Fy = 1000.0
 
             prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0),
@@ -699,43 +947,197 @@ cd(path)
             ##### Note: In order have beams that match between GXBeam and BeamDyn, the discretization has to be just right. I think that the way that I'm interpolating the stiffness and mass matrices is causing there to be discrepancies, even when both BeamDyn and GXBeam are converged... which makes sense, different inputs mean different outputs... So I guess at this point is change what interpolation I use... or use a turbine that is simpler... Apparently the turbine I created is quite floppy, so I should make a stiffer one. 
             
 
-            # @test abs(tiperr)<1
+            @test abs(tiperr)<1
+
+            println("complex beam tipload load error: ", tiperr, "%")
+            println("")
         end #End testing tip load
 
-        # @testset "Distributed Load" begin
-        #     ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a distributed load. 
+        @testset "Distributed Load" begin
+            ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a distributed load. 
 
-        #     prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0)) # root section is fixed
+            prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0)) # root section is fixed
 
-        #     q = 5.0
-        #     distributed_loads = Dict(ielem => DistributedLoads(assembly, ielem; fz = (s) -> -q) for ielem in 1:nelem)
-
-
-
-        #     ### GXBeam  solution  
-        #     system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions, distributed_loads) 
-
-        #     gxstate = AssemblyState(system, assembly; prescribed_conditions)
-
-        #     def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
-        #     def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
-        #     def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
+            q = 5.0
+            distributed_loads = Dict(ielem => DistributedLoads(assembly, ielem; fz = (s) -> -q) for ielem in 1:nelem)
 
 
-        #     bdread = readdlm("./data/complexbeam/cb_distributedload_steady.out", skipstart=6) #Checked 3/13/23 4:42pm
-        #     # bdread = readdlm("./data/complexbeam/cb_bddriver.out", skipstart=6)
-        #     bdnames = bdread[1,:]
-        #     bddata = Float64.(bdread[3:end,:])
 
-        #     bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+            ### GXBeam  solution  
+            system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions, distributed_loads) 
 
-        #     # println("GXBeam: ", def_x[end], ", ", def_y[end], ", ", def_z[end])
-        #     # println("OpenFAST: ", bdouts["TipTDxr"][end], ", ", bdouts["TipTDyr"][end], ", ", bdouts["TipTDzr"][end])
+            gxstate = AssemblyState(system, assembly; prescribed_conditions)
 
-        #     tiperr = 100*(def_x[end]-bdouts["TipTDxr"][end])/bdouts["TipTDxr"][end]
-        #     @test abs(tiperr)<1
+            def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
+            def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
+            def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
 
-        # end #End distributed load
+
+            bdread = readdlm("./data/complexbeam/cb_distributedload_steady.out", skipstart=6) #Checked 3/13/23 4:42pm
+            # bdread = readdlm("./data/complexbeam/cb_bddriver.out", skipstart=6)
+            bdnames = bdread[1,:]
+            bddata = Float64.(bdread[3:end,:])
+
+            bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+
+            # println("GXBeam: ", def_x[end], ", ", def_y[end], ", ", def_z[end])
+            # println("OpenFAST: ", bdouts["TipTDxr"][end], ", ", bdouts["TipTDyr"][end], ", ", bdouts["TipTDzr"][end])
+
+            tiperr = 100*(def_x[end]-bdouts["TipTDxr"][end])/bdouts["TipTDxr"][end]
+            @test abs(tiperr)<1
+
+            println("complex beam distributed load error: ", tiperr, "%")
+            println("")
+
+        end #End distributed load
+
+        @testset "Spinning" begin
+            ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
+        
+            Fx = 0.0
+
+            prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0),
+            nelem+1 => GXBeam.PrescribedConditions(Fz = -Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
+        
+            omega = 1.0
+
+            tvec = collect(0:0.001:20.0)
+
+            ### GXBeam  solution  
+            system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions, angular_velocity = [0, 0, -omega]) 
+            gxstate = AssemblyState(system, assembly; prescribed_conditions)
+
+
+            def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
+            def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
+            def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
+
+            Vx = [-gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
+            Vy = [gxstate.points[i].V[2] for i in eachindex(gxstate.points)]
+            Vz = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
+
+
+            bdread = readdlm("./data/complexbeam/cb_spinning.out", skipstart=6)
+            bdnames = bdread[1,:]
+            bddata = Float64.(bdread[3:end,:])
+
+            bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+
+            # @show assembly.points[end]
+            # @show assembly.points[end]+gxstate.points[end].u
+
+            # @show bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]
+            TVx, TVy, TVz = bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
+            # @show TVx, TVy, TVz
+
+            Vof = sqrt(TVy^2+TVz^2)
+            # bdvx = bdouts["N100_TVxl"][end]
+            # bdvy = bdouts["N100_TVyl"][end]
+            # bdvz = bdouts["N100_TVzl"][end]
+            # @show bdvx, bdvy, bdvz
+
+
+            # @show Vx[end], Vy[end], Vz[end]
+
+            dx_gx = -(assembly.points[end]+gxstate.points[end].u)[3]
+            dx_bd = bdouts["TipTDxr"][end]
+
+            dy_gx = (assembly.points[end]+gxstate.points[end].u)[2]
+            dy_bd = bdouts["TipTDyr"][end] 
+
+            dz_gx = (assembly.points[end]+gxstate.points[end].u)[1]
+            dz_bd = bdouts["TipTDzr"][end] + 100.0
+
+            # @show dx_gx, dy_gx, dz_gx
+            # @show dx_bd, dy_bd, dz_bd
+
+            Dyerr = (dy_gx-dy_bd)
+            Dzerr = 100*(dz_gx-dz_bd)/dz_bd
+            Verr = 100*(Vof+Vy[end])/Vof
+
+            @test abs(Dyerr)<0.1
+            @test abs(Dzerr)<0.1
+            @test abs(Verr)<0.1
+            
+            println("Complex beam spinning Error: ")
+            println("   Dyerr: ", Dyerr, " m") #Todo:
+            println("   Dzerr: ", Dzerr, " %")
+            println("   Verr: ", Verr, " %") #Todo:
+            println("")
+        
+        end #End testing spinning
+
+
+        @testset "Tipload-Spinning" begin
+            ### Test the create assembly function (and everything contained therein) with a constant cross section beam and a tip load. 
+        
+            Fx = 10000.0
+
+            prescribed_conditions = Dict(1 => GXBeam.PrescribedConditions(ux=0, uy=0, uz=0, theta_x=0, theta_y=0, theta_z=0),
+            nelem+1 => GXBeam.PrescribedConditions(Fz = -Fx)) # root section is fixed, Note that the BeamDyn and GXBeam beams extend in different directions (I could probably fix that. )
+        
+            omega = 1.0
+
+            tvec = collect(0:0.001:20.0)
+
+            ### GXBeam  solution  
+            system, converged = GXBeam.steady_state_analysis(assembly; prescribed_conditions = prescribed_conditions, angular_velocity = [0, 0, -omega]) 
+            gxstate = AssemblyState(system, assembly; prescribed_conditions)
+
+
+            def_x = [-gxstate.points[i].u[3] for i in eachindex(gxstate.points)]
+            def_y = [gxstate.points[i].u[2] for i in eachindex(gxstate.points)]
+            def_z = [gxstate.points[i].u[1] for i in eachindex(gxstate.points)]
+
+            Vx = [-gxstate.points[i].V[3] for i in eachindex(gxstate.points)]
+            Vy = [gxstate.points[i].V[2] for i in eachindex(gxstate.points)]
+            Vz = [gxstate.points[i].V[1] for i in eachindex(gxstate.points)]
+
+
+            bdread = readdlm("./data/complexbeam/cb_tipload_spinning.out", skipstart=6)
+            bdnames = bdread[1,:]
+            bddata = Float64.(bdread[3:end,:])
+
+            bdouts = Dict(bdnames[i] => bddata[:,i] for i in eachindex(bdnames))
+
+
+            TVx, TVy, TVz = bdouts["TipTVxg"][end], bdouts["TipTVyg"][end], bdouts["TipTVzg"][end]
+            # @show TVx, TVy, TVz
+
+            Vof = sqrt(TVy^2+TVz^2)
+
+
+            dx_gx = -(assembly.points[end]+gxstate.points[end].u)[3]
+            dx_bd = bdouts["TipTDxr"][end]
+
+            dy_gx = (assembly.points[end]+gxstate.points[end].u)[2]
+            dy_bd = bdouts["TipTDyr"][end] 
+
+            dz_gx = (assembly.points[end]+gxstate.points[end].u)[1]
+            dz_bd = bdouts["TipTDzr"][end] + 100.0
+
+            @show dx_gx, dy_gx, dz_gx
+            @show dx_bd, dy_bd, dz_bd
+
+
+            Dxerr = 100*(dx_gx-dx_bd)/dx_bd
+            Dyerr = (dy_gx-dy_bd)
+            Dzerr = 100*(dz_gx-dz_bd)/dz_bd
+            Verr = 100*(Vof+Vy[end])/Vof
+
+            @test abs(Dxerr)<0.3
+            @test abs(Dyerr)<0.1
+            @test abs(Dzerr)<0.1
+            @test abs(Verr)<0.1
+            
+            println("Complex beam spinning Tip load Error: ")
+            println("   Dxerr: ", Dxerr, " %")
+            println("   Dyerr: ", Dyerr, " m")
+            println("   Dzerr: ", Dzerr, " %")
+            println("   Verr: ", Verr, " %")
+            println("")
+        
+        end #End testing tipload spinning
     end #End testing complex blade.
 
 end # End testing BeamDyn

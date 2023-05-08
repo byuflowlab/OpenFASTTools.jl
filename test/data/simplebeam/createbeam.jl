@@ -52,7 +52,8 @@ nu = 0.3 #Poisson's Ratio
 m = 10.0 #2700.0 #kg/m^3 -> Decreasing the weight decreases the frequency of oscillation
 h = 0.25 # Thickness (meters)
 w = 0.25 # Width (meters)
-mu = 0.001 #Damping ratio
+# mu = 0.1 #Damping ratio
+mu = 2.0
 
 A = w*h #Area
 
@@ -94,14 +95,21 @@ let
     ### BD Primary #Todo: Add stuff to automatically update the BDDriver as well. 
     bdfile["QuasiStaticInit"] = false
     bdfile["NRMax"] = 5000
-    bdfile["quadrature"] = 2
+    bdfile["quadrature"] = 1
     bdfile["DTBeam"] = "DEFAULT"
     bdfile["order_elem"] = 7
     bdfile["stop_tol"] = 1e-9
 
-    bdfile["member_total"] = 1
     bdfile["kp_total"] = n
-    bdfile["KeyPairs"] = [1 n]
+
+    # bdfile["member_total"] = 1
+    # bdfile["KeyPairs"] = [1 n]
+
+    bdfile["member_total"] = 4
+    # bdfile["KeyPairs"] = [1 100; 2 101; 3 101; 4 101]
+    bdfile["KeyPairs"] = [1 25; 2 26; 3 26; 4 26]
+
+
     bdfile["kp_xr"] = zeros(n)
     bdfile["kp_yr"] = zeros(n)
     

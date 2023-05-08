@@ -21,7 +21,7 @@ bdfile = of.read_bdfile("NREL5MWrefBD.dat", ofpath)
 bdblade = of.read_bdblade("NREL5MWrefBD_Blade.dat", ofpath)
 
 ### Simulation control
-tmax = 5.0
+tmax = 20.0
 dt = 0.001
 dt_out = 0.001 # "\"default\""
 n = 200
@@ -52,7 +52,8 @@ nu = 0.3 #Poisson's Ratio
 m = 10.0 #2700.0 #kg/m^3 -> Decreasing the weight decreases the frequency of oscillation
 h = 0.25 # Thickness (meters)
 w = 0.25 # Width (meters)
-mu = 0.001 #Damping ratio
+# mu = 0.001 #Damping ratio
+mu = 2.0
 
 A = w*h #Area
 
@@ -98,7 +99,7 @@ let
     bdfile["quadrature"] = 1
     bdfile["DTBeam"] = "DEFAULT"
     bdfile["order_elem"] = 7
-    bdfile["stop_tol"] = 1e-12
+    bdfile["stop_tol"] = 1e-9
 
     bdfile["member_total"] = 4
     bdfile["KeyPairs"] = [1 50; 2 51; 3 51; 4 51]
@@ -118,8 +119,8 @@ let
     bdfile["BldNd_BlOutNd"] = 99
 
     bdfile["OutNd"] = Int[1]
-    bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr"]
-    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr"]
+    bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr", "TipTVxg", "TipTVyg", "TipTVzg" ]
+    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr", "TVxg", "TVyg", "TVzg", "TVxl", "TVyl", "TVzl"]
     # append!(bdfile["NodeOutList"], ["TDxr", "TDyr", "TDzr", "RVxr", "RVyr", "RVzr"])
 
     ### BD Blade file

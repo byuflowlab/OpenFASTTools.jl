@@ -10,7 +10,7 @@ false         QuasiStaticInit  - Use quasistatic pre-conditioning with centripet
 DEFAULT       DTBeam           - Time step size (s)
 "DEFAULT"     load_retries  -   Number of factored load retries before quitting the aimulation [DEFAULT = 20]
 5000          NRMax            - Max  number of iterations in Newton-Raphson algorithm (-) [DEFAULT = 10]
-1.0e-12       stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]
+1.0e-9        stop_tol         -   Tolerance for stopping criterion (-) [DEFAULT = 1E-5]
 "DEFAULT"     tngt_stf_fd      -    Use finite differenced tangent stiffness matrix? (flag)
 "DEFAULT"     tngt_stf_comp       - Compare analytical finite differenced tangent stiffness matrix? (flag)
 "DEFAULT"     tngt_stf_pert       - Perturbation size for finite differencing (-) [DEFAULT = 1E-6]
@@ -243,6 +243,9 @@ True          SumPrint       - Print   summary data to "<RootName>.sum" (flag)
 "TipTDxr"  
 "TipTDyr"  
 "TipTDzr"  
+"TipTVxg"  
+"TipTVyg"  
+"TipTVzg"  
 END of input file (the word "END" must appear in the first 3columns of    this last OutList line)
 ---------------------- NODE OUTPUTS --------------------------------------------
           1   BldNd_BladesOut  - Blades to output
@@ -250,4 +253,10 @@ END of input file (the word "END" must appear in the first 3columns of    this l
 "TDxr"                        OutList             - The next line(s) contains  list    of output parameters.  See s for a listing of available output channels, (-)
 "TDyr"     
 "TDzr"     
+"TVxg"     
+"TVyg"     
+"TVzg"     
+"TVxl"     
+"TVyl"     
+"TVzl"     
 END of input file (the word "END" must appear in the first  columns of    this last OutList line)

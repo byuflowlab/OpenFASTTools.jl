@@ -21,10 +21,10 @@ bdfile = of.read_bdfile("NREL5MWrefBD.dat", ofpath)
 bdblade = of.read_bdblade("NREL5MWrefBD_Blade.dat", ofpath)
 
 ### Simulation control
-tmax = 5.0
+tmax = 20.0
 dt = 0.001
 dt_out = 0.001 # "\"default\""
-n = 400
+n = 200
 
 ### Environmental variables
 gravity = 0.0 #9.81 #Gravity (m/s^2)
@@ -37,7 +37,7 @@ omega = rpm*2*pi/60 #angular velocity (radians/second)
 ### Turbine description
 
 rhub = 0.0 #Hub radius
-rtip = 10.0 #Tip radius
+rtip = 100.0 #Tip radius
 
 rvec = collect(range(rhub, rtip, length=n))
 rfrac = (rvec .- rhub)/(rtip-rhub)
@@ -52,7 +52,8 @@ nu = 0.3 #Poisson's Ratio
 m = 10.0 #2700.0 #kg/m^3 -> Decreasing the weight decreases the frequency of oscillation
 h = 0.25 # Thickness (meters)
 w = 0.25 # Width (meters)
-mu = 0.001 #Damping ratio
+# mu = 0.001 #Damping ratio
+mu = 2.0
 
 A = w*h #Area
 
@@ -97,13 +98,14 @@ let
     bdfile["quadrature"] = 1
     bdfile["DTBeam"] = "DEFAULT"
     bdfile["order_elem"] = 10
-    bdfile["stop_tol"] = 1e-12
+    bdfile["stop_tol"] = 1e-9
     bdfile["RotStates"] = false
 
     # bdfile["member_total"] = 1
     # bdfile["KeyPairs"] = [1 n]
     bdfile["member_total"] = 4
-    bdfile["KeyPairs"] = [1 100; 2 101; 3 101; 4 101]
+    # bdfile["KeyPairs"] = [1 100; 2 101; 3 101; 4 101]
+    bdfile["KeyPairs"] = [1 50; 2 51; 3 51; 4 51]
 
     bdfile["kp_total"] = n
     bdfile["kp_xr"] = zeros(n)
@@ -117,8 +119,8 @@ let
     bdfile["BldNd_BlOutNd"] = 99
 
     bdfile["OutNd"] = Int[1]
-    bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr"]
-    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr", "TVxr", "TVyr", "TVzr"]
+    bdfile["OutList"] = [" ", "TipTDxr", "TipTDyr", "TipTDzr", "TipTVxg", "TipTVyg", "TipTVzg" ]
+    bdfile["NodeOutList"] = ["TDxr", "TDyr", "TDzr", "TVxg", "TVyg", "TVzg", "TVxl", "TVyl", "TVzl"]
     # append!(bdfile["NodeOutList"], ["TDxr", "TDyr", "TDzr", "RVxr", "RVyr", "RVzr"])
 
     ### BD Blade file
