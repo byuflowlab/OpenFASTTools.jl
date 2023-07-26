@@ -1964,7 +1964,24 @@ end
 
 export make_dsairfoil
 
-function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
+"""
+    make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
+
+Make an DynamicStallModels airfoil object. (I don't know if this belongs here, or in DynamicStallModels). 
+
+**Arguments**
+- afi::AirfoilInputUnsteady - An unsteady Airfoil object.
+- chord::Float - the chord length of the airfoil.
+- radians::Bool - Whether the associated polar is in degrees or radians.
+- zeta::Float - I think this is the efficiency #TODO: 
+- separationpointfun::Symbol - a symbol indicating which separation point function to use. Options include `:fit` (which defaults to Aerodyn's original or Gonzalez depending on what model you have chosen), or `:Fun` for Beddoes-Leishman's original separation point function. 
+- model::Symbol - a symbol indicating which stall model to use. Options include `:Original` and `:Gonzalez`. 
+- interp::Function - What interpolation scheme you'd like to use on the polars.
+- a::Float - speed of sound
+- cutrad:: - the cutout radius around the cutout angle of attack. 
+- A::Vector{Float} - a vector of A values to overide the A values that the given inputfile has (useful for optimization). 
+"""
+function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180, A=nothing) 
     if radians || maximum(afi.aoa)<=pi
         aoa = afi.aoa
     else
@@ -2017,8 +2034,9 @@ function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.
 
     xcp = afi.x_cp_bar
 
-
-    A = [afi.a1, afi.a2, afi.a5]
+    if isnothing(A)
+        A = [afi.a1, afi.a2, afi.a5]
+    end
     b = [afi.b1, afi.b2, afi.b5]
     T = [afi.t_p, afi.t_f0, afi.t_v0, afi.t_vl, afi.st_sh]
 

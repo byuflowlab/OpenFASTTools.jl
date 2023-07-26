@@ -1,13 +1,13 @@
 """
-    DamageEquivalentLoad(loads; m=10)
-Damage equivalent load from the MLife theory, using the goodman correction.
+    damage_equivalent_load(loads; m=10)
+Damage equivalent load from the MLife theory, using the Goodman correction.
 # Arguments
     loads - the an array of loads, whether they be forces, moments or stresses
     m - the Whöler exponent, which is typically 10 for composites
 # Outputs
     DEL - Damage equivalent load
 """
-function DamageEquivalentLoad(loads; m=10)
+function damage_equivalent_load(loads; m=10)
     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
     out = rainflow(peaks) 
     n = Int(length(out)/3)
@@ -296,10 +296,10 @@ function localtoroot(Nstar, Tstar, ϕ)
 end
 
 """
-#### roottolocal(N, T, ϕ)
+    roottolocal(N, T, ϕ)
 Converts from blade root reference (BRR) to local blade reference (LBR).
 
-### Inputs
+**Inputs**
 - N = local force normal to blade root chord (Flapwise loading)
 - T = local force tangent to blade root chord (Leadlag Loading)
 - ϕ = Total twist (pitch + twist distribution) in degrees
@@ -318,4 +318,20 @@ end
 
 function remove!(a, item)
     deleteat!(a, findall(x->x==item, a))
+end
+
+"""
+    root_bending_moment(r, load)
+
+Compute the root bending moment by trapezoidal integration. 
+
+**Inputs**
+- r::Vector{Float64}: The vector of radii corresponding to the aerodynamic loads (z distance)
+- loads::Vector{Float64}: The vector of distributed loads corresponding to the aerodynamic loads
+"""
+function root_bending_moment(r, load)
+
+    integrand = r.*load
+
+    return FLOWMath.trapz(r, integrand)
 end

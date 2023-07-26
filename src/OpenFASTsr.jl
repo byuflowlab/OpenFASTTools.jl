@@ -7,6 +7,8 @@ module OpenFASTsr
 #Todo: Where do I use LinearAlgebra? 
 #Todo: I'm not sure that OpenFAST is case sensitive. In that case, it would be good to make sure everything is lowercase.
 
+#Todo: I think I'd like to rename this package OpenFASTTools (OFT)
+
 using Printf, FLOWMath, DelimitedFiles, GXBeam, StaticArrays, LinearAlgebra, DynamicStallModels
 
 DS = DynamicStallModels
