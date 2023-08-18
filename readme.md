@@ -1,4 +1,4 @@
-# OpenFAST_parse
+# OpenFASTTools
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://byuflowlab.github.io/OpenFASTTools.jl/dev)
 
 Author: Adam Cardoza  
