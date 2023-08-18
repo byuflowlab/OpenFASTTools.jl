@@ -7,9 +7,9 @@ Adam Cardoza 01/23/23
 =#
 
 
-using OpenFASTsr, Rotors, DynamicStallModels
+using OpenFASTTools, Rotors, DynamicStallModels
 
-of = OpenFASTsr
+of = OpenFASTTools
 
 path = dirname(@__FILE__)
 cd(path)

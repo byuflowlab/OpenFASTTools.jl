@@ -1,7 +1,7 @@
-using Documenter, OpenFASTsr
+using Documenter, OpenFASTTools
 
 makedocs(
-        modules = [OpenFASTsr],
+        modules = [OpenFASTTools],
         format = Documenter.HTML(),
         pages = [
             "Introduction" => "index.md", 
@@ -9,8 +9,8 @@ makedocs(
             "Guided Examples" => "guidedexamples.md",
             "API Reference" => "reference.md"
         ],
-        repo="https://github.com/byuflowlab/OpenFASTsr.jl/blob/{commit}{path}#L{line}",
-        sitename="OpenFASTsr",
+        repo="https://github.com/byuflowlab/OpenFASTTools.jl/blob/{commit}{path}#L{line}",
+        sitename="OpenFASTTools",
         authors = "Adam Cardoza <adam.cardoza.online@gmail.com>",
         )
 
@@ -30,5 +30,5 @@ makedocs(
 # )
 
 deploydocs(
-    repo = "github.com/byuflowlab/OpenFASTsr.jl.git",
+    repo = "github.com/byuflowlab/OpenFASTTools.jl.git",
 )

@@ -1,6 +1,6 @@
-using OpenFASTsr, Revise, DelimitedFiles
+using OpenFASTTools, Revise, DelimitedFiles
 
-of = OpenFASTsr
+of = OpenFASTTools
 
 localdir = @__DIR__
 

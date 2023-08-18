@@ -1,5 +1,5 @@
 # OpenFAST_parse
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://byuflowlab.github.io/OpenFASTsr.jl/dev)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://byuflowlab.github.io/OpenFASTTools.jl/dev)
 
 Author: Adam Cardoza  
 Contact: adam@cardoza.one  
@@ -28,12 +28,12 @@ export PATH="$PATH:/Users/adamcardoza/repos/openfast/build/modules/aerodyn"
 ``` 
 
 
-##### Install the OpenFASTsr package
+##### Install the OpenFASTTools package
 
 Add the package via git:
 
 ```julia
-pkg> add https://github.com/byuflowlab/OpenFASTsr.jl.git
+pkg> add https://github.com/byuflowlab/OpenFASTTools.jl.git
 ```
 -->
 

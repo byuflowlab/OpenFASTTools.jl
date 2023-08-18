@@ -1,6 +1,6 @@
-using OpenFASTsr, Test, GXBeam, DynamicStallModels, DelimitedFiles
+using OpenFASTTools, Test, GXBeam, DynamicStallModels, DelimitedFiles
 
-of = OpenFASTsr
+of = OpenFASTTools
 
 path = dirname(@__FILE__)
 cd(path)
@@ -8,7 +8,7 @@ cd(path)
 @testset "BeamDyn" begin
     # @testset "Read BeamDyn File" begin
     #     file = "NREL5MWrefBD.dat"
-    #     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+    #     path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
     #     bdfile = of.read_bdfile(file, path)
 
     #     @test bdfile.echo==false
@@ -100,7 +100,7 @@ cd(path)
 
     # @testset "Write BeamDyn File" begin
     #     file = "NREL5MWrefBD.dat"
-    #     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+    #     path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
     #     bdfiletemp = of.read_bdfile(file, path)
     #     of.write_bdfile(bdfiletemp, "testingbdfile.dat")
     #     bdfile = of.read_bdfile("testingbdfile.dat", path)
@@ -194,7 +194,7 @@ cd(path)
 
     # @testset "Read BD Blade" begin
     #     file = "NREL5MWrefBD_Blade.dat"
-    #     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+    #     path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
     #     bdblade = of.read_bdblade(file, path)
 
     #     @test bdblade.station_total==49
@@ -256,7 +256,7 @@ cd(path)
 
     # @testset "Write BD Blade" begin
     #     file = "NREL5MWrefBD_Blade.dat"
-    #     path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+    #     path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
     #     bdbladetemp = of.read_bdblade(file, path)
     #     of.write_bdblade(bdbladetemp, "testingbdblade.dat")
     #     bdblade = of.read_bdblade("testingbdblade.dat", path)
@@ -906,8 +906,8 @@ cd(path)
             # r = [bdouts["TipTDxr"][end], bdouts["TipTDyr"][end], bdouts["TipTDzr"][end]]
             # v = [bdouts["N400_TVxr"][end], bdouts["N400_TVyr"][end], bdouts["N400_TVzr"][end]]
 
-            # rl = OpenFASTsr.rotate_x(-deg)*r
-            # vl = OpenFASTsr.rotate_x(deg)*v
+            # rl = OpenFASTTools.rotate_x(-deg)*r
+            # vl = OpenFASTTools.rotate_x(deg)*v
             # @show deg
             
 

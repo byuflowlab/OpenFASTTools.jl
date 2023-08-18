@@ -6,9 +6,9 @@
 
 =#
 
-using OpenFASTsr, Rotors, DynamicStallModels, DelimitedFiles, Plots, GXBeam
+using OpenFASTTools, Rotors, DynamicStallModels, DelimitedFiles, Plots, GXBeam
 
-of = OpenFASTsr
+of = OpenFASTTools
 
 path = dirname(@__FILE__)
 cd(path)

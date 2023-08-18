@@ -1,7 +1,7 @@
 @testset "InflowWind" begin
     @testset "Read InflowWind File" begin
     file = "NREL5MWref_InflowWind_12mps.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
     iwfile = of.ReadIWFile(file, path)
 
     @test lowercase(iwfile.Echo)=="false"
@@ -61,7 +61,7 @@
 
     @testset "Write InflowWind file" begin
     file = "NREL5MWref_InflowWind_12mps.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
     iwfiletemp = of.ReadIWFile(file, path)
     of.WriteIWFile(iwfiletemp, "testingInflowWind.dat")
     iwfile = of.ReadIWFile("testingInflowWind.dat", path)

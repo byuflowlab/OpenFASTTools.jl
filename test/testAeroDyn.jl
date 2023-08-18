@@ -1,14 +1,14 @@
-# using OpenFASTsr
+# using OpenFASTTools
 # using Test
 
-# of = OpenFASTsr
+# of = OpenFASTTools
 
 @testset "AeroDyn" begin
 
     @testset "Read AeroDyn" begin 
 
         file = "NREL5MWrefAD15.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         adfile = of.read_adfile(file, path)
 
         @test adfile.echo==false
@@ -102,7 +102,7 @@
     @testset "Write AeroDyn" begin #I have no clue why this has 1 less test... It is a copy and paste. 
         println("Note that if there are any errors in the read test set, they will propogate to the write test set.")
         file = "NREL5MWrefAD15.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         adfiletemp = of.read_adfile(file, path)
         of.write_adfile(adfiletemp, "testNREL5MWAD15.dat")
         adfile = of.read_adfile(file, path)
@@ -198,7 +198,7 @@
 
     @testset "Read ADBlade" begin
         file = "NREL5MWrefAD_blade.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         adblade = of.read_adblade(file, path)
         
         @test adblade.numnds==19
@@ -236,7 +236,7 @@
 
     @testset "Write ADBlade" begin
         file = "NREL5MWrefAD_blade.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         adbladetemp = of.read_adblade(file, path)
         of.write_adblade(adbladetemp, "testadblade.dat";outputpath=path)
         adblade = of.read_adblade("testadblade.dat", path)
@@ -282,7 +282,7 @@
 
     @testset "Read Aerodata" begin
     file = "DU21_A17.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/AeroData"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine/AeroData"
     aerodata = of.read_aerodata(file, path)
 
     @test aerodata.numairfoils==1
@@ -447,7 +447,7 @@
 
     @testset "Write Aerodata" begin
     file = "DU21_A17.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/AeroData"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine/AeroData"
     aerodatatemp = of.read_aerodata(file, path)
     of.write_aerodata(aerodatatemp, "testingaerodata.dat")
     aerodata = of.read_aerodata("testingaerodata.dat", path)
@@ -614,7 +614,7 @@
 
     @testset "Read AirfoilInput - Steady" begin
         file = "ccblade_S809_3.00E+05_Vinf-5.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/uae20kw"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/uae20kw"
         input = of.read_airfoilinput(file, path)
 
         @test input.interpord==0
@@ -863,7 +863,7 @@
 
     @testset "Read AirfoilInput - Unsteady" begin
         file = "DU25_A17.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine/Airfoils"
         input = of.read_airfoilinput(file, path)
 
         @test input.interpord==0
@@ -1057,7 +1057,7 @@
 
     @testset "Write AirfoilInput - Steady" begin
         file = "ccblade_S809_3.00E+05_Vinf-5.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/uae20kw"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/uae20kw"
         inputtemp = of.read_airfoilinput(file, path)
         of.write_airfoilinput(inputtemp, "testingwriteairfoilinput.dat"; outputpath=path)
         input = of.read_airfoilinput("testingwriteairfoilinput.dat", path)
@@ -1310,7 +1310,7 @@
 
     @testset "Write AirfoilInput - Unsteady" begin
     file = "DU25_A17.dat"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine/Airfoils"
     inputtemp = of.read_airfoilinput(file, path)
     of.write_airfoilinput(inputtemp, "testingwriteairfoilinput.dat")
     input = of.read_airfoilinput("testingwriteairfoilinput.dat", path)
@@ -1507,7 +1507,7 @@
 
     @testset "Read Airfoil Coordinate" begin
     file = "DU35_A17_coords.txt"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine/Airfoils"
     coords = of.read_airfoilcoordinates(file, path)
 
     @test coords.numcoords==400
@@ -1920,7 +1920,7 @@
 
     @testset "Write airfoil coordinates" begin
     file = "DU35_A17_coords.txt"
-    path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine/Airfoils"
+    path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine/Airfoils"
     coordstemp = of.read_airfoilcoordinates(file, path)
     of.write_airfoilcoordinates(coordstemp, "testingairfoilcoords.txt")
     coords = of.read_airfoilcoordinates("testingairfoilcoords.txt", path)
@@ -2334,7 +2334,7 @@
     
     @testset "read_addriver" begin
         file = "DTU10MWADdriver.inp"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/dtu10mw"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/dtu10mw"
         driver = of.read_addriver(file, path)
 
         @test driver.echo==false
@@ -2370,7 +2370,7 @@
 
     @testset "Write AD Driver" begin
         file = "DTU10MWADdriver.inp"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/dtu10mw"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/dtu10mw"
         drivertemp = of.read_addriver(file, path)
         of.write_addriver(drivertemp, "testingwritedriver.inp"; outputpath=path)
         driver = of.read_addriver("testingwritedriver.inp", path)

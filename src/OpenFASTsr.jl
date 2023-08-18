@@ -1,4 +1,4 @@
-module OpenFASTsr
+module OpenFASTTools
 
 
 # This wrapper just calls openFAST from the command line. 

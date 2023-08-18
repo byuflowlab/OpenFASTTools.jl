@@ -1,7 +1,7 @@
-name = "OpenFASTsr"
+name = "OpenFASTTools"
 uuid = "45c743d6-1a1e-4fb4-aa78-18ed941dcf18"
 authors = ["cardoza2 <adam@cardoza.one>"]
-version = "0.3.0"
+version = "1.0.0"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"

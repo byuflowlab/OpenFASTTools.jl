@@ -1,9 +1,9 @@
-# OpenFASTsr Documentation
+# OpenFASTTools Documentation
 
 Adam Cardoza 
 
 ### Summary:
-OpenFAST is a multi-physics, multi-fidelity tool for simulating the coupled dynamic response of wind turbines created and maintained by the National Renewable Energy Labratory (NREL). OpenFAST is written in FORTRAN, and is typically operated from the command line via input and output text files. This wrapper, OpenFASTsr.jl, simply provides a convinient way to interact with the input and output files. For further information about OpenFAST, consult the official [documentation](https://openfast.readthedocs.io/en/main/).
+OpenFAST is a multi-physics, multi-fidelity tool for simulating the coupled dynamic response of wind turbines created and maintained by the National Renewable Energy Labratory (NREL). OpenFAST is written in FORTRAN, and is typically operated from the command line via input and output text files. This wrapper, OpenFASTTools.jl, simply provides a convinient way to interact with the input and output files. For further information about OpenFAST, consult the official [documentation](https://openfast.readthedocs.io/en/main/).
 
 I wrote this package to support work for an ARPA-E project we were working on here at BYU, as such, I have not wrapped all of the many modules from OpenFAST. Modules currently supported are:
 - AeroDyn - An unsteady aerodynamic solver for turbines. Contains two models for calculating the effect of wind turbine wakes: the blade element momentum theory and the generalized dynamic-wake theory.
@@ -33,12 +33,12 @@ export PATH="$PATH:/Users/adamcardoza/repos/openfast/build/modules/turbsim"
 export PATH="$PATH:/Users/adamcardoza/repos/openfast/build/modules/aerodyn"
 ```
 
-##### Install the OpenFASTsr package
+##### Install the OpenFASTTools package
 
 Add the package via git:
 
 ```julia
-pkg> add https://github.com/byuflowlab/OpenFASTsr.jl.git
+pkg> add https://github.com/byuflowlab/OpenFASTTools.jl.git
 ```
 
 
