@@ -1,9 +1,9 @@
 using BenchmarkTools
 
-using OpenFASTsr
+using OpenFASTTools
 using Test
 
-of = OpenFASTsr
+of = OpenFASTTools
 println("Starting Testing...")
  
 # include("testAeroDyn.jl")

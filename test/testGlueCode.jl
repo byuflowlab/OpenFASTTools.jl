@@ -1,6 +1,6 @@
-# using OpenFASTsr
+# using OpenFASTTools
 
-# of = OpenFASTsr
+# of = OpenFASTTools
 
 @testset "GlueCode" begin
     @testset "Overarching Structures" begin

@@ -1,12 +1,28 @@
 function formatword(word;location="front",quotes=true, desiredlength=11)
+    if isa(word, Vector)
+        vectorflag=true
+    else
+        vectorflag=false
+    end
+    
     word = string(word)
     if quotes
-        word = "\""*word*"\""
+        if occursin("\"", word)
+        else
+            word = "\""*word*"\""
+        end
     end
 
+    if vectorflag
+        word = replace(word, "["=>"")
+        word = replace(word, "]"=>"")
+    end
+
+
+
     if length(word)>desiredlength
-        println("Word in formatted word is longer than desired length.")
-        println("word: ", word)
+        # println("Word in formatted word is longer than desired length.")
+        # println("word: ", word, ".")
     elseif length(word)<desiredlength && location == "front"
         addlength = desiredlength-length(word)
         word = word*" "^addlength
@@ -26,17 +42,28 @@ function formatmatrix(matrix;spacing=2)
         #I've wanted to modify the function to have a size aspect to it, but I haven't found a way.
     line = string()
     smatrix = String[]
+
+    for i in eachindex(matrix)
+        if matrix[i]==0
+            matrix[i]=0.0
+        end
+    end
+
     m, n = size(matrix)
     for i = 1:m
         for j = 1:n
             text = @sprintf "%.7E" matrix[i,j]
-            space = " "^spacing
+            space = ""
             if j<n
+                # @show matrix[i,j+1]
                 if matrix[i,j+1]<0
                     space = " "^(spacing-1) #Have the spacing vary based on negative signs... I don't know if this is a good fix.
+                    # println("Got here")
+                else
+                    space *= " "^spacing
                 end
-            elseif j==n
-                space=""
+            # elseif j==n
+            #     space=""
             end
             line = line*text*space
         end

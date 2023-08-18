@@ -1,5 +1,5 @@
 # Quick Start
-Once you've successfully installed OpenFAST, a quick run through these examples may be beneficial in learning how to use OpenFASTsr and OpenFAST. 
+Once you've successfully installed OpenFAST, a quick run through these examples may be beneficial in learning how to use OpenFASTTools and OpenFAST. 
 
 
 ## AeroDyn Only
@@ -49,7 +49,7 @@ Then we can simply stick them into the ADDriver object for later use.
 
 
 ```julia
-addriver = OpenFASTsr.ADDriver(Notes, Echo, AD_InputFile, NumBlades, HubRad, HubHt, Overhang, ShftTilt, Precone , OutFileRoot, TabDel, OutFmt, Beep, NumCases, windspeed, ShearExp, RPM, Pitch, Yaw, dT, Tmax)
+addriver = OpenFASTTools.ADDriver(Notes, Echo, AD_InputFile, NumBlades, HubRad, HubHt, Overhang, ShftTilt, Precone , OutFileRoot, TabDel, OutFmt, Beep, NumCases, windspeed, ShearExp, RPM, Pitch, Yaw, dT, Tmax)
 ```
 
 ### ADFile
@@ -74,12 +74,12 @@ for i = 1:length(afiddistro[:,1]) #Need to skip over the transition foils to mak
     end
 end
 
-radsafid = OpenFASTsr.namefit(afiddistro[:,1], afiddistro[:,2], rads)
+radsafid = OpenFASTTools.namefit(afiddistro[:,1], afiddistro[:,2], rads)
 ```
 
 ```julia
 
-adblade, irads = OpenFASTsr.CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=50, notes = "20kW UAE Turbine", verbose=false)
+adblade, irads = OpenFASTTools.CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=50, notes = "20kW UAE Turbine", verbose=false)
 
 ```
 
@@ -108,7 +108,7 @@ At this point, we can do what we want with the files now. Likely you'll want to 
 Because you have to use a minimum of three modules (InflowWind, AeroDyn, and ElastoDyn), this is a little more involved. Luckily, it follows about the same procedure from before. A file for the glue code is also required. 
 
 !!! tip
-    While reading and writing your files using OpenFASTsr can be useful, sometimes I just take an old input file and change it manually (especially if I don't plan on making lots of changes). 
+    While reading and writing your files using OpenFASTTools can be useful, sometimes I just take an old input file and change it manually (especially if I don't plan on making lots of changes). 
 
 ### OpenFAST Glue Code
 

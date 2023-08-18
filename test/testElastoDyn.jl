@@ -1,13 +1,13 @@
-# using OpenFASTsr
+# using OpenFASTTools
 # using Test
 
-# of = OpenFASTsr
+# of = OpenFASTTools
 
 
 @testset "ElastoDyn" begin
     @testset "Read ElastoDyn File" begin
         file = "NREL5MWrefED.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         edfile = of.read_edfile(file, path)
 
         @test edfile.echo==false
@@ -129,7 +129,7 @@
 
     @testset "Write ElastoDyn File" begin
         file = "NREL5MWrefED.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         edfiletemp = of.read_edfile(file, path)
         of.write_edfile(edfiletemp, "testingEDFile.dat"; outputpath=path)
         edfile = of.read_edfile("testingEDfile.dat", path)
@@ -253,7 +253,7 @@
 
     @testset "read ED Blade" begin
         file = "NREL5MWref_Blade.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         edblade = of.read_edblade(file, path)
 
         @test edblade.numnds==49
@@ -333,7 +333,7 @@
 
     @testset "Write EDBlade" begin
         file = "NREL5MWref_Blade.dat"
-        path = joinpath(dirname(pathof(OpenFASTsr)))[1:end-3]*"test/data/5MWturbine"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
         edbladetemp = of.read_edblade(file, path)
         of.write_edblade(edbladetemp, "testingedblade.dat")
         edblade = of.read_edblade("testingedblade.dat", path)
