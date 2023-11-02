@@ -51,7 +51,7 @@
 ################## READING FUNCTIONS #########################
 ##############################################################
 """
-    ReadInflowWindFile(filename, filepath)
+    read_inflowwind(filename, filepath)
 
 Reads an InflowWind file and produces an IWFile object. 
 
@@ -72,7 +72,22 @@ function read_inflowwind(filename, filepath)
     inflowwind = Dict()
     inflowwind["Notes"] = lines[1]
 
-    for i = 2:41
+    # @show length(lines)
+
+    # @show lines[7]
+
+    for i = 2:7
+        key, entry = parseline(lines[i])
+        inflowwind[key] = entry
+    end
+
+    for i = 8:10
+        key, entry = parseline(lines[i], :vector)
+        inflowwind[key] = entry
+    end
+
+
+    for i = 11:54
         key, entry = parseline(lines[i])
         inflowwind[key] = entry
     end
@@ -80,7 +95,8 @@ function read_inflowwind(filename, filepath)
 
 
     ### Outputs section
-    idx = 42
+    idx = 55
+    # @show lines[54]
 
     outlist1idx = findlistbounds(lines[idx:end])
 
@@ -134,6 +150,9 @@ function write_inflowwind(iwfile, outputfile; outputpath=pwd())
     push!(lines, line)
 
     line = string(formatword(string(iwfile["VFlowAng"]);location="back", quotes=false),"   VFlowAng       - Upflow angle (degrees) (not used for native Bladed format WindType=7)")
+    push!(lines, line)
+
+    line = string(formatword(addriver["VelInterpCubic"];quotes=false),"   VelInterpCubic - Use cubic interpolation for velocity in time (false=linear, true=cubic) [Used with WindType=2,3,4,5,7]")
     push!(lines, line)
 
     line = string(formatword(Int(iwfile["NWindVel"]);location="back", quotes=false),"   NWindVel       - Number of points to output the wind velocity    (0 to 9)")
@@ -321,6 +340,45 @@ function write_inflowwind(iwfile, outputfile; outputpath=pwd())
 
 
 
+    ###########################################################################
+    line = "================== LIDAR Parameters ==========================================================================="
+    push!(lines, line)
+
+    line = string(formatword(Int(iwfile["SensorType"]);location="back", quotes=false),"   SensorType          - Switch for lidar configuration (0 = None, 1 = Single Point Beam(s), 2 = Continuous, 3 = Pulsed)")
+    push!(lines, line)
+
+    line = string(formatword(Int(iwfile["NumPulseGate"]);location="back", quotes=false),"   NumPulseGate        - Number of lidar measurement gates (used when SensorType = 3)")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["PulseSpacing"];location="back", quotes=false),"   PulseSpacing        - Distance between range gates (m) (used when SensorType = 3)")
+    push!(lines, line)
+
+    line = string(formatword(Int(iwfile["NumBeam"]);location="back", quotes=false),"   NumBeam             - Number of lidar measurement beams (0-5)(used when SensorType = 1)")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["FocalDistanceX"];location="back", quotes=false),"   FocalDistanceX      - Focal distance co-ordinates of the lidar beam in the x direction (relative to hub height) (only first coordinate used for SensorType 2 and 3) (m))")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["FocalDistanceY"];location="back", quotes=false),"   FocalDistanceY      - Focal distance co-ordinates of the lidar beam in the y direction (relative to hub height) (only first coordinate used for SensorType 2 and 3) (m))")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["FocalDistanceZ"];location="back", quotes=false),"   FocalDistanceZ      - Focal distance co-ordinates of the lidar beam in the z direction (relative to hub height) (only first coordinate used for SensorType 2 and 3) (m))")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["RotorApexOffsetPos"];location="back", quotes=false),"   RotorApexOffsetPos  - Offset of the lidar from hub height (m)")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["URefLid"];location="back", quotes=false),"   URefLid             - Reference average wind speed for the lidar[m/s]")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["MeasurementInterval"];location="back", quotes=false),"   MeasurementInterval - Time between each measurement [s]")
+    push!(lines, line)
+
+    line = string(formatword(iwfile["LidRadialVel"];quotes=false),"   LidRadialVel        - TRUE => return radial component, FALSE => return 'x' direction estimate")
+    push!(lines, line)
+
+    line = string(formatword(Int(iwfile["ConsiderHubMotion"]);location="back", quotes=false),"   ConsiderHubMotion   - Flag whether to consider the hub motion's impact on Lidar measurements")
+    push!(lines, line)
 
 
 
