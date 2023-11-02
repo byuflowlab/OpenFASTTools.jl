@@ -1012,7 +1012,7 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade;fit=Linear)
+function make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade;fit=Linear) #, inittype=typeof(rhub))
 
     #Todo: How does precone and sweep affect the blade? 
 
@@ -1021,7 +1021,11 @@ function make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdb
     np = length(rfrac) #Number of points #Todo. The points do not align with where the GXBeam elements are. -> What would you like me to do about that? 
     ne = np - 1 #Number of elements
 
-    
+    #Convertt types
+    # rx = inittype.(rx)
+    # ry = inittype.(ry)
+    # rz = inittype.(rz)
+    # twist = inittype.(twist)
 
 
     # L = rtip - rhub #Length of the blade
@@ -1088,7 +1092,7 @@ Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assem
 ### Outputs:
 - assembly::GXBeam.Assembly
 """
-function make_assembly(edfile, bdfile, bdblade; fit=Linear)
+function make_assembly(edfile, bdfile, bdblade; fit=Linear) #, inittype=Float64)
     
     rhub = edfile["HubRad"]
     rtip = edfile["TipRad"]
@@ -1105,5 +1109,5 @@ function make_assembly(edfile, bdfile, bdblade; fit=Linear)
     sweep = zeros(length(rx)) #Todo:
     curve = zeros(length(rx))
 
-    return make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade; fit)
+    return make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade; fit) #, inittype)
 end

@@ -80,7 +80,7 @@ function parseentry(word; tryint=false)
                 out = nothing
             end
         else
-            out =nothing
+            out = nothing
         end
     end
 
@@ -98,6 +98,55 @@ function parseline(line_initial)
     # println("\"", line, "\"")
     entryend = findlast(" ", line)[1]-1 #Todo. This will cause problem if the requested line is a vector. -> I'll make a function that does this functionality. Inside that it'll see if this space occurs before or after a comma. -> Or just use findlast().... because I've used strip(), then the last space that occurs, should be just before the key. 
     entry = parseentry(line[1:entryend])
+    key = nospaces(line[entryend+1:end])
+    # println("\"", key, "\"")
+
+    return key, entry
+end
+
+function parseentry(word, linetype::Symbol; tryint=false)
+    out = nothing
+    if linetype == :int
+        out = tryparse(Int, word)
+    end
+
+    if linetype == :float
+        out = tryparse(Float64, word)
+    end
+
+    if linetype == :bool
+        out = tryparse(Bool, word)
+    end
+
+    if linetype == :vector
+        if contains(word, ",")
+            try
+                out = vec(readdlm(IOBuffer(word), ','))
+            catch
+                out = nothing
+            end
+        else
+            try
+                out = [tryparse(Float64, word)]
+            catch
+                println("errored on: ", word)
+                out = nothing
+            end
+        end
+    end
+
+    if linetype == :string
+        out = word
+    end
+
+    return out
+end
+
+function parseline(line_initial, linetype)
+    line = removecomment(line_initial)
+    # println("\"", line, "\"")
+    entryend = findlast(" ", line)[1]-1 #Todo. This will cause problem if the requested line is a vector. -> I'll make a function that does this functionality. Inside that it'll see if this space occurs before or after a comma. -> Or just use findlast().... because I've used strip(), then the last space that occurs, should be just before the key. 
+    entry = parseentry(line[1:entryend], linetype)
     key = nospaces(line[entryend+1:end])
     # println("\"", key, "\"")
 
