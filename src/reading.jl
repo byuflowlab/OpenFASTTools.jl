@@ -32,18 +32,44 @@ function cleanfile!(lines)
         if occursin("---", lines[i]) #Flag title lines to get rid of them later. I can't get rid of them now, otherwise that'll throw of the iteration. 
             push!(comment_idxs, i)
             continue
+
         elseif occursin("===", lines[i])
+            push!(comment_idxs, i)
+            continue
+
+        elseif occursin("!", lines[i]) #Get rid of lines that are just comments
+            push!(comment_idxs, i)
+            continue
+
+        elseif lines[i][1]=="#" #Get rid of lines that are just comments
+            push!(comment_idxs, i)
+            continue
+
+        elseif lines[i][1]=="%" #Get rid of lines that are just comments
             push!(comment_idxs, i)
             continue
         end
 
-        if occursin("!", lines[i]) #Remove comments #Todo: This didn't work on line 66
+        if occursin("!", lines[i]) #Remove comments 
             cidx = findfirst("!", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+
+        elseif occursin("#", lines[i])
+            cidx = findfirst("#", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+
+        elseif occursin("%", lines[i])
+            cidx = findfirst("%", lines[i])[1]
             lines[i] = lines[i][1:cidx-1]
         end
 
         lines[i] = rmspaces(lines[i]) #Remove tabs and double spaces. 
         lines[i] = strip(lines[i]) #Remove leading and trailing whitespace
+
+        if lines[i]=="" #Get rid of empty lines
+            push!(comment_idxs, i)
+            continue
+        end
     end
 
     for idx in reverse(comment_idxs) #Get rid of title lines
@@ -474,13 +500,20 @@ function readflag(line)
 end
 
 """
-parse a matrix that is seperated by a single space, not distances
-Overloaded function.
-    This funcion uses the number of columns and the lines to read in
-    a matrix from an array of strings.
+Parse a matrix that is seperated by a single space, not distances.
+This function counts the number of columns and the lines to read 
+in a matrix from an array of strings.
+
+NOTE: use cat(readdlm.(IOBuffer.(lines))...,dims=1) instead. 
+
+**Inputs**
+- lines - an array of strings that contain the matrix
+- n - the number of columns in the matrix
+
+
 """
 function readmatrix(lines;n=1)
-    #TODO: Better than this function: cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
+    #Note: Better than this function: cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
     stops = []
     for i=1:length(lines[1])
         if lines[1][i]==' '

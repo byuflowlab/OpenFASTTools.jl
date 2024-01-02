@@ -90,6 +90,32 @@ of = OpenFASTTools
 
     end #End testing read Inflow Wind file
 
+    @testset "Read Uniform Inflow file" begin
+        file = "inflowwind_uniform_example.dat"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
+        ufile = of.read_uniformwind(file, path)
+
+        @test isapprox(ufile["time"], [0., 10.], atol=1e-5)
+        @test isapprox(ufile["windspeed"], [10., 12.], atol=1e-5)
+        @test isapprox(ufile["winddir"], [0., 0.], atol=1e-5)
+        @test isapprox(ufile["verticalspeed"], [0., 0.], atol=1e-5)
+        @test isapprox(ufile["horizontalshear"], [0., 0.], atol=1e-5)
+        @test isapprox(ufile["pwrlawvertshear"], [0.3, 0.3], atol=1e-5)
+        @test isapprox(ufile["linlawvertshear"], [0., 0.], atol=1e-5)
+        @test isapprox(ufile["gustspeed"], [0., 0.], atol=1e-5)
+        @test isapprox(ufile["upflowang"], [8., 8.], atol=1e-5)
+
+    end #End testing read uniform inflow file
+
+    @testset "Write Uniform inflow file" begin
+        file = "inflowwind_uniform_example.dat"
+        path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
+        ufile = of.read_uniformwind(file, path)
+
+        of.write_uniformwind(ufile, "testingUniform.dat"; outputpath=path)
+
+    end #End testing write uniform inflow file
+
     # @testset "Write InflowWind file" begin
     # file = "NREL5MWref_InflowWind_12mps.dat"
     # path = joinpath(dirname(pathof(OpenFASTTools)))[1:end-3]*"test/data/5MWturbine"
