@@ -9,11 +9,11 @@
 
 Reads an InflowWind file and produces an IWFile object. 
 
-### Inputs
+**Inputs**
 - filename::String - a string containing the name of the file to be read.
 - filepath::String - a string containing the path to the file to be read.
 
-### Outputs
+**Outputs**
 - iwfile::IWFile - an InflowWind file object
 """
 function read_inflowwind(filename, filepath)
@@ -82,7 +82,7 @@ function read_uniformwind(filename, filepath)
     lines = readlines(fi)
     close(fi)
 
-    lines = cleanfile!(lines)
+    lines = deepcleanfile!(lines)
 
     uniform = Dict()
 
@@ -113,7 +113,7 @@ end
 
 Writes an InflowWind file from and InflowWind file object. 
 
-### Inputs
+**Inputs**
 - iwfile::IWFile - InflowWind file object to be written
 - outputfile::String - The desired name of the new file. 
 - outputpath::String - The path to the desired location of the new file. 

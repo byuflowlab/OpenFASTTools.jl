@@ -248,11 +248,11 @@ end
 
 Reads in AeroDyn input file and stores the options as a dictionary.
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file. 
 - filepath::String - the path to the file. 
 
-### Outputs: 
+**Outputs**: 
 - adfile::Dict() - a dictionary using the variable names as strings for keys, and the variable as the value. 
 
 """
@@ -329,11 +329,11 @@ end
 
 This function navigates to the location of the file given, and reads in the named AD blade file.
 
-### Inputs:
+**Inputs**:
     filename - A string of the name of the file, including the extension
     filepath - A string of the path to the file
 
-### Outputs: 
+**Outputs**: 
     adblade - a dictionary of the AD blade file variables
 
 """
@@ -365,11 +365,11 @@ This function reads in the information from an aerodata file, including the pola
 from the Aerodata folder. Note that currently you have to point it at the correct
 file.
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file to be read
 - filepath::String - the relative or absolute path to the file location. 
 
-### Outputs:
+**Outputs**:
 - aerodata::Aerodata
 
 """
@@ -442,11 +442,11 @@ end
 
 This function reads in the airfoil input file, which is similar to the aerodata file but points to the coordinates and has some different information. Using the fact that commented lines begin with "!".
 
-### Inputs:
+**Inputs**:
 - filename::String - The name of the file
 - filepath::String - the relative or absolute path to the file.
 
-### Outputs:
+**Outputs**:
 - airfoilinput::AirfoilInput
 
 """
@@ -634,11 +634,11 @@ end #end of function
 
 Reads in the text file that has the airfoil coordinates, as per the format from OpenFAST
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file
 - filepath::String - the relative or absolute path to the file. 
 
-### Outputs:
+**Outputs**:
 - airfoil::AirfoilCoords
 
 """
@@ -673,11 +673,11 @@ end
 
 Returns an ADDriver object by reading a ADDriver input file. Note that the driver file is different from the primary input file. 
 
-### Inputs 
+**Inputs** 
 - filename::String - The name of the file in the directory to be read. 
 - filepath::String - The path to the file to be read, not including the filename in the path
 
-### Outputs
+**Outputs**
 - addriver - a dictionary containing the AD driver file entries
 
 ### Notes
@@ -725,7 +725,7 @@ end
 
 Writes a AeroDyn v15 object to file. 
 
-### Inputs:
+**Inputs**:
 - adfile::ADfile - an AeroDyn file object
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute path of the written file.
@@ -1086,7 +1086,7 @@ end
 
 Writes an AeroDyn Blade object to file. 
 
-### Inputs:
+**Inputs**:
 - adblade::ADBlade - AeroDyn blade object
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute write location of the file. 
@@ -1134,7 +1134,7 @@ end
 
 Writes a file for the OpenFAST airfoil coordinates file.
 
-### Inputs: 
+**Inputs**: 
 - airfoilcoords::AirfoilCoords - airfoil coordinates object
 - outputfile::String - The desired name of the written file
 - outputpath::String - The desired relative or absolute path of the write file. 
@@ -1179,7 +1179,7 @@ end
 
 Writes an Airfoil Input file object to file. 
 
-### Inputs:
+**Inputs**:
 - airfoilinput::AirfoilInput - The airfoil input file. This is different from the airfoil coordinates file. 
 - outputfile::String - The desired name of the written file. 
 - outputpath::String - The desired relative or absolute path to the written file. 
@@ -1420,7 +1420,7 @@ end
 
 This function takes an aerodata structure and writes an output file for it.
 
-### Inputs: 
+**Inputs**: 
 - aerodata::Aerodata - the aerodata object. It looks like it is information about the airfoil polar. 
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute path of the written file. 
@@ -1475,7 +1475,7 @@ end
 
 Writes the desired AD driver file at the stated location. 
 
-### Inputs 
+**Inputs** 
 - addriver::Dict - the AD driver file
 - outputfile::String - The name of the file, containing the file ending.
 - outputpath::String - the location to write the file
@@ -1718,11 +1718,11 @@ InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
 TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
 Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
 
-### Inputs::
+**Inputs**::
 - Blades::Array{String, 1} - an array containing the names of the blade files
 - foils::Array{String, 1} - an array containing the names of airfoils to be used. 
 
-### Outputs:
+**Outputs**:
 - ad15file::AD15file - the AeroDyn v15 input file object
 """
 function create_adfile(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
@@ -1774,7 +1774,7 @@ end
 
 Takes the iodenputs and creats a adblade struct. Note that this is a file that mainly contains nodes that describe the turbine blade to AeroDyn. At each node the distance from the hub will be given; the chord length, twist, cone distance, cone angle, sweep, and airfoil will also be given. 
 
-### Inputs
+**Inputs**
 - rads - node distance from the center of rotation. (meters)
 - radschords - node chord length (meters)
 - radstwist - node twist angle (degrees)
@@ -1791,7 +1791,7 @@ Takes the iodenputs and creats a adblade struct. Note that this is a file that m
 - notes - notes that the user would like placed at the top of the blade file.
 - verbose - boolean that marks whether to make statements about creating the blade.
 
-### Outputs
+**Outputs**
 - adblade - an adblade struct
 - importantnodes - the node numbers of the important radi that the user declared. 
 
@@ -1878,7 +1878,7 @@ end
 
 Takes the inputs and creats a adblade struct. Note that this is a file that mainly contains nodes that describe the turbine blade to AeroDyn. At each node the distance from the hub will be given; the chord length, twist, cone distance, cone angle, sweep, and airfoil will also be given. 
 
-    ### Inputs
+    **Inputs**
     - props - a n x 7 array holding the nodal values in order (radius, chord length, twist, cone, cone angle, sweep, airfoil name)
     - tiprad - tip radius from center of rotation (meters)
     - hubrad - hub radius from center of rotation (meters)
@@ -1889,7 +1889,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
     - notes - notes that the user would like placed at the top of the blade file.
     - verbose - boolean that marks whether to make statements about creating the blade.
     
-    ### Outputs
+    **Outputs**
     - adblade - an adblade struct
     - importantnodes - the node numbers of the important radi that the user declared. 
     
@@ -1913,12 +1913,12 @@ end
 
 Creates an Airfoil Input file object. 
 
-### Inputs:
+**Inputs**:
 - Polar::Array{Float64, 2} - nx4 array of the airfoil coefficients in order of aoa, cl, cd, cm
 - Re::Float64 - Reynolds number of the airfoil polar
 - NumCoords::String - file containing the coordinate file ("@\"s809_coords.dat\"")
 
-### Outputs: 
+**Outputs**: 
 - airfoilinput::AirfoilInput - an airfoil input file object. 
 """
 function CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimArea=1)

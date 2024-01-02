@@ -196,12 +196,12 @@ end
 """
 #### integerfit(x, y, xnew)
 Fit Integer values of Y.
-### Inputs
+**Inputs**
 - x = x values 
 - y = y values (Integers)
 - xnew = x values to be interpolated, single element or an array
 
-### Outputs
+**Outputs**
 - ynew = the fit integer values that correspond to xnew
 
 ### Notes
@@ -219,10 +219,10 @@ end
 #### nametonumber(list)
 Converts a list of names into a list of integers. The first name will appear as 1, the second name will appear as 2, etc. 
 
-### Inputs
+**Inputs**
 list - a 1D array of strings containing the names you wish to convert to numbers
 
-### Outputs
+**Outputs**
 numbers - a 1D array of integers that represent the names you converted
 
 ### Notes
@@ -278,12 +278,12 @@ end
 #### localtoroot(N*, T*, ϕ)
 Converts from local blade reference (lbr) to blade root reference (brr)
 
-### Inputs 
+**Inputs** 
 - Nstar = local force normal to chord (Flatwise loading)
 - Tstar = local force tangent to chord (Edgewise loading)
 - ϕ = Total twist (pitch + twist distro) in degrees
 
-### Outputs 
+**Outputs** 
 - N = brr normal force
 - T = brr tangent force
 
@@ -304,7 +304,7 @@ Converts from blade root reference (BRR) to local blade reference (LBR).
 - T = local force tangent to blade root chord (Leadlag Loading)
 - ϕ = Total twist (pitch + twist distribution) in degrees
 
-### Outputs
+**Outputs**
 - Nstar - lbr normal force
 - Tstar - lbr tangent force
 

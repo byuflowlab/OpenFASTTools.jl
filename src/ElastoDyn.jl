@@ -236,11 +236,11 @@ end
     read_edfile(filename, filepath)
 This function reads in a ElastoDyn input file and stores the values in an ED structure.
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file to be read. 
 - filepath::String - The path of the file to be read. 
 
-### Outputs:
+**Outputs**:
 -edfile::EDFile - and ElastoDyn file object
 """
 function read_edfile(filename::String, filepath::String)
@@ -299,11 +299,11 @@ end
 
 Reads in an ElastoDyn Blade from file. 
 
-### Inputs:
+**Inputs**:
 - filename::String - The name of the file to be read in.
 - filepath::String - The path to the file to be read in. 
 
-### Outputs:
+**Outputs**:
 - edfile::EDBlade - An ElastoDyn blade object. 
 """
 function read_edblade(filename::String, filepath::String)
@@ -353,12 +353,12 @@ end
 
 This function takes an ElastoDyn structure and writes it to file.
 
-### Inputs:
+**Inputs**:
 - edfile::EDFile - The edfile object
 - outputfile::String - The name of the file to be written
 - outputpath::String - The location to write the file. 
 
-### Outputs:
+**Outputs**:
 - A written file. 
 """
 function write_edfile(edfile::Dict, outputfile::String; outputpath::String=pwd())
@@ -856,12 +856,12 @@ end
 
 Takes an edblade structure and prints it to file.
 
-### Inputs: 
+**Inputs**: 
 - edblade::EDBlade - The blade object. Note this might not be defined on the range of the blade radius that AeroDyn is defined on (need to find out).
 - outputfile::String - the desired filename to be written.
 - outputpath::String - the desired write location. 
 
-### Outputs:
+**Outputs**:
 - A written file. 
 
 
@@ -989,7 +989,7 @@ end
 Creates an instance of EDBlade based off of input data. 
 
 
-### Inputs
+**Inputs**
 - rads - node distance from the center of rotation. (meters)
 - radspitchaxis -  Fraction of chord from leading edge to pitch axis 
 - radstwist - node twist angle (degrees)
@@ -1005,7 +1005,7 @@ Creates an instance of EDBlade based off of input data.
 - notes - notes that the user would like placed at the top of the blade file.
 - verbose - boolean that marks whether to make statements about creating the blade.
 
-### Outputs
+**Outputs**
 - adblade - an adblade struct
 - importantnodes - the node numbers of the important radi that the user declared. 
 

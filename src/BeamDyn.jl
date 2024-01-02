@@ -91,12 +91,12 @@
 
 # Take the makings of a BeamDyn blade node and make it into a node. 
 
-# ### Inputs
+# **Inputs**
 # - frac::Float64 - The percentage of the blade (not including hub distance) that the node is defined at. 
 # - stiffmat::Array{Float64, 2} - The 6x6 array defining the flap, edge, and polar shear and extension stiffnesses. See the OpenFAST docs for a description of this matrix (and the next one). 
 # - massmat::Array{Float64, 2} - The 6x6 array defining the mass, center of mass, and area moment of inertia. 
 
-# ### Outputs
+# **Outputs**
 # - BDBladeNode - An object containing the extractable data from the matrices. 
 # """
 # function makenode(frac, stiffmat, massmat)
@@ -176,11 +176,11 @@ end
 
 Reads a BeamDyn file and creates a dictionary to be used. 
 
-### Inputs 
+**Inputs** 
 - filename::String - name of the file to read in. 
 - filepath::String - path to the directory containing the file to read
 
-### Outputs
+**Outputs**
 - bdfile::Dict - a dictionary holding the BeamDyn primary file. 
 """
 function read_bdfile(filename::String, filepath::String)
@@ -248,11 +248,11 @@ end
 
 Reads a BeamDyn blade file and creates an object containing the data. 
 
-### Inputs
+**Inputs**
 - filename::String - a string containing the name of the file
 - filepath::String - a string containing the path to the file to be read
 
-### Outputs
+**Outputs**
 - BDBlade - a BeamDyn Blade object. 
 """
 function read_bdblade(filename::String, filepath::String)
@@ -493,7 +493,7 @@ end
 
 Writes a BeamDyn struct to file. 
 
-### Inputs
+**Inputs**
 - bdfile::BDFile : BeamDyn file
 - outputfile::String : Name to give the written file. 
 - outputpath::String : Path to the desired write location, otherwise, will write at current location. 
@@ -754,12 +754,12 @@ end
 
 Writes a bdblade object to file. 
 
-### Inputs:
+**Inputs**:
 - bdblade::BDBlade - A BeamDyn blade object
 - outputfile::String - The desired name of the written file. 
 - outputpath::String - The desired location of the written file. 
 
-### Outputs:
+**Outputs**:
 -  N/A - A file will be written. 
 """
 function write_bdblade(bdblade::Dict, outputfile::String; outputpath::String=pwd())
@@ -844,7 +844,7 @@ end
 """
     stiffness_matrix(E, nu, A, Ix, Iy; G=E/(2*(1+nu)), xc=0, yc=0, xs=xc, ys=yc, theta_p=0, theta_s=theta_p, kxs=1, kys=kxs)
 
-### Inputs
+**Inputs**
 - E = Young's Modulus
 - A = Cross sectional area
 - Ix = Area moment of inertia about the x axis
@@ -900,7 +900,7 @@ end
 """
     mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
 
-### Inputs
+**Inputs**
 - m = distributed mass
 - Ix, Iy = mass moment of inertia about its respective axis
 - x, y = coordinates of the center of principle inertia relative to the cross section coordinate frame
@@ -1004,12 +1004,12 @@ make_assembly(rhub, rtip, bdblade)
 
 Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assembly struct for use with the Rotors.jl package. 
 
-### Inputs:
+**Inputs**:
 - rhub::TF - hub radius
 - rtip::TF - tip radius
 - bdblade::BDBlade - a BeamDyn blade struct
 
-### Outputs:
+**Outputs**:
 - assembly::GXBeam.Assembly
 """
 function make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade;fit=Linear) #, inittype=typeof(rhub))
@@ -1085,11 +1085,11 @@ make_assembly(edfile, bdblade)
 
 Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assembly struct for use with the Rotors.jl package. 
 
-### Inputs:
+**Inputs**:
 - edfile::EDFile - ElastoDyn file struct
 - bdblade::BDBlade - a BeamDyn blade struct
 
-### Outputs:
+**Outputs**:
 - assembly::GXBeam.Assembly
 """
 function make_assembly(edfile, bdfile, bdblade; fit=Linear) #, inittype=Float64)
