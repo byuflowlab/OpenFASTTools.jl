@@ -1,24 +1,75 @@
 """
     damage_equivalent_load(loads; m=10)
-Damage equivalent load from the MLife theory, using the Goodman correction.
+Damage equivalent load from the MLife theory, without using the Goodman correction.
 # Arguments
     loads - the an array of loads, whether they be forces, moments or stresses
     m - the Whöler exponent, which is typically 10 for composites
 # Outputs
     DEL - Damage equivalent load
 """
-function damage_equivalent_load(loads; m=10)
+function damage_equivalent_load(loads; m=10, Lult=nothing)
     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
     out = rainflow(peaks) 
-    n = Int(length(out)/3)
-    maxl, maxlidx = findmax(out[1,:])
-    DEL = 0
+    n, _= size(out)
+
+    # Lult, _ = findmax(out[1,:])
+    if isnothing(Lult)
+        Lult = maximum(abs.(out[1,:]))
+    end
+
+    # @show sum(out[3,:])
+    
+    DEL = 0.
     for i =1:n
-        correctedloadrange = out[1,i]*(maxl/(maxl-abs(out[2,i]))) #Goodman correction
+        correctedloadrange = out[1,i]*(Lult/(Lult-abs(out[2,i]))) #Goodman correction
         DEL += out[3,i]*(correctedloadrange^m)
     end
     DEL = (DEL/sum(out[3,:]))^(1/m)
     return DEL
+end
+
+# function damage(loads; m=10, Lult=nothing)
+# #Note: I'm not sure where this function came from. Hopefully it doesn't break anything. 
+#     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
+#     out = rainflow(peaks) 
+#     n, _= size(out)
+
+#     # Lult, _ = findmax(out[1,:])
+#     if isnothing(Lult)
+#         Lult = maximum(abs.(out[1,:]))
+#     end
+    
+#     DEL = 0.
+#     for i =1:n
+#         correctedloadrange = out[1,i]*(Lult/(Lult-abs(out[2,i]))) #Goodman correction
+#         DEL += out[3,i]*(correctedloadrange^m)
+#     end
+#     DEL = (DEL/sum(out[3,:]))^(1/m)
+
+#     ###
+# end
+
+"""
+    damage(loads; m=10, Lult=maximum(abs.(loads)))
+
+Damage calculation from the MLife documentation, using Goodman correction. 
+
+"""
+function damage(loads; m=10, Lult=maximum(abs.(loads)), absfun=abs)
+    peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
+    out = rainflow(peaks) 
+    n, _= size(out)
+
+    damage = 0.
+    Ni_vec = zeros(n)
+    for i =1:n
+        #Plug equation 7 into equation 6, LMF cancels out. 
+        Ni = (2*(Lult - abs(out[2,i]))/out[1, i])^m
+        Ni_vec[i] = Ni
+        damage += out[3,i]/Ni #Todo. This doesn't account for the length of the simulation... -> It shouldn't. This just caluclates the damage from a single time series. If you want to calculate the damage over the time period, you're going to scale the damage from a time series to be the length of the time period. 
+    end
+    
+    return damage, Ni_vec
 end
 
 """
@@ -50,9 +101,9 @@ function rainflow(array_ext,uc_mult=0.5)
             lrange = abs( a[j-1] - a[j-2] )
             # partial range
             if j == 3
-                mean      = ( a[1] + a[2] ) / 2.0
-                a[1]=a[2]
-                a[2]=a[3]
+                mean = (a[1] + a[2])/2.0
+                a[1] = a[2]
+                a[2] = a[3]
                 j=2
                 if lrange > 0
                     array_out[1,po] = lrange
@@ -76,7 +127,7 @@ function rainflow(array_ext,uc_mult=0.5)
     end
     # partial range
     for i = 1:j-1
-        lrange    = abs( a[i] - a[i+1] )
+        lrange    = abs( a[i] - a[i+1] ) #Note: This appears discontinuous.
         mean      = ( a[i] + a[i+1] ) / 2.0
         if lrange > 0
             array_out[1,po] = lrange

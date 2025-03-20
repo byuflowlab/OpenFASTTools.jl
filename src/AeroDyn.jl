@@ -256,9 +256,9 @@ Reads in AeroDyn input file and stores the options as a dictionary.
 - adfile::Dict() - a dictionary using the variable names as strings for keys, and the variable as the value. 
 
 """
-function read_adfile(filename, filepath)
+function read_adfile(filename, filepath; tailfin=false)
     
-    fi = open(filepath*"/"*filename, "r")
+    fi = open(joinpath(filepath, filename), "r")
     lines = readlines(fi)
     close(fi)
 
@@ -270,6 +270,7 @@ function read_adfile(filename, filepath)
     for i = 2:41
         # @show i
         key, entry = parseline(lines[i])
+        # @show key, entry
         adfile[key] = entry
     end
 
@@ -278,14 +279,19 @@ function read_adfile(filename, filepath)
     idx = 42+Int(adfile["NumAFfiles"])
     # @show idx
 
-    for i = idx:idx+8
+    idxadd = tailfin ? 10 : 8 #Todo: Maybe have this automatically determined.
+    # @show tailfin, idxadd
+    for i = idx:idx+idxadd
+        # println(lines[i])
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
+    idx = idx+idxadd
+
     # @show idx+4
 
-    twrnames, twrdata = parsematrix(lines[idx+9:idx+9+2+Int(adfile["NumTwrNds"])-1])
+    twrnames, twrdata = parsematrix(lines[idx+1:idx+1+2+Int(adfile["NumTwrNds"])-1])
 
     #Todo: The parsematrix function only works when there aren't comments interjected in the header of the function.... :| I might need to come up with an alternate function. :| ... At least when it comes to getting the length of the matrix I'm trying to read. 
     for i = 1:5 #length(twrnames)
@@ -294,15 +300,16 @@ function read_adfile(filename, filepath)
 
 
     ### Outputs section
-    idx = idx+9+2+Int(adfile["NumTwrNds"])
+    idx = idx+1+2+Int(adfile["NumTwrNds"])
     # @show idx
 
     for i = idx:idx+4
+        # println(lines[i])
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    outlist1idx = findlistbounds(lines[idx+5:end])
+    outlist1idx = findlistbounds(lines[idx+5:end]) #Todo. This isn't finding the end of the outputs list. -> The input file was missing an end. 
 
     # println("")
     # println("This list")
@@ -311,8 +318,11 @@ function read_adfile(filename, filepath)
 
     idx = idx+5+outlist1idx[end]
 
-    ### Nodal outputs
-    for i = idx:idx+1
+    # @show idx, length(lines)
+    # @show outputs
+
+    ### Nodal outputs #todo: I've encountered some files that don't have this section. Maybe have some behavior to adapt? (I don't know if OpenFAST errors if this section isn't present.)
+    for i = idx:idx+1 
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
@@ -338,7 +348,7 @@ This function navigates to the location of the file given, and reads in the name
 
 """
 function read_adblade(filename, filepath)
-    fi = open(filepath*"/"*filename, "r")
+    fi = open(joinpath(filepath,filename), "r")
     lines = readlines(fi)
     close(fi)
 
@@ -450,7 +460,7 @@ This function reads in the airfoil input file, which is similar to the aerodata 
 - airfoilinput::AirfoilInput
 
 """
-function read_airfoilinput(filename) #(filename, filepath)
+function read_airfoilinput(filename) #(filename, filepath) #Todo: 
     
     # fi = open(filepath*"/"*filename, "r")
     fi = open(filename, "r")
@@ -642,8 +652,8 @@ Reads in the text file that has the airfoil coordinates, as per the format from 
 - airfoil::AirfoilCoords
 
 """
-function read_airfoilcoordinates(filename, filepath)
-    fi = open(filepath*"/"*filename, "r")
+function read_airfoilcoordinates(filename, filepath) #Todo: Convert to something else. 
+    fi = open(filepath*"/"*filename, "r") #Todo: joinpath
     lined = readlines(fi)
     close(fi)
 
@@ -757,6 +767,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
     line = string(formatword(Int(adfile["TwrShadow"]);quotes=false, location="back"), "   TwrShadow          - Calculate tower influence on wind based on downstream tower shadow? (flag)")
+    # line = string(formatword(adfile["TwrShadow"];quotes=false, location="back"), "   TwrShadow          - Calculate tower influence on wind based on downstream tower shadow? (flag)")
     push!(lines,line)
 
     line = string(formatword(adfile["TwrAero"];quotes=false), "   TwrAero            - Calculate tower aerodynamic loads? (flag)")
@@ -846,7 +857,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(Int(adfile["DBEMT_Mod"]);location="back", quotes=false), "   DBEMT_Mod          - Type of dynamic BEMT (DBEMT) model {1=constant tau1, 2=time-dependent tau1} (-) [used only when WakeMod=2]")
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["tau1_const"]);location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
+    line = string(formatword(adfile["tau1_const"];location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
     push!(lines, line)
 
 
@@ -1045,7 +1056,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
         if isa(eltype(adfile["BldNd_BlOutNd"]), Number)
             line = formatvector(Int.(adfile["BldNd_BlOutNd"]))
         else
-            line = formatword(adfile["BldNd_BlOutNd"]; quotes=true)
+            line = formatword(adfile["BldNd_BlOutNd"]; quotes=false)
         end
     else
         line = " "^11
@@ -1660,9 +1671,12 @@ function write_addriver(addriver::Dict, outputfile::String; outputpath::String=p
     line = "(m/s)      (-)    (rpm)   (deg)  (deg)  (s)   (s)   (-)   (-)       (Hz)"
     push!(lines, line)
 
-    WindData = hcat(addriver["HWndSpeed_mat"], addriver["PLExp_mat"], addriver["RotSpd_mat"], addriver["Pitch_mat"], addriver["Yaw_mat"], addriver["dT_mat"], addriver["Tmax_mat"], addriver["DOF_mat"], addriver["Amplitude_mat"], addriver["Frequency_mat"])
-    line = formatmatrix(WindData)
-    append!(lines, line)
+    if addriver["AnalysisType"]==2 #I suppose the AeroDyn Driver doesn't expect there to be any combined case data if the analysis type is 2. 
+    else
+        WindData = hcat(addriver["HWndSpeed_mat"], addriver["PLExp_mat"], addriver["RotSpd_mat"], addriver["Pitch_mat"], addriver["Yaw_mat"], addriver["dT_mat"], addriver["Tmax_mat"], addriver["DOF_mat"], addriver["Amplitude_mat"], addriver["Frequency_mat"])
+        line = formatmatrix(WindData)
+        append!(lines, line)
+    end
 
 
     ##############################################################################
@@ -1707,67 +1721,254 @@ end
 ##############################################################
 
 """
-    CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
-DTAero="default", WakeMod=1,
-AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
-CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
-Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="\"default\"", TipLoss="True",
-HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
-MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
-InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
-TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
-Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+    create_addriver()
 
-**Inputs**::
-- Blades::Array{String, 1} - an array containing the names of the blade files
-- foils::Array{String, 1} - an array containing the names of airfoils to be used. 
+This function helps the user insure that they've put in all the 
+required entries to write an AeroDyn driver file from a dictionary.
+(This is for a single wind turbine)
 
-**Outputs**:
-- ad15file::AD15file - the AeroDyn v15 input file object
+**Inputs**
 """
-function create_adfile(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
-    DTAero="default", WakeMod=1,
-    AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
-    CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
-    Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="default", TipLoss="True",
-    HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
-    MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
-    InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
-    TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
-    Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+function create_addriver(Notes, Echo, AnalysisType, AD_InputFile, NumBlades,
+    HubRad, HubHt, RefHt, Overhang, ShftTilt, Precone, twr2shft, V, rho, kinvisc, a, ShearExp, RPM,
+    Pitch, Yaw, dT, Tmax; MHK=0, Patm=0, Pvap=0, WtrDpth=0, 
+    Amp=zeros(length(V)), Freq=zeros(length(V)), DOF=zeros(length(V)),
+    CompInflow=false, Inflowfile="", HAWTformat=true, origin=[0,0,0],
+    OutFmt="\"ES15.8E2\"", OutFileFmt=1, WrVTK=0, WrVTK_type=1,
+    VTK_hubr=HubRad, VTKNacDim=[-1, -1, -1 ,2, 2, 2], TimeAnalysisFileName="unused")
 
-    NumAFfiles=length(Foils)
-    if NumAFfiles==0
-     error("Too few airfoils included in AD15 file. - CreateAD15")
-    end
+    addriver = Dict()
+ 
+    addriver["Notes"] = Notes
+    addriver["Echo"] = Echo
+    addriver["MHK"] = MHK
+    addriver["AnalysisType"] = AnalysisType
+    addriver["TMax"] = Tmax
+    addriver["DT"] = dT[1]
+    addriver["AeroFile"] = AD_InputFile
+    addriver["FldDens"] = rho
+    addriver["KinVisc"] = kinvisc
+    addriver["SpdSound"] = a
+    addriver["Patm"] = Patm
+    addriver["Pvap"] = Pvap
+    addriver["WtrDpth"] = WtrDpth
+    addriver["CompInflow"] = CompInflow
+    addriver["InflowFile"] = Inflowfile
+    addriver["HWindSpeed"] = V
+    addriver["RefHt"] = RefHt
+    addriver["PLExp"] = ShearExp[1]
 
-    for i=1:NumAFfiles
-     temp = "Foil $i"
-     push!(directory, temp)
-    end
+    addriver["NumTurbines"] = 1
+    addriver["BasicHAWTFormat(1)"] = HAWTformat
+    addriver["BaseOriginInit(1)"] = origin
+    addriver["NumBlades(1)"] = NumBlades
+    addriver["HubRad(1)"] = HubRad
+    addriver["HubHt(1)"] = HubHt
+    addriver["Overhang(1)"] = Overhang
+    addriver["ShftTilt(1)"] = ShftTilt
+    addriver["Precone(1)"] = Precone
+    addriver["Twr2Shft(1)"] = twr2shft
+    addriver["BaseMotionType(1)"] = 0
+    addriver["DegreeOfFreedom(1)"] = 1
+    addriver["Amplitude(1)"] = 1
+    addriver["Frequency(1)"] = 1
+    addriver["BaseMotionFileName(1)"] = "unused"
+    addriver["NacYaw(1)"] = 1
+    addriver["RotSpeed(1)"] = 1
+    addriver["BldPitch(1)"] = 1
+    addriver["TimeAnalysisFileName"] = TimeAnalysisFileName
 
-    if length(Blades)>3
-     error("Too many blade files included in AD15 file. - CreateAD15")
-    elseif length(Blades)==0
-     error("A blade file is required to create an AD15 file.")
-    end
+    addriver["NumCases"] = length(V)
+    addriver["HWndSpeed_mat"] = V
+    addriver["PLExp_mat"] = ShearExp
+    addriver["RotSpd_mat"] = RPM
+    addriver["Pitch_mat"] = Pitch
+    addriver["Yaw_mat"] = Yaw
+    addriver["dT_mat"] = dT
+    addriver["Tmax_mat"] = Tmax
+    addriver["DOF_mat"] = DOF
+    addriver["Amplitude_mat"] = Amp
+    addriver["Frequency_mat"] = Freq
 
-    m,n = size(TwrNds)
-    NumTwrNds = m
-    if n!=3
-     error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
-    end
+    addriver["OutFmt"] = OutFmt
+    addriver["OutFileFmt"] = OutFileFmt
+    addriver["WrVTK"] = WrVTK
+    addriver["WrVTK_Type"] = WrVTK_type
+    addriver["VTKHubRad"] = VTK_hubr
+    addriver["VTKNacDim"] = VTKNacDim
+     
+    # @warn("create_addriver() is untested.")
 
-    if NBlOuts>9
-     error("Max number of NBlOuts is 9. CreateAD15")
-    end
-    if NTwOuts>9
-     error("Max number of NBlOuts is 9. CreateAD15")
-    end
-
-    file = ADfile(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
-    return file
+    return addriver
 end
+
+
+function create_adfile(WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, AirDens, KinVisc,
+    SkewMod, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, UAMod, FLookup, UAStartRad, UAEndRad, AFNames, UseBlCm, ADBlFile, TwrElev, TwrDiam,
+    TwrCd, TwrTI, TwrCb, OutList, NodeOutList;
+    Echo=false, DTAero="\"defaults\"", FrozenWake=false, CavitCheck=false, Buoyancy=false,
+    CompAA=false, AA_InputFile="unused", SpdSound=335.0, Patm=0., Pvap=0., SkewModFactor="\"default\"", IndToler=1e-6, MaxIter=400, DBEMT_Mod=1, tau1_const=4, OLAFInputFileName="\"unused\"", AFTabMod=1, InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, VolHub=0., HubCenBx=0., VolNac=0., NacCenB=[0., 0., 0.], SumPrint=false, NBlOuts=1, BlOutNd=[1, 2], NTwOuts=0, TwOutNd=[1, 2], BldNd_BladesOut=1, BldNd_BlOutNd="\"All\"", Notes="")
+
+    adfile = Dict()
+
+    ### General Options
+    adfile["Notes"] = Notes
+    adfile["Echo"] = Echo
+    adfile["DTAero"] = DTAero
+    adfile["WakeMod"] = WakeMod
+    adfile["AFAeroMod"] = AFAeroMod
+    adfile["TwrPotent"] = TwrPotent
+    adfile["TwrShadow"]= TwrShadow
+    adfile["TwrAero"] = TwrAero
+    adfile["FrozenWake"] = FrozenWake
+    adfile["CavitCheck"] = CavitCheck
+    adfile["Buoyancy"] = Buoyancy
+    adfile["CompAA"] = CompAA
+    adfile["AA_InputFile"] = AA_InputFile
+
+    ### Environmental Conditions
+    adfile["AirDens"] = AirDens
+    adfile["KinVisc"] = KinVisc
+    adfile["SpdSound"] = SpdSound
+    adfile["Patm"] = Patm
+    adfile["Pvap"] = Pvap
+
+    ### BEMT Options
+    adfile["SkewMod"] = SkewMod
+    adfile["SkewModFactor"] = SkewModFactor
+    adfile["TipLoss"] = TipLoss
+    adfile["HubLoss"] = HubLoss
+    adfile["TanInd"] = TanInd
+    adfile["AIDrag"] = AIDrag
+    adfile["TIDrag"] = TIDrag
+    adfile["IndToler"] = IndToler
+    adfile["MaxIter"] = MaxIter
+
+    ### Dynamic BEMT Options
+    adfile["DBEMT_Mod"] = DBEMT_Mod
+    adfile["tau1_const"] = tau1_const
+
+    ### OLAF options
+    adfile["OLAFInputFileName"] = OLAFInputFileName
+
+    ### Unsteady Aerodynamics options
+    adfile["UAMod"] = UAMod
+    adfile["FLookup"] = FLookup
+    adfile["UAStartRad"] = UAStartRad
+    adfile["UAEndRad"] = UAEndRad
+
+    ### Airfoil Information
+    adfile["AFTabMod"] = AFTabMod
+    adfile["InCol_Alfa"] = InCol_Alfa
+    adfile["InCol_Cl"] = InCol_Cl
+    adfile["InCol_Cd"] = InCol_Cd
+    adfile["InCol_Cm"] = InCol_Cm
+    adfile["InCol_Cpmin"] = InCol_Cpmin
+    adfile["NumAFfiles"] = length(AFNames)
+    adfile["AFNames"] = AFNames
+    
+    ### Rotor/Blade Properties
+    adfile["UseBlCm"] = UseBlCm
+    for i=1:3
+       adfile["ADBlFile($i)"] = ADBlFile
+    end
+
+    ### Hub Properties
+    adfile["VolHub"] =  VolHub
+    adfile["HubCenBx"] = HubCenBx
+
+    ### Nacelle Properties
+    adfile["VolNac"] = VolNac
+    adfile["NacCenB"] = NacCenB
+
+    ### Tower Influence
+    adfile["NumTwrNds"] = length(TwrElev)
+    adfile["TwrElev_mat"] = TwrElev
+    adfile["TwrDiam_mat"] = TwrDiam
+    adfile["TwrCd_mat"] = TwrCd
+    adfile["TwrTI_mat"] = TwrTI
+    adfile["TwrCb_mat"] = TwrCb
+    
+    ### Outputs
+    adfile["SumPrint"] = SumPrint
+    adfile["NBlOuts"] = NBlOuts
+    adfile["BlOutNd"] = BlOutNd
+    adfile["NTwOuts"] = NTwOuts
+    adfile["TwOutNd"] = TwOutNd
+    adfile["OutList"] = OutList
+
+    ### Section Outputs
+    adfile["BldNd_BladesOut"] = BldNd_BladesOut
+    adfile["BldNd_BlOutNd"] = BldNd_BlOutNd
+    adfile["NodeOutList"] = NodeOutList
+
+    return adfile
+end
+
+
+
+# """
+#     CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
+# DTAero="default", WakeMod=1,
+# AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
+# CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
+# Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="\"default\"", TipLoss="True",
+# HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
+# MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
+# InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
+# TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
+# Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+
+# **Inputs**::
+# - Blades::Array{String, 1} - an array containing the names of the blade files
+# - foils::Array{String, 1} - an array containing the names of airfoils to be used. 
+
+# **Outputs**:
+# - ad15file::AD15file - the AeroDyn v15 input file object
+# """
+# function create_adfile(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
+#     DTAero="default", WakeMod=1,
+#     AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
+#     CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
+#     Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="default", TipLoss="True",
+#     HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
+#     MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
+#     InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
+#     TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
+#     Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+
+#     NumAFfiles=length(Foils)
+#     if NumAFfiles==0
+#      error("Too few airfoils included in AD15 file. - CreateAD15")
+#     end
+
+#     for i=1:NumAFfiles
+#      temp = "Foil $i"
+#      push!(directory, temp)
+#     end
+
+#     if length(Blades)>3
+#      error("Too many blade files included in AD15 file. - CreateAD15")
+#     elseif length(Blades)==0
+#      error("A blade file is required to create an AD15 file.")
+#     end
+
+#     m,n = size(TwrNds)
+#     NumTwrNds = m
+#     if n!=3
+#      error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
+#     end
+
+#     if NBlOuts>9
+#      error("Max number of NBlOuts is 9. CreateAD15")
+#     end
+#     if NTwOuts>9
+#      error("Max number of NBlOuts is 9. CreateAD15")
+#     end
+
+#     file = ADfile(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
+#     return file
+# end
 
 """
     CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad; importantrads=[], notes="This is a turbine.", verbose=true)
@@ -1805,8 +2006,8 @@ Below is a short list of the naming convention used in this function.
 - blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
 - blade fraction (blfrac) - percentage of blade radius
 """
-function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=100, importantrads=[], notes="This is a turbine.", verbose=true)
-    # Definitions
+function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=100, importantrads=[], importantfracs=[], notes="This is a turbine.", verbose=true)
+    # Definitions #todo: I probably shouldn't name this as CreateAD15Blade... it is creating a blade, but it is also interpolating. 
     # radius (rads) - distance from the center of rotation
     # fractions (fracs) - percentage of total blade radius
     # blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
@@ -1823,13 +2024,15 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     # I can only assume that I resolved the issue. 
 
     # Need to add important locations to fracs
-    minus = 2
+    minus = 2 #todo: What is this? 
     bladelength = tiprad-hubrad
     tipblfrac = 1.0
     hubblfrac = 0.0
+
     if airfoilrad<hubrad || airfoilrad<cylinderrad
         error("Beginning of airfoil radius smaller than cylinder radius or hub  radius. ")
     end
+
     airfoilblfrac = (airfoilrad-hubrad)/bladelength
     cylinderblfrac = (cylinderrad-hubrad)/bladelength
     if cylinderrad<=hubrad
@@ -1839,10 +2042,16 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
         cylinderblfrac = 0
         minus -= 1
     end
+
     importantblfracs = (importantrads.-hubrad)./bladelength  
-    blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantrads)-minus))
+    append!(importantblfracs, importantfracs)
+    unique!(importantblfracs)
+    # blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantrads)-minus))
+    blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantblfracs)-minus))
     append!(blfracs, importantblfracs)
+
     push!(blfracs, hubblfrac,  airfoilblfrac, tipblfrac)
+
     if cylinderblfrac>0
         push!(blfracs, cylinderblfrac)
     end
@@ -1851,7 +2060,7 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
 
     # Convert from blfracs to radius positions and their radial locations
     blrads = blfracs.*(bladelength) #Note do not use this to get any property values    with the fits.
-    locs = blrads.+0.508 #The rads location of the blrads nodes #Todo: What is this 0.508? This looks like a hard coded thing.... which should probably be hub radius. 
+    locs = blrads.+hubrad #0.508 #The rads location of the blrads nodes #Todo. What is this 0.508? This looks like a hard coded thing.... which should probably be hub radius. 
     n = length(blrads)
     precone = conefit.(locs)
     sweep = sweepfit.(locs)
@@ -1861,7 +2070,18 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     chords = chordfit.(locs)
     afid = integerfit(rads, radsafid, locs)
 
-    adblade = ADBlade(notes, n, blrads, precone, sweep,  preconeangle, twist, chords, afid)  
+
+    adblade = Dict()
+    adblade["Notes"] = notes
+    adblade["NumBlNds"] = n
+
+    adblade["BlSpn"] = blrads
+    adblade["BlCrvAC"] = precone
+    adblade["BlSwpAC"] = sweep
+    adblade["BlCrvAng"] = preconeangle
+    adblade["BlTwist"] = twist
+    adblade["BlChord"] = chords
+    adblade["BlAFID"] = afid
 
     # Find the nodes of the important idxs
     nodeidxs = []

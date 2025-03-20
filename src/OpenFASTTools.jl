@@ -9,6 +9,8 @@ module OpenFASTTools
 
 #Todo: I think I'd like to rename this package OpenFASTTools (OFT)
 
+#Todo: I'm not sure if OpenFAST is case sensitive for the input files. If so, I should make sure everything is lowercase.
+
 using Printf, FLOWMath, DelimitedFiles, GXBeam, StaticArrays, LinearAlgebra, DynamicStallModels
 
 DS = DynamicStallModels

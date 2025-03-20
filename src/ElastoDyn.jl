@@ -256,7 +256,9 @@ function read_edfile(filename::String, filepath::String)
     # @show lines[107]
     for i = 2:107 #Todo: I need to update parseline so that if there isn't an entry. Apparently that doesn't screw up OpenFAST. 
         # @show i
+        # @show lines[i]
         key, entry = parseline(lines[i])
+        # @show key, entry
         edfile[key] = entry
     end
 
@@ -341,6 +343,8 @@ function read_edblade(filename::String, filepath::String)
 
     return EDBlade(notes, numnds, flapdamp, edgedamp, flsttunr, adjblms, adjflst, adjedst, frac, pitchaxis, twist, massdensity, flapstiff, edgestiff, flapmode1, flapmode2, edgemode1)
 end
+
+#Todo: ED Tower functions? 
 
 
 

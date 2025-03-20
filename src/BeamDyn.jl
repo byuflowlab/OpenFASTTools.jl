@@ -914,7 +914,8 @@ function mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
     Ip = Ix + Iy + m*(x^2 + y^2)
 
 
-    return [m 0 0 0 0 -m*y;
+    return @SMatrix [
+            m 0 0 0 0 -m*y;
             0 m 0 0 0 m*x;
             0 0 m m*y -m*x 0;
             0 0 m*y Ixx -Ixy 0;
@@ -923,8 +924,79 @@ function mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
 end
 
 
+"""
+    mass_matrix(M; fromto::Symbol=:OF_GX)
 
+Convert the mass matrix from the OpenFAST coordinate system to the GXBeam coordinate system.
 
+**Inputs**
+- M::AbstractMatrix - mass matrix
+- fromto::Symbol - the direction of the conversion. Either :OF_GX or :GX_OF
+"""
+function mass_matrix(M; fromto::Symbol=:OF_GX)
+    if fromto==:OF_GX
+        #From OpenFAST to GXBeam
+        mu = M[1,1]
+        xm2 = -M[1,6]/mu
+        xm3 = M[2,6]/mu
+        i22 = M[5,5]
+        i33 = M[4,4]
+        i23 = -M[5,4]
+
+        return @SMatrix [
+                mu       0     0       0 mu*xm3 -mu*xm2;
+                0       mu     0  -mu*xm3     0      0;
+                0       0     mu   mu*xm2     0      0;
+                0  -mu*xm3 mu*xm2 i22+i33     0      0;
+            mu*xm3      0     0       0   i22   -i23;
+            -mu*xm2      0     0       0  -i23    i33]
+    elseif fromto==:GX_OF
+        #From GXBeam to OpenFAST
+        mu = M[1,1]
+        xm2 = -M[1,6]/mu #OF y
+        xm3 = M[1,5]/mu #OF x
+        i22 = M[5,5]
+        i33 = M[6,6]
+        i23 = -M[5,6]
+
+        return @SMatrix [
+                mu       0     0       0  0 -mu*xm2;
+                0       mu     0       0  0  mu*xm3;
+                0       0     mu       mu*xm2  -mu*xm3      0;
+                0       0     mu*xm2   i22     -i23      0;
+                0       0    -mu*xm3  -i23      i33      0;
+                -mu*xm2 mu*xm3 0       0        0       i22+i33]
+    else
+        error("mass_matrix: fromto must be either :OF_GX or :GX_OF")
+    end
+end
+
+function stiffness_matrix(k; fromto::Symbol=:OF_GX)
+
+    if fromto==:OF_GX
+        stiffness_gx = [
+                k[3,3] k[3,2] k[3,1] k[3,6] k[3,5] k[3,4]
+                k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4] 
+                k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4] 
+                k[6,3] k[6,2] k[6,1] k[6,6] k[6,5] k[6,4]
+                k[5,3] k[5,2] k[5,1] k[5,6] k[5,5] k[5,4]
+                k[4,3] k[4,2] k[4,1] k[4,6] k[4,5] k[4,4]]
+
+        return stiffness_gx
+    elseif fromto==:GX_OF
+        stiffness_of = [
+                k[3,3] k[3,2] k[3,1] k[3,6] k[3,5] k[3,4]
+                k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4] 
+                k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4] 
+                k[6,3] k[6,2] k[6,1] k[6,6] k[6,5] k[6,4]
+                k[5,3] k[5,2] k[5,1] k[5,6] k[5,5] k[5,4]
+                k[4,3] k[4,2] k[4,1] k[4,6] k[4,5] k[4,4]]
+
+        return stiffness_of
+    else
+        error("stiffness_matrix: fromto must be either :OF_GX or :GX_OF")
+    end
+end
 
 
 
@@ -972,21 +1044,7 @@ function make_element(x, points, stiffness, mass, Cab, damping)
     C = SMatrix{6,6}(compliance)  
 
     ### element mass matrix 
-    mu = mass[1,1]
-    # mu = 0.000000001
-    xm2 = -mass[1,6]/mu
-    xm3 = mass[2,6]/mu
-    i22 = mass[5,5]
-    i33 = mass[4,4]
-    i23 = -mass[5,4]
-
-    M = @SMatrix [
-             mu       0     0       0 mu*xm3 -mu*xm2;
-             0       mu     0  -mu*xm3     0      0;
-             0       0     mu   mu*xm2     0      0;
-             0  -mu*xm3 mu*xm2 i22+i33     0      0;
-          mu*xm3      0     0       0   i22   -i23;
-         -mu*xm2      0     0       0  -i23    i33]
+    M = mass_matrix(mass)
  
        
     # mass_gx = R*mass*(R')
