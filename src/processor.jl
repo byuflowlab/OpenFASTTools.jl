@@ -10,14 +10,11 @@ Damage equivalent load from the MLife theory, without using the Goodman correcti
 function damage_equivalent_load(loads; m=10, Lult=nothing)
     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
     out = rainflow(peaks) 
-    n, _= size(out)
+    _, n = size(out)
 
-    # Lult, _ = findmax(out[1,:])
     if isnothing(Lult)
         Lult = maximum(abs.(out[1,:]))
     end
-
-    # @show sum(out[3,:])
     
     DEL = 0.
     for i =1:n
@@ -28,26 +25,6 @@ function damage_equivalent_load(loads; m=10, Lult=nothing)
     return DEL
 end
 
-# function damage(loads; m=10, Lult=nothing)
-# #Note: I'm not sure where this function came from. Hopefully it doesn't break anything. 
-#     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
-#     out = rainflow(peaks) 
-#     n, _= size(out)
-
-#     # Lult, _ = findmax(out[1,:])
-#     if isnothing(Lult)
-#         Lult = maximum(abs.(out[1,:]))
-#     end
-    
-#     DEL = 0.
-#     for i =1:n
-#         correctedloadrange = out[1,i]*(Lult/(Lult-abs(out[2,i]))) #Goodman correction
-#         DEL += out[3,i]*(correctedloadrange^m)
-#     end
-#     DEL = (DEL/sum(out[3,:]))^(1/m)
-
-#     ###
-# end
 
 """
     damage(loads; m=10, Lult=maximum(abs.(loads)))
@@ -58,18 +35,20 @@ Damage calculation from the MLife documentation, using Goodman correction.
 function damage(loads; m=10, Lult=maximum(abs.(loads)), absfun=abs)
     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
     out = rainflow(peaks) 
-    n, _= size(out)
+    _, n= size(out)
+
+    TF = typeof(loads[1])
 
     damage = 0.
-    Ni_vec = zeros(n)
+    Ni_vec = zeros(TF, n)
     for i =1:n
         #Plug equation 7 into equation 6, LMF cancels out. 
-        Ni = (2*(Lult - abs(out[2,i]))/out[1, i])^m
+        Ni = (2*(Lult - absfun(out[2,i]))/out[1, i])^m
         Ni_vec[i] = Ni
         damage += out[3,i]/Ni #Todo. This doesn't account for the length of the simulation... -> It shouldn't. This just caluclates the damage from a single time series. If you want to calculate the damage over the time period, you're going to scale the damage from a time series to be the length of the time period. 
     end
     
-    return damage, Ni_vec
+    return damage, Ni_vec, out
 end
 
 """
