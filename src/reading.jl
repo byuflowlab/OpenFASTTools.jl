@@ -186,6 +186,7 @@ end
 
 
 function parseline(line_initial)
+    # @show line_initial
     line = removecomment(line_initial)
     # println("\"", line, "\"")
     entryend = findlast(" ", line)[1]-1 #Todo. This will cause problem if the requested line is a vector. -> I'll make a function that does this functionality. Inside that it'll see if this space occurs before or after a comma. -> Or just use findlast().... because I've used strip(), then the last space that occurs, should be just before the key. 

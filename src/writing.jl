@@ -118,9 +118,9 @@ function formatvector(vector;desiredlength=11, loc="back", delim=",")
     line = ""
     if length(vector)>0
         for i=1:length(vector)-1
-           line = string(line,formatword(string(vector[i]);location=loc,quotes=false),delim)
+           line = string(line,formatword(string(vector[i]);location=loc,quotes=false, desiredlength),delim)
         end
-        line = string(line,formatword(string(vector[end]);location=loc,quotes=false))
+        line = string(line,formatword(string(vector[end]);location=loc,quotes=false, desiredlength))
     else
         line = "     "
     end

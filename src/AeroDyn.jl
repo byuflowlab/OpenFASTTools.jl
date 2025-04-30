@@ -112,10 +112,10 @@ end
 abstract type AirfoilInput end
 
 #TODO: Add inner constructors for base construction and construction without cm. 
-struct AirfoilInputSteady{TS, TI, TF, TB} <: AirfoilInput
+struct AirfoilInputSteady{TS, TI, TF, TB, TSI} <: AirfoilInput
     interpord::TI
     nondimarea::TF
-    numcoords::Union{TS, TI}
+    numcoords::TSI
     bl_file::TS
     numtabs::TI
     re::TF
@@ -126,6 +126,16 @@ struct AirfoilInputSteady{TS, TI, TF, TB} <: AirfoilInput
     cl::Array{TF, 1}
     cd::Array{TF, 1}
     cm::Array{TF, 1}
+end
+
+function create_cylinder(cd; aoa=collect(-180.:1:180), interpord="Default", nondimarea=1.0, numcoords=100, bl_file="cylinder.dat", numtabs=1, re=1.0, userprop=0, incluadata=false)
+    cl = zeros(length(aoa))
+    cd = ones(length(aoa)).*cd
+    cm = zeros(length(aoa))
+
+    interpord = isa(interpord, String) ? 3 : interpord
+
+    return AirfoilInputSteady(interpord, nondimarea, numcoords, bl_file, numtabs, re, userprop, incluadata, length(aoa), aoa, cl, cd, cm)
 end
 
 struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
@@ -175,6 +185,73 @@ struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
     cd::Array{TF, 1}
     cm::Array{TF, 1}
 end
+
+function mimic_unsteady_airfoil(file, aoa, cl, cd, cm; alpha0range=(-7, 7), alpha1range=(0, 45), alpha2range=(-45,0))
+    numalf = length(aoa)
+
+    af = read_airfoilinput(file)
+
+    interpord = af.interpord
+    nondimarea = af.nondimarea
+    numcoords = af.numcoords
+    bl_file = af.bl_file
+    numtabs = af.numtabs
+    re = af.re
+    userprop = af.userprop
+    incluadata = af.incluadata
+
+    clfit = Akima(aoa, cl)
+    xstar, _ = brent(clfit, alpha0range[1], alpha0range[2])
+    alpha0 = xstar
+
+    idx_alpha1_start = argmin(abs.(aoa .- alpha1range[1]))
+    idx_alpha1_end = argmin(abs.(aoa .- alpha1range[2]))
+    # @show idx_alpha1_start, idx_alpha1_end
+    alpha1 = aoa[argmax(cl[idx_alpha1_start:idx_alpha1_end])+idx_alpha1_start-1]
+
+    idx_alpha2_start = argmin(abs.(aoa .- alpha2range[1]))
+    idx_alpha2_end = argmin(abs.(aoa .- alpha2range[2]))
+    # @show idx_alpha2_start, idx_alpha2_end
+    alpha2 = aoa[argmin(cl[idx_alpha2_start:idx_alpha2_end])+idx_alpha2_start-1]
+
+    eta_e = af.eta_e
+    c_nalpha = af.c_nalpha
+    t_f0 = af.t_f0
+    t_v0 = af.t_v0
+    t_p = af.t_p
+    t_vl = af.t_vl
+    b1 = af.b1
+    b2 = af.b2
+    b5 = af.b5
+    a1 = af.a1
+    a2 = af.a2
+    a5 = af.a5
+    s1 = af.s1
+    s2 = af.s2
+    s3 = af.s3
+    s4 = af.s4
+    cn1 = af.cn1
+    cn2 = af.cn2
+    st_sh = af.st_sh
+
+    cdfit = Akima(aoa, cd)
+    cd0 = cdfit(alpha0)
+
+    cmfit = Akima(aoa, cm)
+    cm0 = cmfit(alpha0)
+
+    k0 = af.k0
+    k1 = af.k1
+    k2 = af.k2
+    k3 = af.k3
+    k1_hat = af.k1_hat
+    x_cp_bar = af.x_cp_bar
+    uacutout = af.uacutout
+    filtcutoff = af.filtcutoff
+
+    return AirfoilInputUnsteady(interpord, nondimarea, numcoords, bl_file, numtabs, re, userprop, incluadata, alpha0, alpha1, alpha2, eta_e, c_nalpha, t_f0, t_v0, t_p, t_vl, b1, b2, b5, a1, a2, a5, s1, s2, s3, s4, cn1, cn2, st_sh, cd0, cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, uacutout, filtcutoff, numalf, aoa, cl, cd, cm)
+end
+
 
 struct AirfoilCoords{TI, TF}
     numcoords::TI
@@ -256,7 +333,7 @@ Reads in AeroDyn input file and stores the options as a dictionary.
 - adfile::Dict() - a dictionary using the variable names as strings for keys, and the variable as the value. 
 
 """
-function read_adfile(filename, filepath; tailfin=false)
+function read_adfile(filename, filepath)
     
     fi = open(joinpath(filepath, filename), "r")
     lines = readlines(fi)
@@ -267,29 +344,21 @@ function read_adfile(filename, filepath; tailfin=false)
     adfile = Dict()
     adfile["Notes"] = lines[1]
 
-    for i = 2:41
-        # @show i
-        key, entry = parseline(lines[i])
-        # @show key, entry
-        adfile[key] = entry
-    end
-
-    adfile["AFNames"] = readlist(lines[42:42+Int(adfile["NumAFfiles"])-1]) 
-
-    idx = 42+Int(adfile["NumAFfiles"])
-    # @show idx
-
-    idxadd = tailfin ? 10 : 8 #Todo: Maybe have this automatically determined.
-    # @show tailfin, idxadd
-    for i = idx:idx+idxadd
-        # println(lines[i])
+    for i = 2:50
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    idx = idx+idxadd
+    adfile["AFNames"] = readlist(lines[51:51+Int(adfile["NumAFfiles"])-1]) 
 
-    # @show idx+4
+    idx = 51+Int(adfile["NumAFfiles"])
+    
+    for i = idx:idx+13
+        key, entry = parseline(lines[i])
+        adfile[key] = entry
+    end
+
+    idx = idx+13
 
     twrnames, twrdata = parsematrix(lines[idx+1:idx+1+2+Int(adfile["NumTwrNds"])-1])
 
@@ -301,25 +370,19 @@ function read_adfile(filename, filepath; tailfin=false)
 
     ### Outputs section
     idx = idx+1+2+Int(adfile["NumTwrNds"])
-    # @show idx
 
     for i = idx:idx+4
-        # println(lines[i])
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    outlist1idx = findlistbounds(lines[idx+5:end]) #Todo. This isn't finding the end of the outputs list. -> The input file was missing an end. 
+    outlist1idx = findlistbounds(lines[idx+5:end]) 
 
-    # println("")
-    # println("This list")
     outputs = readlist(lines[idx+5:idx+5+outlist1idx[end]-1])
     adfile["OutList"] = outputs
 
     idx = idx+5+outlist1idx[end]
 
-    # @show idx, length(lines)
-    # @show outputs
 
     ### Nodal outputs #todo: I've encountered some files that don't have this section. Maybe have some behavior to adapt? (I don't know if OpenFAST errors if this section isn't present.)
     for i = idx:idx+1 
@@ -757,11 +820,11 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(adfile["DTAero"];quotes=false, location="back"),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["WakeMod"]);location="back",quotes=false), "   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
+    line = string(formatword(Int(adfile["Wake_Mod"]);location="back",quotes=false), "   Wake_Mod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["AFAeroMod"]);location="back",quotes=false),"   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model} [AFAeroMod must be 1 when linearizing]")
-    push!(lines, line)
+    # line = string(formatword(Int(adfile["AFAeroMod"]);location="back",quotes=false),"   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model} [AFAeroMod must be 1 when linearizing]")
+    # push!(lines, line)
 
     line = string(formatword(Int(adfile["TwrPotent"]);location="back",quotes=false),"   TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}")
     push!(lines, line)
@@ -773,13 +836,16 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(adfile["TwrAero"];quotes=false), "   TwrAero            - Calculate tower aerodynamic loads? (flag)")
     push!(lines, line)
 
-    line = string(formatword(adfile["FrozenWake"];quotes=false), "   FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]")
-    push!(lines, line)
+    # line = string(formatword(adfile["FrozenWake"];quotes=false), "   FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]")
+    # push!(lines, line)
 
     line = string(formatword(adfile["CavitCheck"];quotes=false), "   CavitCheck         - Perform cavitation check? (flag) [AFAeroMod must be 1 when CavitCheck=true]")
     push!(lines, line)
 
     line = string(formatword(adfile["Buoyancy"];quotes=false), "   Buoyancy           - Include buoyancy effects? (flag)")
+    push!(lines, line)
+
+    line = string(formatword(adfile["NacelleDrag"];quotes=false), "   NacelleDrag        - Include nacelle drag effects? (flag)")
     push!(lines, line)
 
     line = string(formatword(adfile["CompAA"];quotes=false), "   CompAA             - Flag to compute AeroAcoustics calculation [only used when WakeMod=1 or 2]")
@@ -818,10 +884,31 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string("="^6, "  Blade-Element/Momentum Theory Options  ", "="^54)
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["SkewMod"]);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
+    line = string(formatword(Int(adfile["BEM_Mod"]);location="back", quotes=false), "   BEM_Mod     - BEM model {1=legacy NoSweepPitchTwist, 2=polar} (switch) [used for all Wake_Mod to determine output coordinate system]")
     push!(lines, line)
 
-    line = string(formatword(adfile["SkewModFactor"]; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+
+    ###### 
+    line = "--- Skew correction"
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["Skew_Mod"]);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SkewMomCorr"];location="back", quotes=false), "   SkewMomCorr - Turn the skew momentum correction on or off [used only when Skew_Mod=1]")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["SkewRedistr_Mod"]);location="back", quotes=false), "   SkewRedistr_Mod - Type of skewed-wake correction model (switch) {0=no redistribution, 1=Glauert/Pitt/Peters, default=1} [used only when Skew_Mod=1]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SkewRedistrFactor"];location="back", quotes=false), "   SkewRedistrFactor - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when Skew_Mod=1 and SkewRedistr_Mod=1]")
+    push!(lines, line)
+
+    # line = string(formatword(adfile["SkewModFactor"]; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+    # push!(lines, line)
+
+    ### BEM Algorithm
+    line = "--- BEM Algorithm"
     push!(lines, line)
 
     line = string(formatword(adfile["TipLoss"]; quotes=false), "   TipLoss            - Use the Prandtl tip-loss model? (flag) [unused when WakeMod=0]")
@@ -846,22 +933,39 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
 
+    ### Shear correction
+    line = "--- Shear correction"
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvg"];location="back", quotes=false), "   SectAvg     - Use sector averaging (flag)")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["SectAvgWeighting"]);location="back", quotes=false), "   SectAvgWeighting - Weighting function for sector average {1=Uniform, default=1} within a sector centered on the blade (switch) [used only when SectAvg=True]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvgNPoints"];location="back", quotes=false), "   SectAvgNPoints - Number of points per sectors (-) {default=5} [used only when SectAvg=True]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvgPsiBwd"];location="back", quotes=false), "   SectAvgPsiBwd - Backward azimuth relative to blade where the sector starts (<=0) {default=-60} (deg) [used only when SectAvg=True]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvgPsiFwd"];location="back", quotes=false), "   SectAvgPsiFwd - Forward azimuth relative to blade where the sector ends (>=0) {default=60} (deg) [used only when SectAvg=True]")
+    push!(lines, line)
 
 
-
+    ### Dynamic wake/inflow
+    line = "--- Dynamic wake/inflow"
+    push!(lines, line)
 
     #####################################################################
-    line = string("="^6, "  Dynamic Blade-Element/Momentum Theory Options  ", "="^46)
-    push!(lines, line)
+    # line = string("="^6, "  Dynamic Blade-Element/Momentum Theory Options  ", "="^46)
+    # push!(lines, line)
 
     line = string(formatword(Int(adfile["DBEMT_Mod"]);location="back", quotes=false), "   DBEMT_Mod          - Type of dynamic BEMT (DBEMT) model {1=constant tau1, 2=time-dependent tau1} (-) [used only when WakeMod=2]")
     push!(lines, line)
 
     line = string(formatword(adfile["tau1_const"];location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
     push!(lines, line)
-
-
-
 
 
     #########################################################################
@@ -873,16 +977,20 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
 
 
 
-
-
     ###########################################################################
-    line = string("="^6, "  Beddoes-Leishman Unsteady Airfoil Aerodynamics Options  ", "="^37)
+    line = string("="^6, "  Unsteady Airfoil Aerodynamics Options  ", "="^37)
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["UAMod"]);location="back", quotes=false), "   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
+    line = string(formatword(adfile["AoA34"];location="back", quotes=false), "   AoA34       - Sample the angle of attack (AoA) at the 3/4 chord or the AC point {default=True} [always used]")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["UA_Mod"]);location="back", quotes=false), "   UA_Mod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
     push!(lines, line)
 
     line = string(formatword(adfile["FLookup"];quotes=false), "   FLookup            - Flag to indicate whether a lookup for f\' will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when AFAeroMod=2]")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["IntegrationMethod"]);quotes=false), "   IntegrationMethod  - Switch to indicate which integration method UA uses (1=RK4, 2=AB4, 3=ABM4, 4=BDF2)")
     push!(lines, line)
 
     line = string(formatword(adfile["UAStartRad"];quotes=false), "   UAStartRad         - Starting radius for dynamic stall (fraction of rotor radius) [used only when AFAeroMod=2; if line is missing UAStartRad=0]]")
@@ -948,9 +1056,6 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     end
 
 
-
-
-
     ##################################################################
     line = string("="^6, "  Hub Properties  ", "="^69)
     push!(lines,line)
@@ -960,10 +1065,6 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
 
     line = string(formatword(adfile["HubCenBx"];quotes=false), "   HubCenBx           - Hub center of buoyancy x direction offset (m)")
     push!(lines,line)
-
-
-
-
 
 
 
@@ -977,8 +1078,26 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(adfile["NacCenB"];quotes=false, desiredlength=15), "   NacCenB            - Position of nacelle center of buoyancy from yaw bearing in nacelle coordinates (m)")
     push!(lines,line)
 
+    line = string(formatword(adfile["NacArea"];quotes=false, desiredlength=15), "   NacArea        - Projected area of the nacelle in X, Y, Z in the nacelle coordinate system (m^2)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["NacCd"];quotes=false, desiredlength=15), "   NacCd          - Drag coefficient for the nacelle areas defined above (-)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["NacDragAC"];quotes=false, desiredlength=15), "   NacDragAC          - Position of aerodynamic center of nacelle drag in nacelle coordinates (m)")
+    push!(lines,line)
 
 
+
+    ##################################################################
+    line = string("="^6, "  Tail Fin Aerodynamics  ", "="^69)
+    push!(lines,line)
+
+    line = string(formatword(adfile["TFinAero"];quotes=false), "   TFinAero    - Calculate tail fin aerodynamics model (flag)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["TFinFile"];quotes=false), "   TFinFile    - Input file for tail fin aerodynamics [used only when TFinAero=True]")
+    push!(lines,line)
 
 
 
@@ -1013,7 +1132,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
     if adfile["NBlOuts"]>0
-       line = formatvector(Int.(adfile["NBlOuts"]))
+       line = formatvector(Int.(adfile["BlOutNd"]), desiredlength=4)
     else
        line = string(" "^11, 1)
     end
@@ -1053,11 +1172,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
     if adfile["BldNd_BladesOut"]>0
-        if isa(eltype(adfile["BldNd_BlOutNd"]), Number)
-            line = formatvector(Int.(adfile["BldNd_BlOutNd"]))
-        else
-            line = formatword(adfile["BldNd_BlOutNd"]; quotes=false)
-        end
+        line = eltype(adfile["BldNd_BlOutNd"]) <: Number ? formatvector(Int.(adfile["BldNd_BlOutNd"])) : formatword(adfile["BldNd_BlOutNd"]; quotes=false)
     else
         line = " "^11
     end
