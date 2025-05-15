@@ -128,7 +128,7 @@ struct AirfoilInputSteady{TS, TI, TF, TB, TSI} <: AirfoilInput
     cm::Array{TF, 1}
 end
 
-function create_cylinder(cd; aoa=collect(-180.:1:180), interpord="Default", nondimarea=1.0, numcoords=100, bl_file="cylinder.dat", numtabs=1, re=1.0, userprop=0, incluadata=false)
+function create_cylinder(cd; aoa=collect(-180.:1:180), interpord="Default", nondimarea=1.0, numcoords="cylinder.dat", bl_file="cylinder.dat", numtabs=1, re=1.0, userprop=0, incluadata=false)
     cl = zeros(length(aoa))
     cd = ones(length(aoa)).*cd
     cm = zeros(length(aoa))
@@ -186,15 +186,19 @@ struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
     cm::Array{TF, 1}
 end
 
-function mimic_unsteady_airfoil(file, aoa, cl, cd, cm; alpha0range=(-7, 7), alpha1range=(0, 45), alpha2range=(-45,0))
+function mimic_unsteady_airfoil(file, aoa, cl, cd, cm; alpha0range=(-7, 7), alpha1range=(0, 45), alpha2range=(-45,0), bl_file=nothing, numcoords=nothing)
     numalf = length(aoa)
 
     af = read_airfoilinput(file)
 
     interpord = af.interpord
     nondimarea = af.nondimarea
-    numcoords = af.numcoords
-    bl_file = af.bl_file
+    
+    if bl_file == nothing
+        numcoords = af.numcoords
+        bl_file = af.bl_file
+    end
+    
     numtabs = af.numtabs
     re = af.re
     userprop = af.userprop
@@ -892,7 +896,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = "--- Skew correction"
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["Skew_Mod"]);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
+    line = string(formatword(Int(adfile["Skew_Mod"]);location="back", quotes=false), "   Skew_Mod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
     push!(lines, line)
 
     line = string(formatword(adfile["SkewMomCorr"];location="back", quotes=false), "   SkewMomCorr - Turn the skew momentum correction on or off [used only when Skew_Mod=1]")
@@ -1286,6 +1290,8 @@ function write_airfoilcoordinates(airfoilcoords::AirfoilCoords, outputfile::Stri
     push!(lines, line)
     line = formatcoordinates(airfoilcoords.coordinates)
     append!(lines, line)
+    line = ""
+    push!(lines, line)
 
 
     ### Write lines to file
@@ -1332,7 +1338,7 @@ function write_airfoilinput(airfoilinput::AirfoilInput, outputfile::String; outp
     end
     push!(lines, line)
 
-    line = string(formatword(string(airfoilinput.bl_file);location="front", quotes=true, desiredlength=length(airfoilinput.bl_file)+5), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
+    line = string(formatword(string(airfoilinput.bl_file);location="front", quotes=false, desiredlength=length(airfoilinput.bl_file)+5), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
     push!(lines, line)
 
     line = string(formatword(string(airfoilinput.numtabs);location="back", quotes=false),"   NumTabs           ! Number of airfoil tables in this file.")
