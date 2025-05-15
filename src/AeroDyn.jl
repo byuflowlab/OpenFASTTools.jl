@@ -2303,7 +2303,7 @@ function CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimAre
     return AirfoilInput(InterpOrd, NonDimArea, NumCoords, BL_file, NumTabs, Re, UserProp, InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1, b2, b5, A1, A2, A5, S1, S2, S3, S4, Cn1, Cn2, St_sh, Cd0, Cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, UACutout, filtCutOff, NumAlf, Polar)
 end
 
-export make_dsairfoil
+# export make_dsairfoil
 
 """
     make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
@@ -2312,7 +2312,6 @@ Make an DynamicStallModels airfoil object. (I don't know if this belongs here, o
 
 **Arguments**
 - afi::AirfoilInputUnsteady - An unsteady Airfoil object.
-- chord::Float - the chord length of the airfoil.
 - radians::Bool - Whether the associated polar is in degrees or radians.
 - zeta::Float - I think this is the efficiency #TODO: 
 - separationpointfun::Symbol - a symbol indicating which separation point function to use. Options include `:fit` (which defaults to Aerodyn's original or Gonzalez depending on what model you have chosen), or `:Fun` for Beddoes-Leishman's original separation point function. 
@@ -2322,7 +2321,7 @@ Make an DynamicStallModels airfoil object. (I don't know if this belongs here, o
 - cutrad:: - the cutout radius around the cutout angle of attack. 
 - A::Vector{Float} - a vector of A values to overide the A values that the given inputfile has (useful for optimization). 
 """
-function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180, A=nothing) 
+function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180, A=nothing) 
     if radians || maximum(afi.aoa)<=pi
         aoa = afi.aoa
     else
@@ -2385,7 +2384,7 @@ function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.
 
     dsmodel = DS.BeddoesLeishman(DS.Indicial(), 3, A, b, T, Cn1, Cd0, Cm0, eta, zeta, a)
     
-    return DS.Airfoil(dsmodel, polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, alphacut, cutrad, sfun, chord, xcp) 
+    return DS.Airfoil(dsmodel, polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, alphacut, cutrad, sfun), xcp
 end
 
 function make_blade()
