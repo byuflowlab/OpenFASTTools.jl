@@ -348,14 +348,15 @@ function read_adfile(filename, filepath)
     adfile = Dict()
     adfile["Notes"] = lines[1]
 
-    for i = 2:50
+    for i = 2:51
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    adfile["AFNames"] = readlist(lines[51:51+Int(adfile["NumAFfiles"])-1]) 
 
-    idx = 51+Int(adfile["NumAFfiles"])
+    adfile["AFNames"] = readlist(lines[52:52+Int(adfile["NumAFfiles"])-1]) 
+
+    idx = 52+Int(adfile["NumAFfiles"])
     
     for i = idx:idx+13
         key, entry = parseline(lines[i])
@@ -2382,7 +2383,7 @@ function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, sepa
 
     eta = afi.eta_e
 
-    dsmodel = DS.BeddoesLeishman(DS.Indicial(), 3, A, b, T, Cn1, Cd0, Cm0, eta, zeta, a)
+    dsmodel = DS.BeddoesLeishman(DS.Discrete(), 3, A, b, T, Cn1, Cd0, Cm0, eta, zeta, a)
     
     return DS.Airfoil(dsmodel, polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, alphacut, cutrad, sfun), xcp
 end
