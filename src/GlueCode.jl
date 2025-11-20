@@ -274,11 +274,11 @@ end
 
 ReadOutput reads the .out file from OpenFASt and parses it into a dictionary.
 
-### Inputs
+**Inputs**
     filename - String of the .out file to be read
     filepath - String of the path to the .out file.
 
-### Outputs
+**Outputs**
     outputs - a dictionary of all of the arrays within the .out file
 
 ### Notes

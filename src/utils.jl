@@ -22,12 +22,12 @@ end
     interpolate_matrix_symmetric(f1, f2, Kmat)
 Interpolate a set of symmetric matrices from one vector of fractions to any number of new fractions.
 
-### Inputs
+**Inputs**
 - f1::Vector{Float64}: The fractional locations of the original stiffness matrices.
 - f2::Vector{Float64}: The fractional locations of the new stiffness matrices.
 - Kmat::Array{Float64, 3}: The stiffness matrices at the original locations.
 
-### Outputs
+**Outputs**
 - Kfit::Array{Float64, 3}: The stiffness matrices at the new locations.
 """
 function interpolate_matrix_symmetric(f1, f2, Kmat; fit=Linear)

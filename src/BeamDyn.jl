@@ -91,12 +91,12 @@
 
 # Take the makings of a BeamDyn blade node and make it into a node. 
 
-# ### Inputs
+# **Inputs**
 # - frac::Float64 - The percentage of the blade (not including hub distance) that the node is defined at. 
 # - stiffmat::Array{Float64, 2} - The 6x6 array defining the flap, edge, and polar shear and extension stiffnesses. See the OpenFAST docs for a description of this matrix (and the next one). 
 # - massmat::Array{Float64, 2} - The 6x6 array defining the mass, center of mass, and area moment of inertia. 
 
-# ### Outputs
+# **Outputs**
 # - BDBladeNode - An object containing the extractable data from the matrices. 
 # """
 # function makenode(frac, stiffmat, massmat)
@@ -176,11 +176,11 @@ end
 
 Reads a BeamDyn file and creates a dictionary to be used. 
 
-### Inputs 
+**Inputs** 
 - filename::String - name of the file to read in. 
 - filepath::String - path to the directory containing the file to read
 
-### Outputs
+**Outputs**
 - bdfile::Dict - a dictionary holding the BeamDyn primary file. 
 """
 function read_bdfile(filename::String, filepath::String)
@@ -248,11 +248,11 @@ end
 
 Reads a BeamDyn blade file and creates an object containing the data. 
 
-### Inputs
+**Inputs**
 - filename::String - a string containing the name of the file
 - filepath::String - a string containing the path to the file to be read
 
-### Outputs
+**Outputs**
 - BDBlade - a BeamDyn Blade object. 
 """
 function read_bdblade(filename::String, filepath::String)
@@ -493,7 +493,7 @@ end
 
 Writes a BeamDyn struct to file. 
 
-### Inputs
+**Inputs**
 - bdfile::BDFile : BeamDyn file
 - outputfile::String : Name to give the written file. 
 - outputpath::String : Path to the desired write location, otherwise, will write at current location. 
@@ -754,12 +754,12 @@ end
 
 Writes a bdblade object to file. 
 
-### Inputs:
+**Inputs**:
 - bdblade::BDBlade - A BeamDyn blade object
 - outputfile::String - The desired name of the written file. 
 - outputpath::String - The desired location of the written file. 
 
-### Outputs:
+**Outputs**:
 -  N/A - A file will be written. 
 """
 function write_bdblade(bdblade::Dict, outputfile::String; outputpath::String=pwd())
@@ -844,7 +844,7 @@ end
 """
     stiffness_matrix(E, nu, A, Ix, Iy; G=E/(2*(1+nu)), xc=0, yc=0, xs=xc, ys=yc, theta_p=0, theta_s=theta_p, kxs=1, kys=kxs)
 
-### Inputs
+**Inputs**
 - E = Young's Modulus
 - A = Cross sectional area
 - Ix = Area moment of inertia about the x axis
@@ -900,7 +900,7 @@ end
 """
     mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
 
-### Inputs
+**Inputs**
 - m = distributed mass
 - Ix, Iy = mass moment of inertia about its respective axis
 - x, y = coordinates of the center of principle inertia relative to the cross section coordinate frame
@@ -914,7 +914,8 @@ function mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
     Ip = Ix + Iy + m*(x^2 + y^2)
 
 
-    return [m 0 0 0 0 -m*y;
+    return @SMatrix [
+            m 0 0 0 0 -m*y;
             0 m 0 0 0 m*x;
             0 0 m m*y -m*x 0;
             0 0 m*y Ixx -Ixy 0;
@@ -923,8 +924,79 @@ function mass_matrix(m, Ix, Iy; x=0, y=0, theta=0)
 end
 
 
+"""
+    mass_matrix(M; fromto::Symbol=:OF_GX)
 
+Convert the mass matrix from the OpenFAST coordinate system to the GXBeam coordinate system.
 
+**Inputs**
+- M::AbstractMatrix - mass matrix
+- fromto::Symbol - the direction of the conversion. Either :OF_GX or :GX_OF
+"""
+function mass_matrix(M; fromto::Symbol=:OF_GX)
+    if fromto==:OF_GX
+        #From OpenFAST to GXBeam
+        mu = M[1,1]
+        xm2 = -M[1,6]/mu
+        xm3 = M[2,6]/mu
+        i22 = M[5,5]
+        i33 = M[4,4]
+        i23 = -M[5,4]
+
+        return @SMatrix [
+                mu       0     0       0 mu*xm3 -mu*xm2;
+                0       mu     0  -mu*xm3     0      0;
+                0       0     mu   mu*xm2     0      0;
+                0  -mu*xm3 mu*xm2 i22+i33     0      0;
+            mu*xm3      0     0       0   i22   -i23;
+            -mu*xm2      0     0       0  -i23    i33]
+    elseif fromto==:GX_OF
+        #From GXBeam to OpenFAST
+        mu = M[1,1]
+        xm2 = -M[1,6]/mu #OF y
+        xm3 = M[1,5]/mu #OF x
+        i22 = M[5,5]
+        i33 = M[6,6]
+        i23 = -M[5,6]
+
+        return @SMatrix [
+                mu       0     0       0  0 -mu*xm2;
+                0       mu     0       0  0  mu*xm3;
+                0       0     mu       mu*xm2  -mu*xm3      0;
+                0       0     mu*xm2   i22     -i23      0;
+                0       0    -mu*xm3  -i23      i33      0;
+                -mu*xm2 mu*xm3 0       0        0       i22+i33]
+    else
+        error("mass_matrix: fromto must be either :OF_GX or :GX_OF")
+    end
+end
+
+function stiffness_matrix(k; fromto::Symbol=:OF_GX)
+
+    if fromto==:OF_GX
+        stiffness_gx = [
+                k[3,3] k[3,2] k[3,1] k[3,6] k[3,5] k[3,4]
+                k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4] 
+                k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4] 
+                k[6,3] k[6,2] k[6,1] k[6,6] k[6,5] k[6,4]
+                k[5,3] k[5,2] k[5,1] k[5,6] k[5,5] k[5,4]
+                k[4,3] k[4,2] k[4,1] k[4,6] k[4,5] k[4,4]]
+
+        return stiffness_gx
+    elseif fromto==:GX_OF
+        stiffness_of = [
+                k[3,3] k[3,2] k[3,1] k[3,6] k[3,5] k[3,4]
+                k[2,3] k[2,2] k[2,1] k[2,6] k[2,5] k[2,4] 
+                k[1,3] k[1,2] k[1,1] k[1,6] k[1,5] k[1,4] 
+                k[6,3] k[6,2] k[6,1] k[6,6] k[6,5] k[6,4]
+                k[5,3] k[5,2] k[5,1] k[5,6] k[5,5] k[5,4]
+                k[4,3] k[4,2] k[4,1] k[4,6] k[4,5] k[4,4]]
+
+        return stiffness_of
+    else
+        error("stiffness_matrix: fromto must be either :OF_GX or :GX_OF")
+    end
+end
 
 
 
@@ -972,21 +1044,7 @@ function make_element(x, points, stiffness, mass, Cab, damping)
     C = SMatrix{6,6}(compliance)  
 
     ### element mass matrix 
-    mu = mass[1,1]
-    # mu = 0.000000001
-    xm2 = -mass[1,6]/mu
-    xm3 = mass[2,6]/mu
-    i22 = mass[5,5]
-    i33 = mass[4,4]
-    i23 = -mass[5,4]
-
-    M = @SMatrix [
-             mu       0     0       0 mu*xm3 -mu*xm2;
-             0       mu     0  -mu*xm3     0      0;
-             0       0     mu   mu*xm2     0      0;
-             0  -mu*xm3 mu*xm2 i22+i33     0      0;
-          mu*xm3      0     0       0   i22   -i23;
-         -mu*xm2      0     0       0  -i23    i33]
+    M = mass_matrix(mass)
  
        
     # mass_gx = R*mass*(R')
@@ -1004,12 +1062,12 @@ make_assembly(rhub, rtip, bdblade)
 
 Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assembly struct for use with the Rotors.jl package. 
 
-### Inputs:
+**Inputs**:
 - rhub::TF - hub radius
 - rtip::TF - tip radius
 - bdblade::BDBlade - a BeamDyn blade struct
 
-### Outputs:
+**Outputs**:
 - assembly::GXBeam.Assembly
 """
 function make_assembly(rhub, rtip, rx, ry, rz, twist, precone, sweep, curve, bdblade;fit=Linear) #, inittype=typeof(rhub))
@@ -1085,11 +1143,11 @@ make_assembly(edfile, bdblade)
 
 Takes the ElastoDyn file and BeamDyn blade structures and creates a GXBeam assembly struct for use with the Rotors.jl package. 
 
-### Inputs:
+**Inputs**:
 - edfile::EDFile - ElastoDyn file struct
 - bdblade::BDBlade - a BeamDyn blade struct
 
-### Outputs:
+**Outputs**:
 - assembly::GXBeam.Assembly
 """
 function make_assembly(edfile, bdfile, bdblade; fit=Linear) #, inittype=Float64)

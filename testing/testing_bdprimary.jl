@@ -38,7 +38,7 @@ filename = "bd_primary_example.dat"
 #     bdfile[key] = entry
 # end
 
-# ### Outputs section
+# **Outputs** section
 # outlist1idx = of.findlistbounds(lines[idx+11:end])
 
 # outputs = of.readlist(lines[idx+11:idx+11+outlist1idx[end]-1])

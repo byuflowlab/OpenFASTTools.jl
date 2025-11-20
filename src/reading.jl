@@ -32,23 +32,115 @@ function cleanfile!(lines)
         if occursin("---", lines[i]) #Flag title lines to get rid of them later. I can't get rid of them now, otherwise that'll throw of the iteration. 
             push!(comment_idxs, i)
             continue
+
         elseif occursin("===", lines[i])
             push!(comment_idxs, i)
             continue
+
+        # elseif lines[i][1]=="!" #Get rid of lines that are just comments
+        #     push!(comment_idxs, i)
+        #     continue
+
+        # elseif lines[i][1]=="#" #Get rid of lines that are just comments
+        #     push!(comment_idxs, i)
+        #     continue
+
+        # elseif lines[i][1]=="%" #Get rid of lines that are just comments
+        #     push!(comment_idxs, i)
+        #     continue
         end
 
-        if occursin("!", lines[i]) #Remove comments #Todo: This didn't work on line 66
+        if occursin("!", lines[i]) #Remove comments 
             cidx = findfirst("!", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+
+        elseif occursin("#", lines[i])
+            cidx = findfirst("#", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+
+        elseif occursin("%", lines[i])
+            cidx = findfirst("%", lines[i])[1]
             lines[i] = lines[i][1:cidx-1]
         end
 
         lines[i] = rmspaces(lines[i]) #Remove tabs and double spaces. 
         lines[i] = strip(lines[i]) #Remove leading and trailing whitespace
+
+        # if lines[i]=="" #Get rid of empty lines
+        #     push!(comment_idxs, i)
+        #     continue
+        # end
     end
 
     for idx in reverse(comment_idxs) #Get rid of title lines
         popat!(lines, idx)
     end
+    return lines
+end
+
+function deepcleanfile!(lines)
+    comment_idxs = Int[]
+    for i = eachindex(lines) #Iterate through lines and clean everything up. 
+        if occursin("---", lines[i]) #Flag title lines to get rid of them later. I can't get rid of them now, otherwise that'll throw of the iteration. 
+            push!(comment_idxs, i)
+            continue
+
+        elseif occursin("===", lines[i])
+            push!(comment_idxs, i)
+            continue
+
+        elseif lines[i][1]=='!' #flag the lines that are just comments
+            push!(comment_idxs, i)
+            continue
+
+        elseif lines[i][1]=='#' #flag the lines that are just comments
+            push!(comment_idxs, i)
+            continue
+
+        elseif lines[i][1]=='%' #flag the lines that are just comments
+            push!(comment_idxs, i)
+            continue
+        end
+
+        if lines[i]=="" #flag the empty lines
+            push!(comment_idxs, i)
+            continue
+        end
+    end
+
+    for idx in reverse(comment_idxs) #Get rid of title lines
+        popat!(lines, idx)
+    end
+
+    ### Now that we've gotten rid of the comments, we can clean up the lines.
+    new_comment_idxs = Int[]
+    for i in eachindex(lines)
+        if occursin("!", lines[i]) #Remove comments 
+            cidx = findfirst("!", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+
+        elseif occursin("#", lines[i])
+            cidx = findfirst("#", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+
+        elseif occursin("%", lines[i])
+            cidx = findfirst("%", lines[i])[1]
+            lines[i] = lines[i][1:cidx-1]
+        end
+
+        lines[i] = rmspaces(lines[i]) #Remove tabs and double spaces. 
+        lines[i] = strip(lines[i]) #Remove leading and trailing whitespace
+
+        if lines[i]=="" #Get rid of empty lines
+            push!(new_comment_idxs, i)
+            continue
+        end
+    end
+
+    for idx in reverse(new_comment_idxs) #Get rid of the empty lines
+        popat!(lines, idx)
+    end
+
     return lines
 end
 
@@ -94,6 +186,7 @@ end
 
 
 function parseline(line_initial)
+    # @show line_initial
     line = removecomment(line_initial)
     # println("\"", line, "\"")
     entryend = findlast(" ", line)[1]-1 #Todo. This will cause problem if the requested line is a vector. -> I'll make a function that does this functionality. Inside that it'll see if this space occurs before or after a comma. -> Or just use findlast().... because I've used strip(), then the last space that occurs, should be just before the key. 
@@ -457,10 +550,10 @@ end
 
 Reads in a line (you'll need to chop off all the description portion) and determines what type of flag it is. 
 
-### Inputs: 
+**Inputs**: 
 - line::String - A line from a OpenFAST file
 
-### Outputs:
+**Outputs**:
 - flag::Flag - one of the flag types. 
 """
 function readflag(line)
@@ -474,13 +567,20 @@ function readflag(line)
 end
 
 """
-parse a matrix that is seperated by a single space, not distances
-Overloaded function.
-    This funcion uses the number of columns and the lines to read in
-    a matrix from an array of strings.
+Parse a matrix that is seperated by a single space, not distances.
+This function counts the number of columns and the lines to read 
+in a matrix from an array of strings.
+
+NOTE: use cat(readdlm.(IOBuffer.(lines))...,dims=1) instead. 
+
+**Inputs**
+- lines - an array of strings that contain the matrix
+- n - the number of columns in the matrix
+
+
 """
 function readmatrix(lines;n=1)
-    #TODO: Better than this function: cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
+    #Note: Better than this function: cat(readdlm.(IOBuffer.(lines[24+member_total:idx-1]))...,dims=1)
     stops = []
     for i=1:length(lines[1])
         if lines[1][i]==' '
@@ -592,10 +692,10 @@ function readoutlist(lines) #Todo: This function needs to be upgraded to recogni
 #### readpair(line)
 Reads a line to find the first two integers separated by spaces, and returns them as a tuple. Note that the second integer must be followed by a space
 
-### Inputs
+**Inputs**
 - line - a string containing two integers separated by spaces, text may follow the integers, but may not be between or before the integers
 
-### Outputs
+**Outputs**
 - pair - a tuple of the pair of integers
 """
 function readpair(line)
@@ -653,10 +753,10 @@ end
 
 An improved version of readvector that doesn't require the number of elements. It chops off the trailing characters and returns a vector of numbers. 
 
-### Inputs 
+**Inputs** 
 - line::String - A string containing a vector of numbers separated by spaces or commas. characters can follow the vector
 
-### Outputs
+**Outputs**
 - vector::Array{inferred} - an array of the numbers you sent to be read. 
 """
 function readvector(line)

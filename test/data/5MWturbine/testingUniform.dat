@@ -1,0 +1,5 @@
+! Time     Wind    Wind    Vertical    Horiz.      Pwr.Law     Lin.Vert.   Gust     Upflow
+!          Speed   Dir     Speed       Shear       Vert.Shr    Shear       Speed    Angle 
+! (sec)    (m/s)   (Deg)   (m/s)                                            (m/s)   (deg)
+0.00000  10.00000  0.00000  0.00000  0.00000  0.30000  0.00000  0.00000  8.00000
+10.00000  12.00000  0.00000  0.00000  0.00000  0.30000  0.00000  0.00000  8.00000

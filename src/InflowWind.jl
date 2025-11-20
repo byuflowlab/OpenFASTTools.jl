@@ -1,50 +1,4 @@
-##############################################################
-##################     STRUCTURES     ########################
-##############################################################
-# mutable struct IWFile
-#     Directory::Array{String,1}
-#     Notes::String
-#     Echo::String
-#     WindType::Int
-#     PropagationDir::AbstractFloat
-#     NWindVel::Int
-#     WindVxiList::Array{Float64, 1} #TODO: This could be an array of arrays
-#     WindVyiList::Array{Float64, 1}
-#     WindVziList::Array{Float64, 1}
-#     HWindSpeedSteady::AbstractFloat
-#     RefHtSteady::AbstractFloat
-#     PLexpSteady::AbstractFloat
-#     FilenameUniform::String
-#     RefHtUniform::AbstractFloat
-#     RefLengthUniform::AbstractFloat #TODO: Couldn't I just combine all of the Reference Heights, lengths, and power law exponents into one variable? 
-#     FilenameTurbSim::String
-#     FilenameBinary::String
-#     TowerFile::String
-#     FileName_u::String #TODO: This could be an array
-#     FileName_v::String
-#     FileName_w::String
-#     nx::Int #TODO: This could be an array
-#     ny::Int
-#     nz::Int
-#     dx::AbstractFloat #TODO: This could be an array
-#     dy::AbstractFloat
-#     dz::AbstractFloat
-#     RefHtHAWC::AbstractFloat
-#     ScaleMethod::Int
-#     SFx::AbstractFloat #TODO: This could be an array
-#     SFy::AbstractFloat
-#     SFz::AbstractFloat
-#     SigmaFx::AbstractFloat #TODO: This could be an array
-#     SigmaFy::AbstractFloat
-#     SigmaFz::AbstractFloat
-#     URef::AbstractFloat
-#     WindProfile::Int
-#     PLexpHAWC::AbstractFloat
-#     Z0::AbstractFloat
-#     InitPositionx::AbstractFloat
-#     SumPrint::String
-#     Outlist::Array{String, 1}
-# end
+
 
 
 ##############################################################
@@ -55,11 +9,11 @@
 
 Reads an InflowWind file and produces an IWFile object. 
 
-### Inputs
+**Inputs**
 - filename::String - a string containing the name of the file to be read.
 - filepath::String - a string containing the path to the file to be read.
 
-### Outputs
+**Outputs**
 - iwfile::IWFile - an InflowWind file object
 """
 function read_inflowwind(filename, filepath)
@@ -113,6 +67,41 @@ function read_inflowwind(filename, filepath)
 end
 
 
+"""
+    read_uniformwind(filename, filepath)
+
+Reads a uniform wind file and produces a dictionary containing the data.
+
+**Inputs**
+- filename::String - a string containing the name of the file to be read.
+- filepath::String - a string containing the path to the file to be read.
+
+"""
+function read_uniformwind(filename, filepath)
+    fi = open(filepath*"/"*filename, "r")
+    lines = readlines(fi)
+    close(fi)
+
+    lines = deepcleanfile!(lines)
+
+    uniform = Dict()
+
+    data = cat(readdlm.(IOBuffer.(lines))...,dims=1)
+
+    uniform["time"] = data[:,1]
+    uniform["windspeed"] = data[:,2]
+    uniform["winddir"] = data[:,3]
+    uniform["verticalspeed"] = data[:,4]
+    uniform["horizontalshear"] = data[:,5]
+    uniform["pwrlawvertshear"] = data[:,6]
+    uniform["linlawvertshear"] = data[:,7]
+    uniform["gustspeed"] = data[:,8]
+    uniform["upflowang"] = data[:,9]
+
+    return uniform
+end
+
+
 
 ##############################################################
 ################## WRITING FUNCTIONS #########################
@@ -120,11 +109,11 @@ end
 
 
 """
-    WriteIWFile(iwfile, outputfile; outputpath=pwd())
+    write_inflowwind(iwfile, outputfile; outputpath=pwd())
 
 Writes an InflowWind file from and InflowWind file object. 
 
-### Inputs
+**Inputs**
 - iwfile::IWFile - InflowWind file object to be written
 - outputfile::String - The desired name of the new file. 
 - outputpath::String - The path to the desired location of the new file. 
@@ -152,7 +141,7 @@ function write_inflowwind(iwfile, outputfile; outputpath=pwd())
     line = string(formatword(string(iwfile["VFlowAng"]);location="back", quotes=false),"   VFlowAng       - Upflow angle (degrees) (not used for native Bladed format WindType=7)")
     push!(lines, line)
 
-    line = string(formatword(addriver["VelInterpCubic"];quotes=false),"   VelInterpCubic - Use cubic interpolation for velocity in time (false=linear, true=cubic) [Used with WindType=2,3,4,5,7]")
+    line = string(formatword(iwfile["VelInterpCubic"];quotes=false),"   VelInterpCubic - Use cubic interpolation for velocity in time (false=linear, true=cubic) [Used with WindType=2,3,4,5,7]")
     push!(lines, line)
 
     line = string(formatword(Int(iwfile["NWindVel"]);location="back", quotes=false),"   NWindVel       - Number of points to output the wind velocity    (0 to 9)")
@@ -414,8 +403,231 @@ function write_inflowwind(iwfile, outputfile; outputpath=pwd())
 end
 
 
+"""
+    write_uniformwind(ufile, outputfile; outputpath=pwd())
+
+Writes a file for InflowWind with uniform wind data. 
+
+**Inputs**
+- ufile::Dict - a dictionary containing the uniform wind data.
+- outputfile::String - The desired name of the new file.
+- outputpath::String - The path to the desired location of the new file.
+"""
+function write_uniformwind(ufile, outputfile; outputpath=pwd())
+    lines = String[]
+
+    line = "! Time     Wind    Wind    Vertical    Horiz.      Pwr.Law     Lin.Vert.   Gust     Upflow"
+    push!(lines, line)
+
+    line = "!          Speed   Dir     Speed       Shear       Vert.Shr    Shear       Speed    Angle "
+    push!(lines, line)
+
+    line = "! (sec)    (m/s)   (Deg)   (m/s)                                            (m/s)   (deg)"
+    push!(lines, line)
+
+    matrix = zeros(length(ufile["time"]), 9)
+    matrix[:,1] = ufile["time"]
+    matrix[:,2] = ufile["windspeed"]
+    matrix[:,3] = ufile["winddir"]
+    matrix[:,4] = ufile["verticalspeed"]
+    matrix[:,5] = ufile["horizontalshear"]
+    matrix[:,6] = ufile["pwrlawvertshear"]
+    matrix[:,7] = ufile["linlawvertshear"]
+    matrix[:,8] = ufile["gustspeed"]
+    matrix[:,9] = ufile["upflowang"]
+
+    line = formatcoordinates(matrix)
+    append!(lines, line)
+
+    # matrix = hcat(ufile["time"], ufile["windspeed"], ufile["winddir"], ufile["verticalspeed"], ufile["horizontalshear"], ufile["pwrlawvertshear"], ufile["linlawvertshear"], ufile["gustspeed"], ufile["upflowang"])
+
+    # for i=1:size(matrix,1)
+    #     line = string(formatword(matrix[i,1];location="back", quotes=false),"   ", formatword(matrix[i,2];location="back", quotes=false),"   ", formatword(matrix[i,3];location="back", quotes=false),"   ", formatword(matrix[i,4];location="back", quotes=false),"   ", formatword(matrix[i,5];location="back", quotes=false),"   ", formatword(matrix[i,6];location="back", quotes=false),"   ", formatword(matrix[i,7];location="back", quotes=false),"   ", formatword(matrix[i,8];location="back", quotes=false),"   ", formatword(matrix[i,9];location="back", quotes=false))
+    #     push!(lines, line)
+    # end
+
+    ### Write lines to file
+    fi = open(outputpath*"/"*outputfile,"w+")
+    i = 1
+    for i = 1:length(lines)-1
+         write(fi,lines[i])
+         write(fi,"\n")
+    end
+    write(fi,lines[end])
+    close(fi)
+end
+
+
 
 
 ##############################################################
 ############### CREATING FUNCTIONS ###########################
 ##############################################################
+
+function create_inflowwind(WindType::Int; notes::String="", echo::Bool=false, PropagationDir=0, VFlowAng=0, VelInterpCubic=false, NWindVel=1, WindVxiList=[0.0], WindVyiList=[0.0], WindVziList=[0.0], HWindSpeed=0.0, RefHt=0.0, Plexp=0.0, FileName_Uni="unused", RefHt_Uni=0.0, RefLength=0.0, FileName_BTS="unused", FilenameRoot="unused", TowerFile=false, FileName_u="unused", FileName_v="unused", FileName_w="unused", nx=0, ny=0, nz=0, dx=0.0, dy=0.0, dz=0.0, RefHt_HAWC=0.0, ScaleMethod=0, SFx=0.0, SFy=0.0, SFz=0.0, SigmaFx=0.0, SigmaFy=0.0, SigmaFz=0.0, URef=0.0, WindProfile=0, PLExp_HAWC=0.0, Z0=0.0, XOffset=0.0, SensorType=0, NumPulseGate=0, PulseSpacing=0.0, NumBeam=0, FocalDistanceX=0.0, FocalDistanceY=0.0, FocalDistanceZ=0.0, RotorApexOffsetPos=0.0, URefLid=0.0, MeasurementInterval=0.0, LidRadialVel=false, ConsiderHubMotion=false, SumPrint=false, OutList=String[])
+
+    iwfile = Dict()
+
+    iwfile["Notes"] = notes
+
+    iwfile["Echo"] = echo
+    iwfile["WindType"] = WindType
+    iwfile["PropagationDir"] = PropagationDir
+    iwfile["VFlowAng"] = VFlowAng
+    iwfile["VelInterpCubic"] = VelInterpCubic
+    iwfile["NWindVel"] = NWindVel
+    iwfile["WindVxiList"] = WindVxiList
+    iwfile["WindVyiList"] = WindVyiList
+    iwfile["WindVziList"] = WindVziList
+
+
+    iwfile["HWindSpeed"] = HWindSpeed
+    iwfile["RefHt"] = RefHt
+    iwfile["PLexp"] = Plexp
+
+
+    iwfile["FileName_Uni"] = FileName_Uni
+    iwfile["RefHt_Uni"] = RefHt_Uni
+    iwfile["RefLength"] = RefLength
+
+
+    iwfile["FileName_BTS"] = FileName_BTS
+
+
+    iwfile["FilenameRoot"] = FilenameRoot
+    iwfile["TowerFile"] = TowerFile
+
+
+    iwfile["FileName_u"] = FileName_u
+    iwfile["FileName_v"] = FileName_v
+    iwfile["FileName_w"] = FileName_w
+    iwfile["nx"] = nx
+    iwfile["ny"] = ny
+    iwfile["nz"] = nz
+    iwfile["dx"] = dx
+    iwfile["dy"] = dy
+    iwfile["dz"] = dz
+    iwfile["RefHt_HAWC"] = RefHt_HAWC
+
+
+
+    iwfile["ScaleMethod"] = ScaleMethod
+    iwfile["SFx"] = SFx
+    iwfile["SFy"] = SFy
+    iwfile["SFz"] = SFz
+    iwfile["SigmaFx"] = SigmaFx
+    iwfile["SigmaFy"] = SigmaFy
+    iwfile["SigmaFz"] = SigmaFz
+
+
+    iwfile["URef"] = URef
+    iwfile["WindProfile"] = WindProfile
+    iwfile["PLExp_HAWC"] = PLExp_HAWC
+    iwfile["Z0"] = Z0
+    iwfile["XOffset"] = XOffset
+
+
+    iwfile["SensorType"] = SensorType
+    iwfile["NumPulseGate"] = NumPulseGate
+    iwfile["PulseSpacing"] = PulseSpacing
+    iwfile["NumBeam"] = NumBeam
+    iwfile["FocalDistanceX"] = FocalDistanceX
+    iwfile["FocalDistanceY"] = FocalDistanceY
+    iwfile["FocalDistanceZ"] = FocalDistanceZ
+    iwfile["RotorApexOffsetPos"] = RotorApexOffsetPos
+
+    iwfile["URefLid"] = URefLid
+    iwfile["MeasurementInterval"] = MeasurementInterval
+    iwfile["LidRadialVel"] = LidRadialVel
+    iwfile["ConsiderHubMotion"] = ConsiderHubMotion
+
+
+    iwfile["SumPrint"] = SumPrint
+    iwfile["OutList"] = OutList
+
+
+    return iwfile
+end
+
+function create_uniformwind(t, v; winddir=nothing, v_up=nothing, hShear=nothing,
+     pwrShear=nothing, linShear=nothing, v_gust=nothing, upflow_ang=nothing)
+
+    n = length(t)
+
+    if length(v)==1
+        v = ones(n).*v
+    elseif length(v)!=n
+        error("create_uniformwind(): length of v incorrect.")
+    end
+
+    if isnothing(winddir)
+        winddir = zeros(n)
+    elseif length(winddir)==1
+        winddir = winddir.*ones(n)
+    elseif length(winddir)!=n
+        error("create_uniformwind(): length of winddir incorrect.")
+    end
+
+    if isnothing(v_up)
+        v_up = zeros(n)
+    elseif length(v_up)==1
+        v_up = v_up.*ones(n)
+    elseif length(v_up)!=n
+        error("create_uniformwind(): length of v_up incorrect.")
+    end
+
+    if isnothing(hShear)
+        hShear = zeros(n)
+    elseif length(hShear)==1
+        hShear = hShear.*ones(n)
+    elseif length(hShear)!=n
+        error("create_uniformwind(): length of hShear incorrect.")
+    end
+
+    if isnothing(pwrShear)
+        pwrShear = zeros(n)
+    elseif length(pwrShear)==1
+        pwrShear = pwrShear.*ones(n)
+    elseif length(pwrShear)!=n
+        error("create_uniformwind(): length of pwrShear incorrect.")
+    end
+
+    if isnothing(linShear)
+        linShear = zeros(n)
+    elseif length(linShear)==1
+        linShear = linShear.*ones(n)
+    elseif length(linShear)!=n
+        error("create_uniformwind(): length of linShear incorrect.")
+    end
+
+    if isnothing(v_gust)
+        v_gust = zeros(n)
+    elseif length(v_gust)==1
+        v_gust = v_gust.*ones(n)
+    elseif length(v_gust)!=n
+        error("create_uniformwind(): length of v_gust incorrect.")
+    end
+
+    if isnothing(upflow_ang)
+        upflow_ang = zeros(n)
+    elseif length(upflow_ang)==1
+        upflow_ang = upflow_ang.*ones(n)
+    elseif length(upflow_ang)!=n
+        error("create_uniformwind(): length of upflow_ang incorrect.")
+    end
+
+
+    ufile = Dict()
+
+    ufile["time"] = t
+    ufile["windspeed"] = v
+    ufile["winddir"] = winddir
+    ufile["verticalspeed"] = v_up
+    ufile["horizontalshear"] = hShear
+    ufile["pwrlawvertshear"] = pwrShear
+    ufile["linlawvertshear"] = linShear
+    ufile["gustspeed"] = v_gust
+    ufile["upflowang"] = upflow_ang
+
+    return ufile
+end

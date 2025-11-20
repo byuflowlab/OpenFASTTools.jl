@@ -43,16 +43,17 @@ function formatmatrix(matrix;spacing=2)
     line = string()
     smatrix = String[]
 
-    for i in eachindex(matrix)
-        if matrix[i]==0
-            matrix[i]=0.0
-        end
-    end
+    # for i in eachindex(matrix)
+    #     if matrix[i]==0
+    #         matrix[i]=0.0
+    #     end
+    # end
 
     m, n = size(matrix)
     for i = 1:m
         for j = 1:n
-            text = @sprintf "%.7E" matrix[i,j]
+            matitem = matrix[i,j]==0 ? 0.0 : matrix[i,j]
+            text = @sprintf "%.7E" matitem
             space = ""
             if j<n
                 # @show matrix[i,j+1]
@@ -117,9 +118,9 @@ function formatvector(vector;desiredlength=11, loc="back", delim=",")
     line = ""
     if length(vector)>0
         for i=1:length(vector)-1
-           line = string(line,formatword(string(vector[i]);location=loc,quotes=false),delim)
+           line = string(line,formatword(string(vector[i]);location=loc,quotes=false, desiredlength),delim)
         end
-        line = string(line,formatword(string(vector[end]);location=loc,quotes=false))
+        line = string(line,formatword(string(vector[end]);location=loc,quotes=false, desiredlength))
     else
         line = "     "
     end

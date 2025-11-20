@@ -23,7 +23,7 @@ filename = "inflowwind_example.dat"
 
 
 
-# ### Outputs section
+# **Outputs** section
 # idx = 42
 
 # outlist1idx = of.findlistbounds(lines[idx:end])

@@ -112,10 +112,10 @@ end
 abstract type AirfoilInput end
 
 #TODO: Add inner constructors for base construction and construction without cm. 
-struct AirfoilInputSteady{TS, TI, TF, TB} <: AirfoilInput
+struct AirfoilInputSteady{TS, TI, TF, TB, TSI} <: AirfoilInput
     interpord::TI
     nondimarea::TF
-    numcoords::Union{TS, TI}
+    numcoords::TSI
     bl_file::TS
     numtabs::TI
     re::TF
@@ -126,6 +126,16 @@ struct AirfoilInputSteady{TS, TI, TF, TB} <: AirfoilInput
     cl::Array{TF, 1}
     cd::Array{TF, 1}
     cm::Array{TF, 1}
+end
+
+function create_cylinder(cd; aoa=collect(-180.:1:180), interpord="Default", nondimarea=1.0, numcoords="cylinder.dat", bl_file="cylinder.dat", numtabs=1, re=1.0, userprop=0, incluadata=false)
+    cl = zeros(length(aoa))
+    cd = ones(length(aoa)).*cd
+    cm = zeros(length(aoa))
+
+    interpord = isa(interpord, String) ? 3 : interpord
+
+    return AirfoilInputSteady(interpord, nondimarea, numcoords, bl_file, numtabs, re, userprop, incluadata, length(aoa), aoa, cl, cd, cm)
 end
 
 struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
@@ -175,6 +185,77 @@ struct AirfoilInputUnsteady{TS, TI, TF, TB} <: AirfoilInput
     cd::Array{TF, 1}
     cm::Array{TF, 1}
 end
+
+function mimic_unsteady_airfoil(file, aoa, cl, cd, cm; alpha0range=(-7, 7), alpha1range=(0, 45), alpha2range=(-45,0), bl_file=nothing, numcoords=nothing)
+    numalf = length(aoa)
+
+    af = read_airfoilinput(file)
+
+    interpord = af.interpord
+    nondimarea = af.nondimarea
+    
+    if bl_file == nothing
+        numcoords = af.numcoords
+        bl_file = af.bl_file
+    end
+    
+    numtabs = af.numtabs
+    re = af.re
+    userprop = af.userprop
+    incluadata = af.incluadata
+
+    clfit = Akima(aoa, cl)
+    xstar, _ = brent(clfit, alpha0range[1], alpha0range[2])
+    alpha0 = xstar
+
+    idx_alpha1_start = argmin(abs.(aoa .- alpha1range[1]))
+    idx_alpha1_end = argmin(abs.(aoa .- alpha1range[2]))
+    # @show idx_alpha1_start, idx_alpha1_end
+    alpha1 = aoa[argmax(cl[idx_alpha1_start:idx_alpha1_end])+idx_alpha1_start-1]
+
+    idx_alpha2_start = argmin(abs.(aoa .- alpha2range[1]))
+    idx_alpha2_end = argmin(abs.(aoa .- alpha2range[2]))
+    # @show idx_alpha2_start, idx_alpha2_end
+    alpha2 = aoa[argmin(cl[idx_alpha2_start:idx_alpha2_end])+idx_alpha2_start-1]
+
+    eta_e = af.eta_e
+    c_nalpha = af.c_nalpha
+    t_f0 = af.t_f0
+    t_v0 = af.t_v0
+    t_p = af.t_p
+    t_vl = af.t_vl
+    b1 = af.b1
+    b2 = af.b2
+    b5 = af.b5
+    a1 = af.a1
+    a2 = af.a2
+    a5 = af.a5
+    s1 = af.s1
+    s2 = af.s2
+    s3 = af.s3
+    s4 = af.s4
+    cn1 = af.cn1
+    cn2 = af.cn2
+    st_sh = af.st_sh
+
+    cdfit = Akima(aoa, cd)
+    cd0 = cdfit(alpha0)
+
+    cmfit = Akima(aoa, cm)
+    cm0 = cmfit(alpha0)
+
+    k0 = af.k0
+    k1 = af.k1
+    k2 = af.k2
+    k3 = af.k3
+    k1_hat = af.k1_hat
+    x_cp_bar = af.x_cp_bar
+    uacutout = af.uacutout
+    filtcutoff = af.filtcutoff
+
+    return AirfoilInputUnsteady(interpord, nondimarea, numcoords, bl_file, numtabs, re, userprop, incluadata, alpha0, alpha1, alpha2, eta_e, c_nalpha, t_f0, t_v0, t_p, t_vl, b1, b2, b5, a1, a2, a5, s1, s2, s3, s4, cn1, cn2, st_sh, cd0, cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, uacutout, filtcutoff, numalf, aoa, cl, cd, cm)
+end
+
 
 struct AirfoilCoords{TI, TF}
     numcoords::TI
@@ -248,17 +329,17 @@ end
 
 Reads in AeroDyn input file and stores the options as a dictionary.
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file. 
 - filepath::String - the path to the file. 
 
-### Outputs: 
+**Outputs**: 
 - adfile::Dict() - a dictionary using the variable names as strings for keys, and the variable as the value. 
 
 """
 function read_adfile(filename, filepath)
     
-    fi = open(filepath*"/"*filename, "r")
+    fi = open(joinpath(filepath, filename), "r")
     lines = readlines(fi)
     close(fi)
 
@@ -267,25 +348,24 @@ function read_adfile(filename, filepath)
     adfile = Dict()
     adfile["Notes"] = lines[1]
 
-    for i = 2:41
-        # @show i
+    for i = 2:51
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    adfile["AFNames"] = readlist(lines[42:42+Int(adfile["NumAFfiles"])-1]) 
 
-    idx = 42+Int(adfile["NumAFfiles"])
-    # @show idx
+    adfile["AFNames"] = readlist(lines[52:52+Int(adfile["NumAFfiles"])-1]) 
 
-    for i = idx:idx+8
+    idx = 52+Int(adfile["NumAFfiles"])
+    
+    for i = idx:idx+13
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    # @show idx+4
+    idx = idx+13
 
-    twrnames, twrdata = parsematrix(lines[idx+9:idx+9+2+Int(adfile["NumTwrNds"])-1])
+    twrnames, twrdata = parsematrix(lines[idx+1:idx+1+2+Int(adfile["NumTwrNds"])-1])
 
     #Todo: The parsematrix function only works when there aren't comments interjected in the header of the function.... :| I might need to come up with an alternate function. :| ... At least when it comes to getting the length of the matrix I'm trying to read. 
     for i = 1:5 #length(twrnames)
@@ -294,25 +374,23 @@ function read_adfile(filename, filepath)
 
 
     ### Outputs section
-    idx = idx+9+2+Int(adfile["NumTwrNds"])
-    # @show idx
+    idx = idx+1+2+Int(adfile["NumTwrNds"])
 
     for i = idx:idx+4
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
 
-    outlist1idx = findlistbounds(lines[idx+5:end])
+    outlist1idx = findlistbounds(lines[idx+5:end]) 
 
-    # println("")
-    # println("This list")
     outputs = readlist(lines[idx+5:idx+5+outlist1idx[end]-1])
     adfile["OutList"] = outputs
 
     idx = idx+5+outlist1idx[end]
 
-    ### Nodal outputs
-    for i = idx:idx+1
+
+    ### Nodal outputs #todo: I've encountered some files that don't have this section. Maybe have some behavior to adapt? (I don't know if OpenFAST errors if this section isn't present.)
+    for i = idx:idx+1 
         key, entry = parseline(lines[i])
         adfile[key] = entry
     end
@@ -329,16 +407,16 @@ end
 
 This function navigates to the location of the file given, and reads in the named AD blade file.
 
-### Inputs:
+**Inputs**:
     filename - A string of the name of the file, including the extension
     filepath - A string of the path to the file
 
-### Outputs: 
+**Outputs**: 
     adblade - a dictionary of the AD blade file variables
 
 """
 function read_adblade(filename, filepath)
-    fi = open(filepath*"/"*filename, "r")
+    fi = open(joinpath(filepath,filename), "r")
     lines = readlines(fi)
     close(fi)
 
@@ -365,11 +443,11 @@ This function reads in the information from an aerodata file, including the pola
 from the Aerodata folder. Note that currently you have to point it at the correct
 file.
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file to be read
 - filepath::String - the relative or absolute path to the file location. 
 
-### Outputs:
+**Outputs**:
 - aerodata::Aerodata
 
 """
@@ -442,15 +520,15 @@ end
 
 This function reads in the airfoil input file, which is similar to the aerodata file but points to the coordinates and has some different information. Using the fact that commented lines begin with "!".
 
-### Inputs:
+**Inputs**:
 - filename::String - The name of the file
 - filepath::String - the relative or absolute path to the file.
 
-### Outputs:
+**Outputs**:
 - airfoilinput::AirfoilInput
 
 """
-function read_airfoilinput(filename) #(filename, filepath)
+function read_airfoilinput(filename) #(filename, filepath) #Todo: 
     
     # fi = open(filepath*"/"*filename, "r")
     fi = open(filename, "r")
@@ -634,16 +712,16 @@ end #end of function
 
 Reads in the text file that has the airfoil coordinates, as per the format from OpenFAST
 
-### Inputs: 
+**Inputs**: 
 - filename::String - The name of the file
 - filepath::String - the relative or absolute path to the file. 
 
-### Outputs:
+**Outputs**:
 - airfoil::AirfoilCoords
 
 """
-function read_airfoilcoordinates(filename, filepath)
-    fi = open(filepath*"/"*filename, "r")
+function read_airfoilcoordinates(filename, filepath) #Todo: Convert to something else. 
+    fi = open(filepath*"/"*filename, "r") #Todo: joinpath
     lined = readlines(fi)
     close(fi)
 
@@ -673,11 +751,11 @@ end
 
 Returns an ADDriver object by reading a ADDriver input file. Note that the driver file is different from the primary input file. 
 
-### Inputs 
+**Inputs** 
 - filename::String - The name of the file in the directory to be read. 
 - filepath::String - The path to the file to be read, not including the filename in the path
 
-### Outputs
+**Outputs**
 - addriver - a dictionary containing the AD driver file entries
 
 ### Notes
@@ -725,7 +803,7 @@ end
 
 Writes a AeroDyn v15 object to file. 
 
-### Inputs:
+**Inputs**:
 - adfile::ADfile - an AeroDyn file object
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute path of the written file.
@@ -747,28 +825,32 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(adfile["DTAero"];quotes=false, location="back"),"   DTAero             - Time interval for aerodynamic calculations {or \"default\"} (s)")
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["WakeMod"]);location="back",quotes=false), "   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
+    line = string(formatword(Int(adfile["Wake_Mod"]);location="back",quotes=false), "   Wake_Mod            - Type of wake/induction model (switch) {0=none, 1=BEMT, 2=DBEMT} [WakeMod cannot be 2 when linearizing]")
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["AFAeroMod"]);location="back",quotes=false),"   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model} [AFAeroMod must be 1 when linearizing]")
-    push!(lines, line)
+    # line = string(formatword(Int(adfile["AFAeroMod"]);location="back",quotes=false),"   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model} [AFAeroMod must be 1 when linearizing]")
+    # push!(lines, line)
 
     line = string(formatword(Int(adfile["TwrPotent"]);location="back",quotes=false),"   TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}")
     push!(lines, line)
 
     line = string(formatword(Int(adfile["TwrShadow"]);quotes=false, location="back"), "   TwrShadow          - Calculate tower influence on wind based on downstream tower shadow? (flag)")
+    # line = string(formatword(adfile["TwrShadow"];quotes=false, location="back"), "   TwrShadow          - Calculate tower influence on wind based on downstream tower shadow? (flag)")
     push!(lines,line)
 
     line = string(formatword(adfile["TwrAero"];quotes=false), "   TwrAero            - Calculate tower aerodynamic loads? (flag)")
     push!(lines, line)
 
-    line = string(formatword(adfile["FrozenWake"];quotes=false), "   FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]")
-    push!(lines, line)
+    # line = string(formatword(adfile["FrozenWake"];quotes=false), "   FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]")
+    # push!(lines, line)
 
     line = string(formatword(adfile["CavitCheck"];quotes=false), "   CavitCheck         - Perform cavitation check? (flag) [AFAeroMod must be 1 when CavitCheck=true]")
     push!(lines, line)
 
     line = string(formatword(adfile["Buoyancy"];quotes=false), "   Buoyancy           - Include buoyancy effects? (flag)")
+    push!(lines, line)
+
+    line = string(formatword(adfile["NacelleDrag"];quotes=false), "   NacelleDrag        - Include nacelle drag effects? (flag)")
     push!(lines, line)
 
     line = string(formatword(adfile["CompAA"];quotes=false), "   CompAA             - Flag to compute AeroAcoustics calculation [only used when WakeMod=1 or 2]")
@@ -807,10 +889,31 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string("="^6, "  Blade-Element/Momentum Theory Options  ", "="^54)
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["SkewMod"]);location="back", quotes=false), "   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
+    line = string(formatword(Int(adfile["BEM_Mod"]);location="back", quotes=false), "   BEM_Mod     - BEM model {1=legacy NoSweepPitchTwist, 2=polar} (switch) [used for all Wake_Mod to determine output coordinate system]")
     push!(lines, line)
 
-    line = string(formatword(adfile["SkewModFactor"]; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+
+    ###### 
+    line = "--- Skew correction"
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["Skew_Mod"]);location="back", quotes=false), "   Skew_Mod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [unused when WakeMod=0]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SkewMomCorr"];location="back", quotes=false), "   SkewMomCorr - Turn the skew momentum correction on or off [used only when Skew_Mod=1]")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["SkewRedistr_Mod"]);location="back", quotes=false), "   SkewRedistr_Mod - Type of skewed-wake correction model (switch) {0=no redistribution, 1=Glauert/Pitt/Peters, default=1} [used only when Skew_Mod=1]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SkewRedistrFactor"];location="back", quotes=false), "   SkewRedistrFactor - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when Skew_Mod=1 and SkewRedistr_Mod=1]")
+    push!(lines, line)
+
+    # line = string(formatword(adfile["SkewModFactor"]; location="back", quotes=false), "   SkewModFactor      - Constant used in Pitt/Peters skewed wake model {or \"default\" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]")
+    # push!(lines, line)
+
+    ### BEM Algorithm
+    line = "--- BEM Algorithm"
     push!(lines, line)
 
     line = string(formatword(adfile["TipLoss"]; quotes=false), "   TipLoss            - Use the Prandtl tip-loss model? (flag) [unused when WakeMod=0]")
@@ -835,22 +938,39 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
 
+    ### Shear correction
+    line = "--- Shear correction"
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvg"];location="back", quotes=false), "   SectAvg     - Use sector averaging (flag)")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["SectAvgWeighting"]);location="back", quotes=false), "   SectAvgWeighting - Weighting function for sector average {1=Uniform, default=1} within a sector centered on the blade (switch) [used only when SectAvg=True]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvgNPoints"];location="back", quotes=false), "   SectAvgNPoints - Number of points per sectors (-) {default=5} [used only when SectAvg=True]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvgPsiBwd"];location="back", quotes=false), "   SectAvgPsiBwd - Backward azimuth relative to blade where the sector starts (<=0) {default=-60} (deg) [used only when SectAvg=True]")
+    push!(lines, line)
+
+    line = string(formatword(adfile["SectAvgPsiFwd"];location="back", quotes=false), "   SectAvgPsiFwd - Forward azimuth relative to blade where the sector ends (>=0) {default=60} (deg) [used only when SectAvg=True]")
+    push!(lines, line)
 
 
-
+    ### Dynamic wake/inflow
+    line = "--- Dynamic wake/inflow"
+    push!(lines, line)
 
     #####################################################################
-    line = string("="^6, "  Dynamic Blade-Element/Momentum Theory Options  ", "="^46)
-    push!(lines, line)
+    # line = string("="^6, "  Dynamic Blade-Element/Momentum Theory Options  ", "="^46)
+    # push!(lines, line)
 
     line = string(formatword(Int(adfile["DBEMT_Mod"]);location="back", quotes=false), "   DBEMT_Mod          - Type of dynamic BEMT (DBEMT) model {1=constant tau1, 2=time-dependent tau1} (-) [used only when WakeMod=2]")
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["tau1_const"]);location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
+    line = string(formatword(adfile["tau1_const"];location="back", quotes=false), "   tau1_const         - Time constant for DBEMT (s) [used only when WakeMod=2 and DBEMT_Mod=1]")
     push!(lines, line)
-
-
-
 
 
     #########################################################################
@@ -862,16 +982,20 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
 
 
 
-
-
     ###########################################################################
-    line = string("="^6, "  Beddoes-Leishman Unsteady Airfoil Aerodynamics Options  ", "="^37)
+    line = string("="^6, "  Unsteady Airfoil Aerodynamics Options  ", "="^37)
     push!(lines, line)
 
-    line = string(formatword(Int(adfile["UAMod"]);location="back", quotes=false), "   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
+    line = string(formatword(adfile["AoA34"];location="back", quotes=false), "   AoA34       - Sample the angle of attack (AoA) at the 3/4 chord or the AC point {default=True} [always used]")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["UA_Mod"]);location="back", quotes=false), "   UA_Mod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez's variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]")
     push!(lines, line)
 
     line = string(formatword(adfile["FLookup"];quotes=false), "   FLookup            - Flag to indicate whether a lookup for f\' will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when AFAeroMod=2]")
+    push!(lines, line)
+
+    line = string(formatword(Int(adfile["IntegrationMethod"]);quotes=false), "   IntegrationMethod  - Switch to indicate which integration method UA uses (1=RK4, 2=AB4, 3=ABM4, 4=BDF2)")
     push!(lines, line)
 
     line = string(formatword(adfile["UAStartRad"];quotes=false), "   UAStartRad         - Starting radius for dynamic stall (fraction of rotor radius) [used only when AFAeroMod=2; if line is missing UAStartRad=0]]")
@@ -937,9 +1061,6 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     end
 
 
-
-
-
     ##################################################################
     line = string("="^6, "  Hub Properties  ", "="^69)
     push!(lines,line)
@@ -949,10 +1070,6 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
 
     line = string(formatword(adfile["HubCenBx"];quotes=false), "   HubCenBx           - Hub center of buoyancy x direction offset (m)")
     push!(lines,line)
-
-
-
-
 
 
 
@@ -966,8 +1083,26 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     line = string(formatword(adfile["NacCenB"];quotes=false, desiredlength=15), "   NacCenB            - Position of nacelle center of buoyancy from yaw bearing in nacelle coordinates (m)")
     push!(lines,line)
 
+    line = string(formatword(adfile["NacArea"];quotes=false, desiredlength=15), "   NacArea        - Projected area of the nacelle in X, Y, Z in the nacelle coordinate system (m^2)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["NacCd"];quotes=false, desiredlength=15), "   NacCd          - Drag coefficient for the nacelle areas defined above (-)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["NacDragAC"];quotes=false, desiredlength=15), "   NacDragAC          - Position of aerodynamic center of nacelle drag in nacelle coordinates (m)")
+    push!(lines,line)
 
 
+
+    ##################################################################
+    line = string("="^6, "  Tail Fin Aerodynamics  ", "="^69)
+    push!(lines,line)
+
+    line = string(formatword(adfile["TFinAero"];quotes=false), "   TFinAero    - Calculate tail fin aerodynamics model (flag)")
+    push!(lines,line)
+
+    line = string(formatword(adfile["TFinFile"];quotes=false), "   TFinFile    - Input file for tail fin aerodynamics [used only when TFinAero=True]")
+    push!(lines,line)
 
 
 
@@ -1002,7 +1137,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
     if adfile["NBlOuts"]>0
-       line = formatvector(Int.(adfile["NBlOuts"]))
+       line = formatvector(Int.(adfile["BlOutNd"]), desiredlength=4)
     else
        line = string(" "^11, 1)
     end
@@ -1042,11 +1177,7 @@ function write_adfile(adfile::Dict, outputfile::String; outputpath::String=pwd()
     push!(lines, line)
 
     if adfile["BldNd_BladesOut"]>0
-        if isa(eltype(adfile["BldNd_BlOutNd"]), Number)
-            line = formatvector(Int.(adfile["BldNd_BlOutNd"]))
-        else
-            line = formatword(adfile["BldNd_BlOutNd"]; quotes=true)
-        end
+        line = eltype(adfile["BldNd_BlOutNd"]) <: Number ? formatvector(Int.(adfile["BldNd_BlOutNd"])) : formatword(adfile["BldNd_BlOutNd"]; quotes=false)
     else
         line = " "^11
     end
@@ -1086,7 +1217,7 @@ end
 
 Writes an AeroDyn Blade object to file. 
 
-### Inputs:
+**Inputs**:
 - adblade::ADBlade - AeroDyn blade object
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute write location of the file. 
@@ -1134,7 +1265,7 @@ end
 
 Writes a file for the OpenFAST airfoil coordinates file.
 
-### Inputs: 
+**Inputs**: 
 - airfoilcoords::AirfoilCoords - airfoil coordinates object
 - outputfile::String - The desired name of the written file
 - outputpath::String - The desired relative or absolute path of the write file. 
@@ -1160,6 +1291,8 @@ function write_airfoilcoordinates(airfoilcoords::AirfoilCoords, outputfile::Stri
     push!(lines, line)
     line = formatcoordinates(airfoilcoords.coordinates)
     append!(lines, line)
+    line = ""
+    push!(lines, line)
 
 
     ### Write lines to file
@@ -1179,7 +1312,7 @@ end
 
 Writes an Airfoil Input file object to file. 
 
-### Inputs:
+**Inputs**:
 - airfoilinput::AirfoilInput - The airfoil input file. This is different from the airfoil coordinates file. 
 - outputfile::String - The desired name of the written file. 
 - outputpath::String - The desired relative or absolute path to the written file. 
@@ -1206,7 +1339,7 @@ function write_airfoilinput(airfoilinput::AirfoilInput, outputfile::String; outp
     end
     push!(lines, line)
 
-    line = string(formatword(string(airfoilinput.bl_file);location="front", quotes=true, desiredlength=length(airfoilinput.bl_file)+5), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
+    line = string(formatword(string(airfoilinput.bl_file);location="front", quotes=false, desiredlength=length(airfoilinput.bl_file)+5), "   BL_file           ! The file name including the boundary layer characteristics of the profile. Ignored if the aeroacoustic module is not called.")
     push!(lines, line)
 
     line = string(formatword(string(airfoilinput.numtabs);location="back", quotes=false),"   NumTabs           ! Number of airfoil tables in this file.")
@@ -1420,7 +1553,7 @@ end
 
 This function takes an aerodata structure and writes an output file for it.
 
-### Inputs: 
+**Inputs**: 
 - aerodata::Aerodata - the aerodata object. It looks like it is information about the airfoil polar. 
 - outputfile::String - the desired name of the written file
 - outputpath::String - the desired relative or absolute path of the written file. 
@@ -1475,7 +1608,7 @@ end
 
 Writes the desired AD driver file at the stated location. 
 
-### Inputs 
+**Inputs** 
 - addriver::Dict - the AD driver file
 - outputfile::String - The name of the file, containing the file ending.
 - outputpath::String - the location to write the file
@@ -1660,9 +1793,12 @@ function write_addriver(addriver::Dict, outputfile::String; outputpath::String=p
     line = "(m/s)      (-)    (rpm)   (deg)  (deg)  (s)   (s)   (-)   (-)       (Hz)"
     push!(lines, line)
 
-    WindData = hcat(addriver["HWndSpeed_mat"], addriver["PLExp_mat"], addriver["RotSpd_mat"], addriver["Pitch_mat"], addriver["Yaw_mat"], addriver["dT_mat"], addriver["Tmax_mat"], addriver["DOF_mat"], addriver["Amplitude_mat"], addriver["Frequency_mat"])
-    line = formatmatrix(WindData)
-    append!(lines, line)
+    if addriver["AnalysisType"]==2 #I suppose the AeroDyn Driver doesn't expect there to be any combined case data if the analysis type is 2. 
+    else
+        WindData = hcat(addriver["HWndSpeed_mat"], addriver["PLExp_mat"], addriver["RotSpd_mat"], addriver["Pitch_mat"], addriver["Yaw_mat"], addriver["dT_mat"], addriver["Tmax_mat"], addriver["DOF_mat"], addriver["Amplitude_mat"], addriver["Frequency_mat"])
+        line = formatmatrix(WindData)
+        append!(lines, line)
+    end
 
 
     ##############################################################################
@@ -1707,74 +1843,261 @@ end
 ##############################################################
 
 """
-    CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
-DTAero="default", WakeMod=1,
-AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
-CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
-Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="\"default\"", TipLoss="True",
-HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
-MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
-InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
-TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
-Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+    create_addriver()
 
-### Inputs::
-- Blades::Array{String, 1} - an array containing the names of the blade files
-- foils::Array{String, 1} - an array containing the names of airfoils to be used. 
+This function helps the user insure that they've put in all the 
+required entries to write an AeroDyn driver file from a dictionary.
+(This is for a single wind turbine)
 
-### Outputs:
-- ad15file::AD15file - the AeroDyn v15 input file object
+**Inputs**
 """
-function create_adfile(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
-    DTAero="default", WakeMod=1,
-    AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
-    CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
-    Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="default", TipLoss="True",
-    HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
-    MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
-    InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
-    TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
-    Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+function create_addriver(Notes, Echo, AnalysisType, AD_InputFile, NumBlades,
+    HubRad, HubHt, RefHt, Overhang, ShftTilt, Precone, twr2shft, V, rho, kinvisc, a, ShearExp, RPM,
+    Pitch, Yaw, dT, Tmax; MHK=0, Patm=0, Pvap=0, WtrDpth=0, 
+    Amp=zeros(length(V)), Freq=zeros(length(V)), DOF=zeros(length(V)),
+    CompInflow=false, Inflowfile="", HAWTformat=true, origin=[0,0,0],
+    OutFmt="\"ES15.8E2\"", OutFileFmt=1, WrVTK=0, WrVTK_type=1,
+    VTK_hubr=HubRad, VTKNacDim=[-1, -1, -1 ,2, 2, 2], TimeAnalysisFileName="unused")
 
-    NumAFfiles=length(Foils)
-    if NumAFfiles==0
-     error("Too few airfoils included in AD15 file. - CreateAD15")
-    end
+    addriver = Dict()
+ 
+    addriver["Notes"] = Notes
+    addriver["Echo"] = Echo
+    addriver["MHK"] = MHK
+    addriver["AnalysisType"] = AnalysisType
+    addriver["TMax"] = Tmax
+    addriver["DT"] = dT[1]
+    addriver["AeroFile"] = AD_InputFile
+    addriver["FldDens"] = rho
+    addriver["KinVisc"] = kinvisc
+    addriver["SpdSound"] = a
+    addriver["Patm"] = Patm
+    addriver["Pvap"] = Pvap
+    addriver["WtrDpth"] = WtrDpth
+    addriver["CompInflow"] = CompInflow
+    addriver["InflowFile"] = Inflowfile
+    addriver["HWindSpeed"] = V
+    addriver["RefHt"] = RefHt
+    addriver["PLExp"] = ShearExp[1]
 
-    for i=1:NumAFfiles
-     temp = "Foil $i"
-     push!(directory, temp)
-    end
+    addriver["NumTurbines"] = 1
+    addriver["BasicHAWTFormat(1)"] = HAWTformat
+    addriver["BaseOriginInit(1)"] = origin
+    addriver["NumBlades(1)"] = NumBlades
+    addriver["HubRad(1)"] = HubRad
+    addriver["HubHt(1)"] = HubHt
+    addriver["Overhang(1)"] = Overhang
+    addriver["ShftTilt(1)"] = ShftTilt
+    addriver["Precone(1)"] = Precone
+    addriver["Twr2Shft(1)"] = twr2shft
+    addriver["BaseMotionType(1)"] = 0
+    addriver["DegreeOfFreedom(1)"] = 1
+    addriver["Amplitude(1)"] = 1
+    addriver["Frequency(1)"] = 1
+    addriver["BaseMotionFileName(1)"] = "unused"
+    addriver["NacYaw(1)"] = 1
+    addriver["RotSpeed(1)"] = 1
+    addriver["BldPitch(1)"] = 1
+    addriver["TimeAnalysisFileName"] = TimeAnalysisFileName
 
-    if length(Blades)>3
-     error("Too many blade files included in AD15 file. - CreateAD15")
-    elseif length(Blades)==0
-     error("A blade file is required to create an AD15 file.")
-    end
+    addriver["NumCases"] = length(V)
+    addriver["HWndSpeed_mat"] = V
+    addriver["PLExp_mat"] = ShearExp
+    addriver["RotSpd_mat"] = RPM
+    addriver["Pitch_mat"] = Pitch
+    addriver["Yaw_mat"] = Yaw
+    addriver["dT_mat"] = dT
+    addriver["Tmax_mat"] = Tmax
+    addriver["DOF_mat"] = DOF
+    addriver["Amplitude_mat"] = Amp
+    addriver["Frequency_mat"] = Freq
 
-    m,n = size(TwrNds)
-    NumTwrNds = m
-    if n!=3
-     error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
-    end
+    addriver["OutFmt"] = OutFmt
+    addriver["OutFileFmt"] = OutFileFmt
+    addriver["WrVTK"] = WrVTK
+    addriver["WrVTK_Type"] = WrVTK_type
+    addriver["VTKHubRad"] = VTK_hubr
+    addriver["VTKNacDim"] = VTKNacDim
+     
+    # @warn("create_addriver() is untested.")
 
-    if NBlOuts>9
-     error("Max number of NBlOuts is 9. CreateAD15")
-    end
-    if NTwOuts>9
-     error("Max number of NBlOuts is 9. CreateAD15")
-    end
-
-    file = ADfile(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
-    return file
+    return addriver
 end
+
+
+function create_adfile(WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, AirDens, KinVisc,
+    SkewMod, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, UAMod, FLookup, UAStartRad, UAEndRad, AFNames, UseBlCm, ADBlFile, TwrElev, TwrDiam,
+    TwrCd, TwrTI, TwrCb, OutList, NodeOutList;
+    Echo=false, DTAero="\"defaults\"", FrozenWake=false, CavitCheck=false, Buoyancy=false,
+    CompAA=false, AA_InputFile="unused", SpdSound=335.0, Patm=0., Pvap=0., SkewModFactor="\"default\"", IndToler=1e-6, MaxIter=400, DBEMT_Mod=1, tau1_const=4, OLAFInputFileName="\"unused\"", AFTabMod=1, InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, VolHub=0., HubCenBx=0., VolNac=0., NacCenB=[0., 0., 0.], SumPrint=false, NBlOuts=1, BlOutNd=[1, 2], NTwOuts=0, TwOutNd=[1, 2], BldNd_BladesOut=1, BldNd_BlOutNd="\"All\"", Notes="")
+
+    adfile = Dict()
+
+    ### General Options
+    adfile["Notes"] = Notes
+    adfile["Echo"] = Echo
+    adfile["DTAero"] = DTAero
+    adfile["WakeMod"] = WakeMod
+    adfile["AFAeroMod"] = AFAeroMod
+    adfile["TwrPotent"] = TwrPotent
+    adfile["TwrShadow"]= TwrShadow
+    adfile["TwrAero"] = TwrAero
+    adfile["FrozenWake"] = FrozenWake
+    adfile["CavitCheck"] = CavitCheck
+    adfile["Buoyancy"] = Buoyancy
+    adfile["CompAA"] = CompAA
+    adfile["AA_InputFile"] = AA_InputFile
+
+    ### Environmental Conditions
+    adfile["AirDens"] = AirDens
+    adfile["KinVisc"] = KinVisc
+    adfile["SpdSound"] = SpdSound
+    adfile["Patm"] = Patm
+    adfile["Pvap"] = Pvap
+
+    ### BEMT Options
+    adfile["SkewMod"] = SkewMod
+    adfile["SkewModFactor"] = SkewModFactor
+    adfile["TipLoss"] = TipLoss
+    adfile["HubLoss"] = HubLoss
+    adfile["TanInd"] = TanInd
+    adfile["AIDrag"] = AIDrag
+    adfile["TIDrag"] = TIDrag
+    adfile["IndToler"] = IndToler
+    adfile["MaxIter"] = MaxIter
+
+    ### Dynamic BEMT Options
+    adfile["DBEMT_Mod"] = DBEMT_Mod
+    adfile["tau1_const"] = tau1_const
+
+    ### OLAF options
+    adfile["OLAFInputFileName"] = OLAFInputFileName
+
+    ### Unsteady Aerodynamics options
+    adfile["UAMod"] = UAMod
+    adfile["FLookup"] = FLookup
+    adfile["UAStartRad"] = UAStartRad
+    adfile["UAEndRad"] = UAEndRad
+
+    ### Airfoil Information
+    adfile["AFTabMod"] = AFTabMod
+    adfile["InCol_Alfa"] = InCol_Alfa
+    adfile["InCol_Cl"] = InCol_Cl
+    adfile["InCol_Cd"] = InCol_Cd
+    adfile["InCol_Cm"] = InCol_Cm
+    adfile["InCol_Cpmin"] = InCol_Cpmin
+    adfile["NumAFfiles"] = length(AFNames)
+    adfile["AFNames"] = AFNames
+    
+    ### Rotor/Blade Properties
+    adfile["UseBlCm"] = UseBlCm
+    for i=1:3
+       adfile["ADBlFile($i)"] = ADBlFile
+    end
+
+    ### Hub Properties
+    adfile["VolHub"] =  VolHub
+    adfile["HubCenBx"] = HubCenBx
+
+    ### Nacelle Properties
+    adfile["VolNac"] = VolNac
+    adfile["NacCenB"] = NacCenB
+
+    ### Tower Influence
+    adfile["NumTwrNds"] = length(TwrElev)
+    adfile["TwrElev_mat"] = TwrElev
+    adfile["TwrDiam_mat"] = TwrDiam
+    adfile["TwrCd_mat"] = TwrCd
+    adfile["TwrTI_mat"] = TwrTI
+    adfile["TwrCb_mat"] = TwrCb
+    
+    ### Outputs
+    adfile["SumPrint"] = SumPrint
+    adfile["NBlOuts"] = NBlOuts
+    adfile["BlOutNd"] = BlOutNd
+    adfile["NTwOuts"] = NTwOuts
+    adfile["TwOutNd"] = TwOutNd
+    adfile["OutList"] = OutList
+
+    ### Section Outputs
+    adfile["BldNd_BladesOut"] = BldNd_BladesOut
+    adfile["BldNd_BlOutNd"] = BldNd_BlOutNd
+    adfile["NodeOutList"] = NodeOutList
+
+    return adfile
+end
+
+
+
+# """
+#     CreateAD15(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
+# DTAero="default", WakeMod=1,
+# AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
+# CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
+# Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="\"default\"", TipLoss="True",
+# HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
+# MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
+# InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
+# TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
+# Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+
+# **Inputs**::
+# - Blades::Array{String, 1} - an array containing the names of the blade files
+# - foils::Array{String, 1} - an array containing the names of airfoils to be used. 
+
+# **Outputs**:
+# - ad15file::AD15file - the AeroDyn v15 input file object
+# """
+# function create_adfile(Blades, Foils; Notes = "Notes on what this Aerodyn File is.", Echo="False",
+#     DTAero="default", WakeMod=1,
+#     AFAeroMod=2, TwrPotent=1, TwrShadow="False", TwrAero="True", FrozenWake="False",
+#     CavitCheck="False", CompAA="False", AA_InputFile="unused", AirDens=1.225, KinVisc=1.464e-5, SpdSound = 335.0, Patm=103500,
+#     Pvap=1700, FluidDepth=0.5, SkewMod=2, SkewModFactor="default", TipLoss="True",
+#     HubLoss="True", TanInd="True", AIDrag="False", TIDrag="False", IndToler="default",
+#     MaxIter=100, DBEMT_Mod=2, tau1_const=4, OLAFInputFileName="unused", UAMod=3, FLookup="True", AFTabMod=1,
+#     InCol_Alfa=1, InCol_Cl=2, InCol_Cd=3, InCol_Cm=4, InCol_Cpmin=0, UseBlCm="True",
+#     TwrNds=zeros(1,3), SumPrint="False", NBlOuts=0, BlOutNd=[0], NTwOuts=0, TwOutNd=[0],
+#     Outlist=String[], BldNd_BladesOut=0, BldNd_BlOutNd=[], NodeOutlist=String[]) 
+
+#     NumAFfiles=length(Foils)
+#     if NumAFfiles==0
+#      error("Too few airfoils included in AD15 file. - CreateAD15")
+#     end
+
+#     for i=1:NumAFfiles
+#      temp = "Foil $i"
+#      push!(directory, temp)
+#     end
+
+#     if length(Blades)>3
+#      error("Too many blade files included in AD15 file. - CreateAD15")
+#     elseif length(Blades)==0
+#      error("A blade file is required to create an AD15 file.")
+#     end
+
+#     m,n = size(TwrNds)
+#     NumTwrNds = m
+#     if n!=3
+#      error("AD15 TwrNds formatted incorrectly. There must be 3 columns.")
+#     end
+
+#     if NBlOuts>9
+#      error("Max number of NBlOuts is 9. CreateAD15")
+#     end
+#     if NTwOuts>9
+#      error("Max number of NBlOuts is 9. CreateAD15")
+#     end
+
+#     file = ADfile(directory, Notes, Echo, DTAero, WakeMod, AFAeroMod, TwrPotent, TwrShadow, TwrAero, FrozenWake, CavitCheck, CompAA, AA_InputFile, AirDens, KinVisc, SpdSound, Patm, Pvap, FluidDepth, SkewMod, SkewModFactor, TipLoss, HubLoss, TanInd, AIDrag, TIDrag, IndToler, MaxIter, DBEMT_Mod, tau1_const, OLAFInputFileName, UAMod, FLookup, AFTabMod, InCol_Alfa, InCol_Cl, InCol_Cd, InCol_Cm, InCol_Cpmin, NumAFfiles, Foils, UseBlCm, Blades, NumTwrNds, TwrNds, SumPrint, NBlOuts, BlOutNd, NTwOuts, TwOutNd, Outlist, BldNd_BladesOut, BldNd_BlOutNd, NodeOutlist)
+#     return file
+# end
 
 """
     CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad; importantrads=[], notes="This is a turbine.", verbose=true)
 
 Takes the iodenputs and creats a adblade struct. Note that this is a file that mainly contains nodes that describe the turbine blade to AeroDyn. At each node the distance from the hub will be given; the chord length, twist, cone distance, cone angle, sweep, and airfoil will also be given. 
 
-### Inputs
+**Inputs**
 - rads - node distance from the center of rotation. (meters)
 - radschords - node chord length (meters)
 - radstwist - node twist angle (degrees)
@@ -1791,7 +2114,7 @@ Takes the iodenputs and creats a adblade struct. Note that this is a file that m
 - notes - notes that the user would like placed at the top of the blade file.
 - verbose - boolean that marks whether to make statements about creating the blade.
 
-### Outputs
+**Outputs**
 - adblade - an adblade struct
 - importantnodes - the node numbers of the important radi that the user declared. 
 
@@ -1805,8 +2128,8 @@ Below is a short list of the naming convention used in this function.
 - blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
 - blade fraction (blfrac) - percentage of blade radius
 """
-function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=100, importantrads=[], notes="This is a turbine.", verbose=true)
-    # Definitions
+function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, radssweeps, radsafid, tiprad, hubrad, cylinderrad, airfoilrad, pitch; numnodes=100, importantrads=[], importantfracs=[], notes="This is a turbine.", verbose=true)
+    # Definitions #todo: I probably shouldn't name this as CreateAD15Blade... it is creating a blade, but it is also interpolating. 
     # radius (rads) - distance from the center of rotation
     # fractions (fracs) - percentage of total blade radius
     # blade radius (blrads) - distance from the hub (distance of blade length not   including the hub)
@@ -1823,13 +2146,15 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     # I can only assume that I resolved the issue. 
 
     # Need to add important locations to fracs
-    minus = 2
+    minus = 2 #todo: What is this? 
     bladelength = tiprad-hubrad
     tipblfrac = 1.0
     hubblfrac = 0.0
+
     if airfoilrad<hubrad || airfoilrad<cylinderrad
         error("Beginning of airfoil radius smaller than cylinder radius or hub  radius. ")
     end
+
     airfoilblfrac = (airfoilrad-hubrad)/bladelength
     cylinderblfrac = (cylinderrad-hubrad)/bladelength
     if cylinderrad<=hubrad
@@ -1839,10 +2164,16 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
         cylinderblfrac = 0
         minus -= 1
     end
+
     importantblfracs = (importantrads.-hubrad)./bladelength  
-    blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantrads)-minus))
+    append!(importantblfracs, importantfracs)
+    unique!(importantblfracs)
+    # blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantrads)-minus))
+    blfracs = collect(range(airfoilblfrac,tipblfrac, length=numnodes-length(importantblfracs)-minus))
     append!(blfracs, importantblfracs)
+
     push!(blfracs, hubblfrac,  airfoilblfrac, tipblfrac)
+
     if cylinderblfrac>0
         push!(blfracs, cylinderblfrac)
     end
@@ -1851,7 +2182,7 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
 
     # Convert from blfracs to radius positions and their radial locations
     blrads = blfracs.*(bladelength) #Note do not use this to get any property values    with the fits.
-    locs = blrads.+0.508 #The rads location of the blrads nodes #Todo: What is this 0.508? This looks like a hard coded thing.... which should probably be hub radius. 
+    locs = blrads.+hubrad #0.508 #The rads location of the blrads nodes #Todo. What is this 0.508? This looks like a hard coded thing.... which should probably be hub radius. 
     n = length(blrads)
     precone = conefit.(locs)
     sweep = sweepfit.(locs)
@@ -1861,7 +2192,18 @@ function CreateAD15Blade(rads, radschords, radstwists, radscones, radsconeangs, 
     chords = chordfit.(locs)
     afid = integerfit(rads, radsafid, locs)
 
-    adblade = ADBlade(notes, n, blrads, precone, sweep,  preconeangle, twist, chords, afid)  
+
+    adblade = Dict()
+    adblade["Notes"] = notes
+    adblade["NumBlNds"] = n
+
+    adblade["BlSpn"] = blrads
+    adblade["BlCrvAC"] = precone
+    adblade["BlSwpAC"] = sweep
+    adblade["BlCrvAng"] = preconeangle
+    adblade["BlTwist"] = twist
+    adblade["BlChord"] = chords
+    adblade["BlAFID"] = afid
 
     # Find the nodes of the important idxs
     nodeidxs = []
@@ -1878,7 +2220,7 @@ end
 
 Takes the inputs and creats a adblade struct. Note that this is a file that mainly contains nodes that describe the turbine blade to AeroDyn. At each node the distance from the hub will be given; the chord length, twist, cone distance, cone angle, sweep, and airfoil will also be given. 
 
-    ### Inputs
+    **Inputs**
     - props - a n x 7 array holding the nodal values in order (radius, chord length, twist, cone, cone angle, sweep, airfoil name)
     - tiprad - tip radius from center of rotation (meters)
     - hubrad - hub radius from center of rotation (meters)
@@ -1889,7 +2231,7 @@ Takes the inputs and creats a adblade struct. Note that this is a file that main
     - notes - notes that the user would like placed at the top of the blade file.
     - verbose - boolean that marks whether to make statements about creating the blade.
     
-    ### Outputs
+    **Outputs**
     - adblade - an adblade struct
     - importantnodes - the node numbers of the important radi that the user declared. 
     
@@ -1913,12 +2255,12 @@ end
 
 Creates an Airfoil Input file object. 
 
-### Inputs:
+**Inputs**:
 - Polar::Array{Float64, 2} - nx4 array of the airfoil coefficients in order of aoa, cl, cd, cm
 - Re::Float64 - Reynolds number of the airfoil polar
 - NumCoords::String - file containing the coordinate file ("@\"s809_coords.dat\"")
 
-### Outputs: 
+**Outputs**: 
 - airfoilinput::AirfoilInput - an airfoil input file object. 
 """
 function CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimArea=1)
@@ -1962,16 +2304,15 @@ function CreateAirfoilInput(Polar, Re, NumCoords; InterpOrd="Default", NonDimAre
     return AirfoilInput(InterpOrd, NonDimArea, NumCoords, BL_file, NumTabs, Re, UserProp, InclUAdata, alpha0, alpha1, alpha2, eta_e, C_nalpha, T_f0, T_V0, T_p, T_VL, b1, b2, b5, A1, A2, A5, S1, S2, S3, S4, Cn1, Cn2, St_sh, Cd0, Cm0, k0, k1, k2, k3, k1_hat, x_cp_bar, UACutout, filtCutOff, NumAlf, Polar)
 end
 
-export make_dsairfoil
+# export make_dsairfoil
 
 """
-    make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
+    make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
 
 Make an DynamicStallModels airfoil object. (I don't know if this belongs here, or in DynamicStallModels). 
 
 **Arguments**
 - afi::AirfoilInputUnsteady - An unsteady Airfoil object.
-- chord::Float - the chord length of the airfoil.
 - radians::Bool - Whether the associated polar is in degrees or radians.
 - zeta::Float - I think this is the efficiency #TODO: 
 - separationpointfun::Symbol - a symbol indicating which separation point function to use. Options include `:fit` (which defaults to Aerodyn's original or Gonzalez depending on what model you have chosen), or `:Fun` for Beddoes-Leishman's original separation point function. 
@@ -1981,7 +2322,7 @@ Make an DynamicStallModels airfoil object. (I don't know if this belongs here, o
 - cutrad:: - the cutout radius around the cutout angle of attack. 
 - A::Vector{Float} - a vector of A values to overide the A values that the given inputfile has (useful for optimization). 
 """
-function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180, A=nothing) 
+function make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180, A=nothing) 
     if radians || maximum(afi.aoa)<=pi
         aoa = afi.aoa
     else
@@ -2042,9 +2383,9 @@ function make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.
 
     eta = afi.eta_e
 
-    dsmodel = DS.BeddoesLeishman(DS.Indicial(), 3, A, b, T, Cn1, Cd0, Cm0, eta, zeta, a)
+    dsmodel = DS.BeddoesLeishman(DS.Discrete(), 3, A, b, T, Cn1, Cd0, Cm0, eta, zeta, a)
     
-    return DS.Airfoil(dsmodel, polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, alphacut, cutrad, sfun, chord, xcp) 
+    return DS.Airfoil(dsmodel, polar, cl, cd, cm, cn, cc, dcldalpha, dcndalpha, alpha0, alphasep, alphacut, cutrad, sfun), xcp
 end
 
 function make_blade()
