@@ -32,9 +32,9 @@ end
 Damage calculation from the MLife documentation, using Goodman correction. 
 
 """
-function damage(loads; m=10, Lult=maximum(abs.(loads)), absfun=abs)
+function damage(loads; m=10, Lult=maximum(abs.(loads)), absfun=abs, uc_mult=0.5)
     peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
-    out = rainflow(peaks) 
+    out = rainflow(peaks, uc_mult) 
     _, n= size(out)
 
     TF = typeof(loads[1])
@@ -42,10 +42,18 @@ function damage(loads; m=10, Lult=maximum(abs.(loads)), absfun=abs)
     damage = 0.
     Ni_vec = zeros(TF, n)
     for i =1:n
-        #Plug equation 7 into equation 6, LMF cancels out. 
-        Ni = (2*(Lult - absfun(out[2,i]))/out[1, i])^m
-        Ni_vec[i] = Ni
-        damage += out[3,i]/Ni #Todo. This doesn't account for the length of the simulation... -> It shouldn't. This just caluclates the damage from a single time series. If you want to calculate the damage over the time period, you're going to scale the damage from a time series to be the length of the time period. 
+
+        s = out[1, i] #Load range
+        smean = out[2, i] #Mean of the load range
+        N = out[3, i] #Number of cycles experienced
+        S_goodman = s/ (1 - (smean/Lult)) #Goodman correction
+        endurance = (Lult/S_goodman)^m #Endurance limit, or the number of cycles that can be experienced before failure.
+        damage += N/endurance #Damage from this cycle
+
+        # #Plug equation 7 into equation 6, LMF cancels out. 
+        # Ni = (2*(Lult - absfun(out[2,i]))/out[1, i])^m
+        # Ni_vec[i] = Ni
+        # damage += out[3,i]/Ni #Todo. This doesn't account for the length of the simulation... -> It shouldn't. This just caluclates the damage from a single time series. If you want to calculate the damage over the time period, you're going to scale the damage from a time series to be the length of the time period. 
     end
     
     return damage, Ni_vec, out
@@ -64,37 +72,40 @@ Rainflow counting of a signal's turning points
                                     2) range mean
                                     3) cycle count
 """
-function rainflow(array_ext,uc_mult=0.5)
+function rainflow(array_ext, uc_mult=0.5)
     tot_num = length(array_ext)             # total size of input array
-    array_out = zeros(typeof(array_ext[1]),(3, tot_num-1))        # initialize output array
+    array_out = zeros(typeof(array_ext[1]),(3, tot_num-1))    # initialize output array (initialized at max possible size, and then will be trimmed)
     pr = 1                                  # index of input array
-    po = 1                                  # index of output array
+    po = 1                                  # index of output array 
     j = 0                                   # index of temporary array "a"
-    a  = zeros(typeof(array_ext[1]),tot_num)                     # temporary array for algorithm
+    a  = zeros(typeof(array_ext[1]), tot_num)  # temporary array for algorithm #must be the vector of residues
     # loop through each turning point stored in input array
     for i = 1:tot_num
-        j += 1                  # increment "a" counter
-        a[j] = array_ext[pr]    # put turning point into temporary array
-        pr += 1                 # increment input array pointer
+        j += 1                  # increment "a" counter #Starts at i=j, but then falls behind. as it gets reduced. but eventually starts building up. 
+        a[j] = array_ext[pr]    # put turning point into temporary array #pr = i at this point
+        pr += 1                 # increment input array pointer #= i + 1
+        # @show i, pr
+        # @show i, j
+        # @show i, a
         while j >= 3 && abs( a[j-1] - a[j-2]) <= abs(a[j] - a[j-1])
             lrange = abs( a[j-1] - a[j-2] )
-            # partial range
-            if j == 3
-                mean = (a[1] + a[2])/2.0
+            
+            if j == 3 # partial range
+                mean = (a[1] + a[2])/2
                 a[1] = a[2]
                 a[2] = a[3]
-                j=2
+                j = 2
                 if lrange > 0
                     array_out[1,po] = lrange
                     array_out[2,po] = mean
                     array_out[3,po] = uc_mult
                     po += 1
                 end
-            # full range
-            else
-                mean      = ( a[j-1] + a[j-2] ) / 2.0
-                a[j-2]=a[j]
-                j=j-2
+            
+            else # full range
+                mean = (a[j-1] + a[j-2])/2
+                a[j-2] = a[j]
+                j = j-2
                 if (lrange > 0)
                     array_out[1,po] = lrange
                     array_out[2,po] = mean
@@ -103,11 +114,14 @@ function rainflow(array_ext,uc_mult=0.5)
                 end
             end
         end
+        # @show array_out
+        # println("")
     end
-    # partial range
+
+    # partial range of the residuals
     for i = 1:j-1
-        lrange    = abs( a[i] - a[i+1] ) #Note: This appears discontinuous.
-        mean      = ( a[i] + a[i+1] ) / 2.0
+        lrange    = abs(a[i] - a[i+1])
+        mean      = (a[i] + a[i+1])/2
         if lrange > 0
             array_out[1,po] = lrange
             array_out[2,po] = mean
@@ -119,6 +133,9 @@ function rainflow(array_ext,uc_mult=0.5)
     out = array_out[:,1:po-1]
     return out
 end
+
+
+
 """
     get_peaks(array)
 get the turning point values of a signal
@@ -154,6 +171,7 @@ function get_peaks(array)
     peaks = append!(peaks,A[length(A)])
     return peaks
 end
+
 """
     get_peaks_indices(array)
 return the indices of the signal peaks
@@ -189,6 +207,126 @@ function get_peaks_indices(array)
     peaks = append!(peaks,length(A))
     return peaks
 end
+
+
+function damage_wresidue(loads; m=10, Lult=maximum(abs.(loads)), absfun=abs, uc_mult=0.5)
+    peaks = get_peaks(loads) #Rainflow counting only cares about the turning points
+    out_1stpass, residue = rainflow_wresidue(peaks, uc_mult) 
+    processed_residue = concatenate_reversals(residue, residue)
+    out_2ndpass, _ = rainflow_wresidue(processed_residue, uc_mult) #This is the second pass of the rainflow counting.
+    out = hcat(out_1stpass, out_2ndpass) #Concatenate the two outputs together.
+
+    _, n= size(out)
+
+    TF = typeof(loads[1])
+
+    damage = 0.
+    Ni_vec = zeros(TF, n)
+    for i =1:n
+
+        s = out[1, i] #Load range
+        smean = out[2, i] #Mean of the load range
+        N = out[3, i] #Number of cycles experienced
+
+        S_goodman = s/ (1 - (smean/Lult)) #Goodman correction
+
+        endurance = (Lult/S_goodman)^m #Endurance limit, or the number of cycles that can be experienced before failure.
+        damage += N/endurance #Damage from this cycle
+
+        # #Plug equation 7 into equation 6, LMF cancels out. 
+        # Ni = (2*(Lult - absfun(out[2,i]))/out[1, i])^m #Todo: Let's compare this against the pCrunch method. 
+        # Ni_vec[i] = Ni
+        # damage += out[3,i]/Ni #Todo. This doesn't account for the length of the simulation... -> It shouldn't. This just caluclates the damage from a single time series. If you want to calculate the damage over the time period, you're going to scale the damage from a time series to be the length of the time period. 
+    end
+    
+    return damage, Ni_vec, out
+end
+
+
+function rainflow_wresidue(array_ext, uc_mult=0.5)
+    tot_num = length(array_ext)             # total size of input array
+    array_out = zeros(typeof(array_ext[1]),(3, tot_num-1))    # initialize output array (initialized at max possible size, and then will be trimmed)
+    pr = 1                                  # index of input array
+    po = 1                                  # index of output array 
+    j = 0                                   # index of temporary array "a"
+    a  = zeros(typeof(array_ext[1]), tot_num)  # temporary array for algorithm #must be the vector of residues
+    # loop through each turning point stored in input array
+    for i = 1:tot_num
+        j += 1                  # increment "a" counter #Starts at i=j, but then falls behind. as it gets reduced. but eventually starts building up. 
+        a[j] = array_ext[pr]    # put turning point into temporary array #pr = i at this point
+        pr += 1                 # increment input array pointer #= i + 1
+        # @show i, pr
+        # @show i, j
+        while j >= 3 && abs( a[j-1] - a[j-2]) <= abs(a[j] - a[j-1])
+            lrange = abs( a[j-1] - a[j-2] )
+            
+            if j == 3 # partial range
+                mean = (a[1] + a[2])/2
+                a[1] = a[2]
+                a[2] = a[3]
+                j = 2
+                if lrange > 0
+                    array_out[1,po] = lrange
+                    array_out[2,po] = mean
+                    array_out[3,po] = uc_mult
+                    po += 1
+                end
+            
+            else # full range
+                mean = (a[j-1] + a[j-2])/2
+                a[j-2] = a[j]
+                j = j-2
+                if (lrange > 0)
+                    array_out[1,po] = lrange
+                    array_out[2,po] = mean
+                    array_out[3,po] = 1.00
+                    po += 1
+                end
+            end
+        end
+    end
+
+    residue = a[1:j] #Todo. I'm not confident this is the residue. -> Matches the residue from pCrunch
+
+    # get rid of unused entries
+    out = array_out[:,1:po-1] #The rest are zeros. 
+    return out, residue
+end
+
+"""
+Concatenate two reversal series while preserving peak-valley conditions.
+"""
+function concatenate_reversals(reversals1, reversals2) #From pCrunch
+
+    dRstart = reversals2[2] - reversals2[1]
+    dRend = reversals1[end] - reversals1[end-1]
+    dRjoin = reversals2[1] - reversals1[end]
+
+    t1 = dRend * dRstart
+    t2 = dRend * dRjoin
+    
+    result = if (t1 > 0) && (t2 < 0)
+        vcat(reversals1, reversals2)
+    elseif (t1 > 0) && (t2 >= 0)
+        vcat(reversals1[1:end-1], reversals2[2:end])
+    elseif (t1 < 0) && (t2 >= 0)
+        vcat(reversals1, reversals2[2:end])
+    elseif (t1 < 0) && (t2 < 0)
+        vcat(reversals1[1:end-1], reversals2)
+    else
+        error("Input must be reversals, end/start value of reversals1/reversals2 repeated.")
+    end
+    
+    return result
+end
+
+
+
+
+
+
+
+
 
 """
 interpolate2dcurve(coords1, coords2, d1, d2, d3) 

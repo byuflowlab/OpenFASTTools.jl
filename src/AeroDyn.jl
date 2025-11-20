@@ -2307,7 +2307,7 @@ end
 # export make_dsairfoil
 
 """
-    make_dsairfoil(afi::AirfoilInputUnsteady, chord; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
+    make_dsairfoil(afi::AirfoilInputUnsteady; radians=false, zeta=0.5, separationpointfun::Symbol=:Fit, model::Symbol=:Gonzalez, interp=Akima, a=343.0, cutrad = 5*pi/180) 
 
 Make an DynamicStallModels airfoil object. (I don't know if this belongs here, or in DynamicStallModels). 
 
